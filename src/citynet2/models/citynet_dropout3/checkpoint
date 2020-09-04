@@ -1,0 +1,2 @@
+model_checkpoint_path: "/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/models/citynet_dropout3/citynet_dropout3-1"
+all_model_checkpoint_paths: "/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/models/citynet_dropout3/citynet_dropout3-1"

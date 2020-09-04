@@ -1,0 +1,2 @@
+model_checkpoint_path: "/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/modelspredictions/test_citynet/0/biotic/results/weights_1.pkl-1"
+all_model_checkpoint_paths: "/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/modelspredictions/test_citynet/0/biotic/results/weights_1.pkl-1"
