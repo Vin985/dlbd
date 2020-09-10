@@ -55,14 +55,6 @@ class DataHandler:
             os.makedirs(dirpath)
         return dirpath
 
-    def get_dir(self, name, database=None):
-        dir_path = None
-        if database and dir_name in database:
-            dir_path = database[dir_name]
-        else:
-            dir_path = self.default_paths.get(dir_name, "")
-        return Path(dir_path)
-
     def get_option(self, name, database=None):
         option = None
         if database and name in database:
@@ -73,15 +65,6 @@ class DataHandler:
             option = Path(option)
         return option
 
-    def get_default_paths(self):
-        default_paths = {}
-        data_opts = self.opts["data"]
-        for path in self.DEFAULT_OPTIONS["paths"]:
-            if path in data_opts:
-                default_paths[path] = Path(data_opts[path])
-        print(default_paths)
-        return default_paths
-
     def get_default_options(self):
         data_opts = self.opts["data"]
         default_opts = {
@@ -89,19 +72,7 @@ class DataHandler:
         }
         return default_opts
 
-    # def get_database_paths(self, database):
-    #     database_paths = {}
-    #     root_dir = None
-    #     for path in self.PATHS:
-    #         tmp_path = database.get(path, self.default_paths.get(path, ""))
-    #         if root_dir:
-    #             tmp_path = self.get_full_path(tmp_path, root_dir)
-    #         else:
-    #             root_dir = tmp_path
-    #         database_paths[path] = tmp_path
-    #     return database_paths
-
-    def get_database_paths2(self, database):
+    def get_database_paths(self, database):
         db_paths = {}
         root_dir = self.get_option("root_dir", database)
         db_paths["root_dir"] = root_dir
@@ -142,7 +113,7 @@ class DataHandler:
         return {"train": [], "validation": []}
 
     def create_dataset(self, database, split_funcs=None):
-        paths = self.get_database_paths2(database)
+        paths = self.get_database_paths(database)
         print(paths)
 
         # self.check_file_lists(database, paths)
