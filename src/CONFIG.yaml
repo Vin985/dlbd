@@ -1,32 +1,36 @@
 
 
-base_dir: '/mnt/win/UMoncton/Doctorat/data/acoustic/reference/CityNet/'
-root_dirs:
-  - '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-  - '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
-train_dir: 'train'
-test_dir:  'test'
-audio_dir: 'wavs'
-annotations_dir: 'annotations'
-dest_dir: 'extracted'
-model_dir: '/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/models/'
+# base_dir: '/mnt/win/UMoncton/Doctorat/data/acoustic/reference/CityNet/'
+# root_dirs:
+#   - '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+#   - '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+# train_dir: 'train'
+# test_dir:  'test'
+# audio_dir: 'wavs'
+# annotations_dir: 'annotations'
+# dest_dir: 'extracted'
+# model_dir: '/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/test/citynet2/models/'
 
 
 data:
   # All path can be relative to the root_dir or complete
   audio_dir: 'wavs'
   tags_dir: 'annotations'
-  train_dir: 'train'
+  training_dir: 'training'
   validation_dir:  'validation'
   dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
   save_intermediate: False
   databases:
     # All options found in data can be overriden in each iteration. If not found, default values
     # from data will be used
-    - name: 'citynet'
-      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+    # - name: 'citynet'
+    #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
     - name: 'arctic'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+      overwrite: False
+      # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
+      # audio_dir: 'audio'
+      # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
 
 spectrogram:
   type: "mel"

@@ -7,7 +7,8 @@ opts = yaml.load(stream, Loader=yaml.Loader)
 
 dh = DataHandler(opts)
 
-# for database in dh.opts["data"]["databases"]:
-#     dh.get_database_paths(database)
+for database in dh.opts["data"]["databases"]:
+    # print(dh.get_database_paths2(database, "train"))
+    dh.create_dataset(database)
 
-dh.create_datasets()
+# dh.create_datasets()
