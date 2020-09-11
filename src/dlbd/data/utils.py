@@ -160,7 +160,13 @@ def force_make_dir(dirpath):
     return dirpath
 
 
-def load_annotations(audio_file_path, labels_dir, class_type="biotic"):
+def load_annotations(
+    audio_file_path,
+    labels_dir,
+    suffix="-sceneRect.csv",
+    tags_with_audio=False,
+    class_type="biotic",
+):
 
     # load file and convert to spectrogram
     wav, sample_rate = librosa.load(str(audio_file_path), None)
@@ -168,7 +174,11 @@ def load_annotations(audio_file_path, labels_dir, class_type="biotic"):
     # create label vector...
     res = 0 * wav
 
-    csv_file_path = labels_dir / (audio_file_path.stem + "-sceneRect.csv")
+    if tags_with_audio:
+        csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
+    else:
+        csv_file_path = labels_dir / (audio_file_path.stem + suffix)
+    print(csv_file_path)
     print("Loading annotations for file: " + str(audio_file_path))
     if os.path.exists(csv_file_path):
         pd_annots = pd.read_csv(csv_file_path, skip_blank_lines=True)
