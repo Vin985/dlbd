@@ -11,6 +11,7 @@ from librosa.core import audio
 from scipy.ndimage.interpolation import zoom
 
 from .utils import load_annotations
+from ..utils.file import list_files
 
 
 class DataHandler:
@@ -37,7 +38,7 @@ class DataHandler:
         "overwrite",
     ]
 
-    DB_TYPES = ["training", "validation"]
+    DB_TYPES = ["test", "training", "validation"]
 
     def __init__(self, opts):
         self.opts = opts
@@ -50,12 +51,6 @@ class DataHandler:
             return path
         else:
             return root / path
-
-    @staticmethod
-    def force_make_dir(dirpath):
-        if not os.path.exists(dirpath):
-            os.makedirs(dirpath)
-        return dirpath
 
     def get_option(self, name, database=None, default=""):
         option = None
@@ -75,162 +70,178 @@ class DataHandler:
         return default_opts
 
     def get_database_paths(self, database):
-        db_paths = {}
+        paths = {}
         root_dir = self.get_option("root_dir", database)
-        db_paths["root_dir"] = root_dir
+        paths["root"] = root_dir
+        paths["audio"] = {"default": self.get_option("audio_dir", database)}
+        paths["tags"] = {"default": self.get_option("tags_dir", database)}
+        paths["dest"] = {"default": self.get_option("dest_dir", database)}
+        paths["file_list"] = {}
+        paths["pkl"] = {}
 
         for db_type in self.DB_TYPES:
             db_type_dir = self.get_full_path(
                 self.get_option(db_type + "_dir", database), root_dir
             )
-            db_paths[db_type + "_dir"] = db_type_dir
-            db_paths[db_type + "_audio_dir"] = self.get_full_path(
-                self.get_option("audio_dir", database), db_type_dir
+            paths[db_type + "_dir"] = db_type_dir
+            paths["audio"][db_type] = self.get_full_path(
+                paths["audio"]["default"], db_type_dir
             )
-            db_paths[db_type + "_tags_dir"] = self.get_full_path(
-                self.get_option("tags_dir", database), db_type_dir
+            paths["tags"][db_type] = self.get_full_path(
+                paths["tags"]["default"], db_type_dir
             )
-            db_paths[db_type + "_dest_dir"] = (
-                self.get_full_path(self.get_option("dest_dir", database), db_type_dir)
+            dest_dir = (
+                self.get_full_path(paths["dest"]["default"], db_type_dir)
                 / database["name"]
             )
+            paths["dest"][db_type] = dest_dir
+            paths["file_list"][db_type] = dest_dir / (db_type + "_file_list.csv")
+            paths["pkl"][db_type] = dest_dir / (db_type + "_data.pkl")
 
-        return db_paths
-
-    def generate_datasets(self):
-        # iterate on databases
-        #    load paths from config
-        #        if train and validation paths provided, use them
-        #        else split data using provided function (how?)
-        #        generate file_lists
-        #     generate training and validation subsets
-        #        use file lists
-        #        generate pickles
-        pass
-
-    def random_split(self, split, paths):
-        audio_path = paths["training_audio_dir"]
-        if not audio_path.exists():
-            raise ValueError(
-                "'audio_dir' option must be provided to split into training and validation subsets"
-            )
-        files = [str(p) for p in audio_path.rglob("*") if p.suffix.lower() == ".wav"]
-        n_files = len(files)
-        n_validation = int(split * n_files)
-        validation_idx = random.sample(range(0, n_files), n_validation)
-        training, validation = [], []
-        for i in range(0, n_files):
-            if i in validation_idx:
-                validation.append(files[i])
-            else:
-                training.append(files[i])
-
-        # Save file_list
-        self.save_file_list("training", training, paths)
-        self.save_file_list("validation", validation, paths)
-        return {"training": training, "validation": validation}
+        return paths
 
     @staticmethod
     def save_file_list(db_type, file_list, paths):
-        file_list_path = paths[db_type + "_dest_dir"] / "_".join(
-            [db_type, "file_list.csv"]
-        )
+        file_list_path = paths["dest"][db_type] / (db_type + "_file_list.csv")
         if not file_list_path.exists() and file_list:
+            file_list_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_list_path, mode="w") as f:
                 writer = csv.writer(f)
                 for name in file_list:
                     writer.writerow([name])
 
-    def check_file_lists(self, database, paths):
-        return {"training": [], "validation": []}
-
-    def create_dataset(self, database, split_funcs=None):
-        paths = self.get_database_paths(database)
-        print(paths)
-
-        # Create training and validation subsets
+    def get_audio_file_lists(self, paths, database):
+        res = {}
         for db_type in self.DB_TYPES:
-            # Create destination paths
-            self.force_make_dir(paths[db_type + "_dest_dir"])
-            file_list_path = paths[db_type + "_dest_dir"] / (
-                "_".join([db_type, "file_list.csv"])
+            res[db_type] = list_files(
+                paths["audio"][db_type],
+                self.get_option("audio_ext", database, [".wav"]),
+                self.get_option("recursive", database, False),
             )
-            pkl_file_path = paths[db_type + "_dest_dir"] / (
-                "_".join([db_type, "all_data.pkl"])
-            )
+            self.save_file_list(db_type, res[db_type], paths)
+        return res
 
+    @staticmethod
+    def load_file_lists(paths):
+        res = {}
+        for db_type, path in paths["file_list"].items():
             file_list = []
-            # * If file list for subset does not exists, create it
-            if not file_list_path.exists():
-                validation_split = self.get_option("validation_split", database)
-                # * Check if we have to split the original data
-                if validation_split:
-                    if not split_funcs or database["name"] not in split_funcs:
-                        # * Do it randomly if not function is provided
-                        file_list = self.random_split(validation_split, paths)[db_type]
-                    else:
-                        # * else use the provided splitting function
-                        file_list = split_funcs[database["name"]](
-                            validation_split, paths, self, database
-                        )[db_type]
-                else:
-                    # * Use db type audio directory
-                    file_list = paths[db_type + "_audio_dir"].iterdir()
+            with open(path, mode="r") as f:
+                reader = csv.reader(f)
+                for name in reader:
+                    file_list.append(Path(name[0]))
+            res[db_type] = file_list
+        return res
+
+    def check_file_lists(self, database, paths, split_funcs):
+        file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
+        # * Check if file lists are missing or need to be regenerated
+        if not file_lists_exist or self.get_option(
+            "generate_file_lists", database, False
+        ):
+            file_lists = {}
+            # * Check if we have a dedicated function to split the original data
+            if split_funcs and database["name"] in split_funcs:
+                file_lists = split_funcs[database["name"]](paths, database, self)
             else:
-                with open(file_list_path, mode="r") as f:
-                    reader = csv.reader(f)
-                    for name in reader:
-                        file_list.append(Path(name[0]))
+                file_lists = self.get_audio_file_lists(paths, database)
+        else:
+            file_lists = self.load_file_lists(paths)
+        return file_lists
 
-            # TODO check overwrite
-            if not pkl_file_path.exists() or database["overwrite"]:
-                print("Generating dataset: ", database["name"])
-                file_names_list = []
-                tmp_vals = []
+    def create_datasets(self, database, split_funcs=None):
+        for database in self.opts["data"]["databases"]:
+            paths = self.get_database_paths(database)
+            for db_type in self.DB_TYPES:
+                self.create_dataset(database, paths, db_type, split_funcs)
 
-                for file_path in file_list:
-                    try:
-                        annots, wav, sample_rate = load_annotations(
-                            file_path,
-                            paths[db_type + "_tags_dir"],
-                            self.get_option("tags_suffix", database, "-sceneRect.csv"),
-                            self.get_option("tags_with_audio", database, False),
-                            self.get_option("class_type", database, "biotic"),
-                        )
-                        spec = self.generate_spectrogram(wav, sample_rate)
+    def check_datasets(self, split_funcs=None):
+        for database in self.opts["data"]["databases"]:
+            paths = self.get_database_paths(database)
+            self.check_file_lists(database, paths, split_funcs)
+            return
+            for db_type in self.DB_TYPES:
+                self.create_dataset(database, paths, db_type, split_funcs)
 
-                        # reshape annotations
-                        factor = float(spec.shape[1]) / annots.shape[0]
-                        annots = zoom(annots, factor)
+    # def create_dataset(self, database, paths, db_type, split_funcs=None):
+    #     # Create destination paths
+    #     self.force_make_dir(paths[db_type + "_dest_dir"])
+    #     file_list_path = paths[db_type + "_dest_dir"] / (
+    #         "_".join([db_type, "file_list.csv"])
+    #     )
+    #     pkl_file_path = paths[db_type + "_dest_dir"] / (
+    #         "_".join([db_type, "all_data.pkl"])
+    #     )
 
-                        # file_names_list.append(file_path)
-                        tmp_vals.append((annots, spec))
+    #     file_list = []
+    #     # * If file list for subset does not exists, create it
+    #     if not file_list_path.exists():
+    #         validation_split = self.get_option("validation_split", database)
+    #         # * Check if we have to split the original data
+    #         if validation_split:
+    #             if not split_funcs or database["name"] not in split_funcs:
+    #                 # * Do it randomly if not function is provided
+    #                 file_list = self.random_split(validation_split, paths)[db_type]
+    #             else:
+    #                 # * else use the provided splitting function
+    #                 file_list = split_funcs[database["name"]](
+    #                     validation_split, paths, self, database
+    #                 )[db_type]
+    #         else:
+    #             # * Use db type audio directory
+    #             file_list = paths[db_type + "_audio_dir"].iterdir()
+    #     else:
+    #         with open(file_list_path, mode="r") as f:
+    #             reader = csv.reader(f)
+    #             for name in reader:
+    #                 file_list.append(Path(name[0]))
 
-                        if self.opts["data"].get("save_intermediates", False):
-                            savename = (
-                                paths["dest_dir"] / "intermediate" / file_path.name
-                            ).with_suffix(".pkl")
-                            # TODO: check overwrite
-                            if not savename.exists() or self.opts.get(
-                                "overwrite", False
-                            ):
-                                with open(savename, "wb") as f:
-                                    pickle.dump((annots, spec), f, -1)
-                    except Exception:
-                        print("Error loading: " + str(file_path) + ", skipping.")
-                        print(traceback.format_exc())
+    #     # TODO check overwrite
+    #     if not pkl_file_path.exists() or database["overwrite"]:
+    #         print("Generating dataset: ", database["name"])
+    #         tmp_vals = []
 
-                # Save all data
-                if tmp_vals:
-                    with open(pkl_file_path, "wb") as f:
-                        pickle.dump(tmp_vals, f, -1)
+    #         for file_path in file_list:
+    #             try:
+    #                 annots, wav, sample_rate = load_annotations(
+    #                     file_path,
+    #                     paths[db_type + "_tags_dir"],
+    #                     self.get_option("tags_suffix", database, "-sceneRect.csv"),
+    #                     self.get_option("tags_with_audio", database, False),
+    #                     self.get_option("class_type", database, "biotic"),
+    #                 )
+    #                 spec = self.generate_spectrogram(wav, sample_rate)
 
-                # # Save file_list
-                # if not file_list_path.exists() and file_names_list:
-                #     with open(file_list_path, mode="w") as f:
-                #         writer = csv.writer(f)
-                #         for name in file_names_list:
-                #             writer.writerow([name])
+    #                 # reshape annotations
+    #                 factor = float(spec.shape[1]) / annots.shape[0]
+    #                 annots = zoom(annots, factor)
+
+    #                 # file_names_list.append(file_path)
+    #                 tmp_vals.append((annots, spec))
+
+    #                 if self.opts["data"].get("save_intermediates", False):
+    #                     savename = (
+    #                         paths["dest_dir"] / "intermediate" / file_path.name
+    #                     ).with_suffix(".pkl")
+    #                     # TODO: check overwrite
+    #                     if not savename.exists() or self.opts.get("overwrite", False):
+    #                         with open(savename, "wb") as f:
+    #                             pickle.dump((annots, spec), f, -1)
+    #             except Exception:
+    #                 print("Error loading: " + str(file_path) + ", skipping.")
+    #                 print(traceback.format_exc())
+
+    #         # Save all data
+    #         if tmp_vals:
+    #             with open(pkl_file_path, "wb") as f:
+    #                 pickle.dump(tmp_vals, f, -1)
+
+    #         # # Save file_list
+    #         # if not file_list_path.exists() and file_names_list:
+    #         #     with open(file_list_path, mode="w") as f:
+    #         #         writer = csv.writer(f)
+    #         #         for name in file_names_list:
+    #         #             writer.writerow([name])
 
     def generate_spectrogram(self, wav, sample_rate):
 
