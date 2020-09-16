@@ -103,12 +103,12 @@ class DataHandler:
     @staticmethod
     def save_file_list(db_type, file_list, paths):
         file_list_path = paths["dest"][db_type] / (db_type + "_file_list.csv")
-        if not file_list_path.exists() and file_list:
-            file_list_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(file_list_path, mode="w") as f:
-                writer = csv.writer(f)
-                for name in file_list:
-                    writer.writerow([name])
+        file_list_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_list_path, mode="w") as f:
+            writer = csv.writer(f)
+            for name in file_list:
+                writer.writerow([name])
+            print("Saved file list:", str(file_list_path))
 
     def get_audio_file_lists(self, paths, database):
         res = {}
@@ -118,7 +118,6 @@ class DataHandler:
                 self.get_option("audio_ext", database, [".wav"]),
                 self.get_option("recursive", database, False),
             )
-            self.save_file_list(db_type, res[db_type], paths)
         return res
 
     @staticmethod
@@ -131,37 +130,91 @@ class DataHandler:
                 for name in reader:
                     file_list.append(Path(name[0]))
             res[db_type] = file_list
+            print("Loaded file: " + str(path))
         return res
 
     def check_file_lists(self, database, paths, split_funcs):
+        file_lists = {}
+        msg = "Checking file lists for database {0}... ".format(database["name"])
         file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
         # * Check if file lists are missing or need to be regenerated
         if not file_lists_exist or self.get_option(
             "generate_file_lists", database, False
         ):
+            print(msg + "Generating file lists...")
             file_lists = {}
             # * Check if we have a dedicated function to split the original data
             if split_funcs and database["name"] in split_funcs:
-                file_lists = split_funcs[database["name"]](paths, database, self)
+                file_lists = split_funcs[database["name"]](paths, self, database)
             else:
                 file_lists = self.get_audio_file_lists(paths, database)
+            # * Save results
+            for db_type, file_list in file_lists.items():
+                self.save_file_list(db_type, file_list, paths)
         else:
+            # * Load files
+            print(msg + "Found all file lists. Now loading...")
             file_lists = self.load_file_lists(paths)
         return file_lists
 
-    def create_datasets(self, database, split_funcs=None):
-        for database in self.opts["data"]["databases"]:
-            paths = self.get_database_paths(database)
-            for db_type in self.DB_TYPES:
-                self.create_dataset(database, paths, db_type, split_funcs)
+    # def create_datasets(self, database, split_funcs=None):
+    #     for database in self.opts["data"]["databases"]:
+    #         paths = self.get_database_paths(database)
+    #         for db_type in self.DB_TYPES:
+    #             self.create_dataset(database, paths, db_type, split_funcs)
+
+    def check_dataset(self, database, paths, file_list, db_type):
+        # * Overwrite if generate_file_lists is true as file lists will be recreated
+        overwrite = self.get_option("overwrite", database, False) or self.get_option(
+            "generate_file_lists", database, False
+        )
+        if not paths["pkl"][db_type].exists() or overwrite:
+            print("Generating dataset: ", database["name"])
+            tmp_vals = []
+
+            for file_path in file_list:
+                try:
+                    annots, wav, sample_rate = load_annotations(
+                        file_path,
+                        paths["tags"][db_type],
+                        self.get_option("tags_suffix", database, "-sceneRect.csv"),
+                        self.get_option("tags_with_audio", database, False),
+                        self.get_option("class_type", database, "biotic"),
+                    )
+                    spec = self.generate_spectrogram(wav, sample_rate)
+
+                    # reshape annotations
+                    factor = float(spec.shape[1]) / annots.shape[0]
+                    annots = zoom(annots, factor)
+
+                    # file_names_list.append(file_path)
+                    tmp_vals.append((annots, spec))
+
+                    if self.get_option("save_intermediates", database, False):
+                        savename = (
+                            paths["dest"][db_type] / "intermediate" / file_path.name
+                        ).with_suffix(".pkl")
+                        if not savename.exists() or overwrite:
+                            with open(savename, "wb") as f:
+                                pickle.dump((annots, spec), f, -1)
+                except Exception:
+                    print("Error loading: " + str(file_path) + ", skipping.")
+                    print(traceback.format_exc())
+
+            # Save all data
+            if tmp_vals:
+                with open(paths["pkl"][db_type], "wb") as f:
+                    pickle.dump(tmp_vals, f, -1)
+                    print("Saved file: ", paths["pkl"][db_type])
 
     def check_datasets(self, split_funcs=None):
         for database in self.opts["data"]["databases"]:
+            print("Checking database:", database["name"])
             paths = self.get_database_paths(database)
-            self.check_file_lists(database, paths, split_funcs)
-            return
-            for db_type in self.DB_TYPES:
-                self.create_dataset(database, paths, db_type, split_funcs)
+            file_lists = self.check_file_lists(database, paths, split_funcs)
+            for db_type, file_list in file_lists.items():
+                print(db_type)
+                self.check_dataset(database, paths, file_list, db_type)
 
     # def create_dataset(self, database, paths, db_type, split_funcs=None):
     #     # Create destination paths
