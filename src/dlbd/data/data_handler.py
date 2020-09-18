@@ -1,17 +1,17 @@
 import csv
 import os
 import pickle
-import random
 import traceback
 from pathlib import Path
 
 import librosa
 import numpy as np
-from librosa.core import audio
+import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
-from .utils import load_annotations
 from ..utils.file import list_files
+from .tags import load_tags
+from .spectrogram import generate_spectrogram
 
 
 class DataHandler:
@@ -42,8 +42,6 @@ class DataHandler:
 
     def __init__(self, opts):
         self.opts = opts
-        # self.default_paths = self.get_default_paths()
-        self.default_options = self.get_default_options()
 
     @staticmethod
     def get_full_path(path, root):
@@ -52,36 +50,29 @@ class DataHandler:
         else:
             return root / path
 
-    def get_option(self, name, database=None, default=""):
+    def get_db_option(self, name, database=None, default=""):
         option = None
         if database and name in database:
             option = database[name]
         else:
-            option = self.default_options.get(name, default)
+            option = self.opts.get(name, default)
         if name.endswith("_dir"):
             option = Path(option)
         return option
 
-    def get_default_options(self):
-        data_opts = self.opts["data"]
-        default_opts = {
-            name: value for name, value in data_opts.items() if name != "databases"
-        }
-        return default_opts
-
     def get_database_paths(self, database):
         paths = {}
-        root_dir = self.get_option("root_dir", database)
+        root_dir = self.get_db_option("root_dir", database)
         paths["root"] = root_dir
-        paths["audio"] = {"default": self.get_option("audio_dir", database)}
-        paths["tags"] = {"default": self.get_option("tags_dir", database)}
-        paths["dest"] = {"default": self.get_option("dest_dir", database)}
+        paths["audio"] = {"default": self.get_db_option("audio_dir", database)}
+        paths["tags"] = {"default": self.get_db_option("tags_dir", database)}
+        paths["dest"] = {"default": self.get_db_option("dest_dir", database)}
         paths["file_list"] = {}
         paths["pkl"] = {}
 
         for db_type in self.DB_TYPES:
             db_type_dir = self.get_full_path(
-                self.get_option(db_type + "_dir", database), root_dir
+                self.get_db_option(db_type + "_dir", database), root_dir
             )
             paths[db_type + "_dir"] = db_type_dir
             paths["audio"][db_type] = self.get_full_path(
@@ -115,8 +106,8 @@ class DataHandler:
         for db_type in self.DB_TYPES:
             res[db_type] = list_files(
                 paths["audio"][db_type],
-                self.get_option("audio_ext", database, [".wav"]),
-                self.get_option("recursive", database, False),
+                self.get_db_option("audio_ext", database, [".wav"]),
+                self.get_db_option("recursive", database, False),
             )
         return res
 
@@ -138,7 +129,7 @@ class DataHandler:
         msg = "Checking file lists for database {0}... ".format(database["name"])
         file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
         # * Check if file lists are missing or need to be regenerated
-        if not file_lists_exist or self.get_option(
+        if not file_lists_exist or self.get_db_option(
             "generate_file_lists", database, False
         ):
             print(msg + "Generating file lists...")
@@ -157,31 +148,36 @@ class DataHandler:
             file_lists = self.load_file_lists(paths)
         return file_lists
 
-    # def create_datasets(self, database, split_funcs=None):
-    #     for database in self.opts["data"]["databases"]:
-    #         paths = self.get_database_paths(database)
-    #         for db_type in self.DB_TYPES:
-    #             self.create_dataset(database, paths, db_type, split_funcs)
-
     def check_dataset(self, database, paths, file_list, db_type):
         # * Overwrite if generate_file_lists is true as file lists will be recreated
-        overwrite = self.get_option("overwrite", database, False) or self.get_option(
-            "generate_file_lists", database, False
-        )
+        overwrite = self.get_db_option(
+            "overwrite", database, False
+        ) or self.get_db_option("generate_file_lists", database, False)
         if not paths["pkl"][db_type].exists() or overwrite:
             print("Generating dataset: ", database["name"])
             tmp_vals = []
 
+            class_type = self.get_db_option("class_type", database, "biotic")
+            classes_file = self.get_db_option("classes_file", database, "classes.csv")
+
+            classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
+            classes = classes_df.loc[classes_df.class_type == class_type].tag.values
+            suffix = self.get_db_option("tags_suffix", database, "-sceneRect.csv")
+            tags_with_audio = self.get_db_option("tags_with_audio", database, False)
+
             for file_path in file_list:
                 try:
-                    annots, wav, sample_rate = load_annotations(
+
+                    annots, wav, sample_rate = load_tags(
                         file_path,
                         paths["tags"][db_type],
-                        self.get_option("tags_suffix", database, "-sceneRect.csv"),
-                        self.get_option("tags_with_audio", database, False),
-                        self.get_option("class_type", database, "biotic"),
+                        suffix=suffix,
+                        tags_with_audio=tags_with_audio,
+                        classes=classes,
                     )
-                    spec = self.generate_spectrogram(wav, sample_rate)
+                    spec = generate_spectrogram(
+                        wav, sample_rate, self.opts["spectrogram"]
+                    )
 
                     # reshape annotations
                     factor = float(spec.shape[1]) / annots.shape[0]
@@ -190,7 +186,7 @@ class DataHandler:
                     # file_names_list.append(file_path)
                     tmp_vals.append((annots, spec))
 
-                    if self.get_option("save_intermediates", database, False):
+                    if self.get_db_option("save_intermediates", database, False):
                         savename = (
                             paths["dest"][db_type] / "intermediate" / file_path.name
                         ).with_suffix(".pkl")
@@ -208,7 +204,7 @@ class DataHandler:
                     print("Saved file: ", paths["pkl"][db_type])
 
     def check_datasets(self, split_funcs=None):
-        for database in self.opts["data"]["databases"]:
+        for database in self.opts["databases"]:
             print("Checking database:", database["name"])
             paths = self.get_database_paths(database)
             file_lists = self.check_file_lists(database, paths, split_funcs)
@@ -216,109 +212,9 @@ class DataHandler:
                 print(db_type)
                 self.check_dataset(database, paths, file_list, db_type)
 
-    # def create_dataset(self, database, paths, db_type, split_funcs=None):
-    #     # Create destination paths
-    #     self.force_make_dir(paths[db_type + "_dest_dir"])
-    #     file_list_path = paths[db_type + "_dest_dir"] / (
-    #         "_".join([db_type, "file_list.csv"])
-    #     )
-    #     pkl_file_path = paths[db_type + "_dest_dir"] / (
-    #         "_".join([db_type, "all_data.pkl"])
-    #     )
-
-    #     file_list = []
-    #     # * If file list for subset does not exists, create it
-    #     if not file_list_path.exists():
-    #         validation_split = self.get_option("validation_split", database)
-    #         # * Check if we have to split the original data
-    #         if validation_split:
-    #             if not split_funcs or database["name"] not in split_funcs:
-    #                 # * Do it randomly if not function is provided
-    #                 file_list = self.random_split(validation_split, paths)[db_type]
-    #             else:
-    #                 # * else use the provided splitting function
-    #                 file_list = split_funcs[database["name"]](
-    #                     validation_split, paths, self, database
-    #                 )[db_type]
-    #         else:
-    #             # * Use db type audio directory
-    #             file_list = paths[db_type + "_audio_dir"].iterdir()
-    #     else:
-    #         with open(file_list_path, mode="r") as f:
-    #             reader = csv.reader(f)
-    #             for name in reader:
-    #                 file_list.append(Path(name[0]))
-
-    #     # TODO check overwrite
-    #     if not pkl_file_path.exists() or database["overwrite"]:
-    #         print("Generating dataset: ", database["name"])
-    #         tmp_vals = []
-
-    #         for file_path in file_list:
-    #             try:
-    #                 annots, wav, sample_rate = load_annotations(
-    #                     file_path,
-    #                     paths[db_type + "_tags_dir"],
-    #                     self.get_option("tags_suffix", database, "-sceneRect.csv"),
-    #                     self.get_option("tags_with_audio", database, False),
-    #                     self.get_option("class_type", database, "biotic"),
-    #                 )
-    #                 spec = self.generate_spectrogram(wav, sample_rate)
-
-    #                 # reshape annotations
-    #                 factor = float(spec.shape[1]) / annots.shape[0]
-    #                 annots = zoom(annots, factor)
-
-    #                 # file_names_list.append(file_path)
-    #                 tmp_vals.append((annots, spec))
-
-    #                 if self.opts["data"].get("save_intermediates", False):
-    #                     savename = (
-    #                         paths["dest_dir"] / "intermediate" / file_path.name
-    #                     ).with_suffix(".pkl")
-    #                     # TODO: check overwrite
-    #                     if not savename.exists() or self.opts.get("overwrite", False):
-    #                         with open(savename, "wb") as f:
-    #                             pickle.dump((annots, spec), f, -1)
-    #             except Exception:
-    #                 print("Error loading: " + str(file_path) + ", skipping.")
-    #                 print(traceback.format_exc())
-
-    #         # Save all data
-    #         if tmp_vals:
-    #             with open(pkl_file_path, "wb") as f:
-    #                 pickle.dump(tmp_vals, f, -1)
-
-    #         # # Save file_list
-    #         # if not file_list_path.exists() and file_names_list:
-    #         #     with open(file_list_path, mode="w") as f:
-    #         #         writer = csv.writer(f)
-    #         #         for name in file_names_list:
-    #         #             writer.writerow([name])
-
-    def generate_spectrogram(self, wav, sample_rate):
-
-        if self.opts["spec_type"] == "mel":
-            spec = librosa.feature.melspectrogram(
-                wav,
-                sr=sample_rate,
-                n_fft=self.opts.get("n_fft", 2048),
-                hop_length=self.opts.get("hop_length", 1024),
-                n_mels=self.opts.get("n_mels", 32),
-            )
-            spec = spec.astype(np.float32)
-        else:
-            raise AttributeError("No other spectrogram supported yet")
-        return spec
-
     def load_file(self, file_name):
-
         annots, spec = pickle.load(open(file_name, "rb"))
-        annots = annots[self.opts["classname"]]
-        # reshape annotations
-        # factor = float(spec.shape[1]) / annots.shape[0]
-        # annots = zoom(annots, factor)
-        # create sampler
+        # annots = annots[self.opts["classname"]]
         if not self.opts["learn_log"]:
             spec = np.log(self.opts["A"] + self.opts["B"] * spec)
             spec = spec - np.median(spec, axis=1, keepdims=True)
