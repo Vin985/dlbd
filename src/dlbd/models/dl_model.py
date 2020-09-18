@@ -34,6 +34,9 @@ class DLModel:
     def run_net(self, input):
         return 0
 
+    def train(self, training_data, validation_data):
+        return 0
+
     def load_wav(self, wavpath, loadmethod="librosa"):
         # tic = time()
 
