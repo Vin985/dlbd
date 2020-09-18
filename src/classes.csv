@@ -1,0 +1,129 @@
+class_type,tag
+other,rain
+other,unknown sound
+other,electrical disturbance
+other,vegetation
+other,wind
+other,unknown
+other,metalic sound
+other,dripping water
+other,shower
+other,metalic
+other,rubbish bag
+other,water dripping
+other,water splashing
+other,rainfall on vegetation
+biotic,bird
+biotic,wing beats
+biotic,bat
+biotic,fox
+biotic,grey squirrel
+biotic,invertebrate
+biotic,insect
+biotic,animal
+biotic,wings beating
+biotic,russling leaves (animal)
+biotic,amphibian
+biotic,squirrel
+biotic,russling vegetation (animal)
+biotic,amgp_1(tu-tit)
+biotic,amgp_2(tuuut)
+biotic,amgp_3(other)
+biotic,bran
+biotic,cago
+biotic,dunl(descending trill)
+biotic,dunl(rising trill)
+biotic,goose
+biotic,gull
+biotic,hegu
+biotic,kiei
+biotic,lalo(chirp)
+biotic,lalo(song)
+biotic,loon
+biotic,ltdu
+biotic,ltdu(yodel)
+biotic,passerine(chirp)
+biotic,passerine(song)
+biotic,pesa(hoohoohoo)
+biotic,plover
+biotic,pusa(tututu)
+biotic,pusa(kreeekreeekreee)
+biotic,reph(chirp)
+biotic,rtlo
+biotic,rtlo(duet)
+biotic,sagu
+biotic,sand(chirp)
+biotic,sand(trill)
+biotic,sesa_2(motorboat)
+biotic,sesa_3(titutu)
+biotic,shorebird(chirp)
+biotic,shorebird(song)
+biotic,snbu(chirp)
+biotic,snbu(song)
+biotic,sngo
+biotic,tusw
+biotic,unkn
+biotic,wrsa_1(boingboingboing)
+birds,SESA
+birds,AMGP
+birds,Shorebird
+birds,Passerine
+anthropic,mix traffic
+anthropic,braking
+anthropic,voices
+anthropic,electrical
+anthropic,anthropogenic unknown
+anthropic,airplane
+anthropic,beep
+anthropic,metal
+anthropic,bus emitting
+anthropic,footsteps
+anthropic,mower
+anthropic,whistle
+anthropic,siren
+anthropic,coughing
+anthropic,music
+anthropic,horn
+anthropic,startthecar
+anthropic,bells
+anthropic,applause
+anthropic,dog bark
+anthropic,road traffic
+anthropic,braking vehicle (road or rail)
+anthropic,human voices
+anthropic,mechanical
+anthropic,vehicle horn (road or rail)
+anthropic,air traffic
+anthropic,vehicle alarm
+anthropic,human voice
+anthropic,machinery
+anthropic,church bell
+anthropic,breaking vehicle
+anthropic,deck lowering
+anthropic,car horn
+anthropic,rail traffic
+anthropic,alarm
+anthropic,vehicle horn
+anthropic,building ventilation system
+anthropic,car alarm
+anthropic,rock
+anthropic,church bells
+anthropic,train horn
+anthropic,mobile phone
+anthropic,train station announcement
+anthropic,hammering
+anthropic,door opening
+anthropic,dog barking
+anthropic,vehicle breaking
+anthropic,cat
+anthropic,glass into bins
+anthropic,barking dog
+anthropic,television
+anthropic,sweeping broom
+anthropic,ball bouncing
+anthropic,bat hitting ball
+anthropic,laughing
+anthropic,clapping
+anthropic,camera
+anthropic,train doors (beeping)
+anthropic,lawnmower
