@@ -57,7 +57,7 @@ def arctic_split(paths, data_handler=None, database=None):
         raise ValueError(
             "'audio_dir' option must be provided to split into test, training and validation subsets"
         )
-    split = data_handler.get_option("split", database, None)
+    split = data_handler.get_db_option("split", database, None)
     if not split:
         raise ValueError("Split option must be provided for arctic split function")
     split_props = []
