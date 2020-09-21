@@ -13,6 +13,9 @@ dh = DataHandler(opts)
 # dh.create_datasets()
 dh.check_datasets(split_funcs={"arctic": arctic_split})
 
+train = dh.load_data("training")
+validate = dh.load_data("validation")
+
 # for database in dh.opts["data"]["databases"]:
 # print(dh.get_database_paths2(database, "train"))
 # dh.create_dataset(database)

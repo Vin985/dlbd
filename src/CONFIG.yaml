@@ -8,6 +8,7 @@ validation_dir:  'validation'
 dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 tags_suffix: "-sceneRect.csv"
+use_spectrogram_subfolder: True
 audio_extensions:
   - ".wav"
   - ".WAV"
@@ -20,7 +21,7 @@ databases:
   #   test_dir: "validation"
   - name: 'arctic'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
-    overwrite: True
+    # overwrite: False
     # generate_file_lists: True
     #* split: Defines proportion of data to set aside for test and validation datasets.
     #* If provided, first the test dataset is set aside, then the remaining data is split into
@@ -44,7 +45,7 @@ class_type: "biotic"
 model:
   model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
 
-overwrite: True
+#overwrite: True
 # Spectrogram options
 spec_type: 'mel'
 ensemble_members: 1
