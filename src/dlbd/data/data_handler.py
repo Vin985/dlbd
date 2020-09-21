@@ -1,17 +1,15 @@
 import csv
-import os
 import pickle
 import traceback
 from pathlib import Path
 
-import librosa
 import numpy as np
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
 from ..utils.file import list_files
-from .tags import load_tags
-from .spectrogram import generate_spectrogram
+from . import spectrogram
+from . import tags
 
 
 class DataHandler:
@@ -63,10 +61,18 @@ class DataHandler:
     def get_database_paths(self, database):
         paths = {}
         root_dir = self.get_db_option("root_dir", database)
+
+        use_spec_subfolder = self.get_db_option("use_spec_subfolder", database, True)
+        spec_folder = ""
+        if use_spec_subfolder:
+            spec_folder = spectrogram.get_spec_subfolder(self.opts["spectrogram"])
+
         paths["root"] = root_dir
         paths["audio"] = {"default": self.get_db_option("audio_dir", database)}
         paths["tags"] = {"default": self.get_db_option("tags_dir", database)}
-        paths["dest"] = {"default": self.get_db_option("dest_dir", database)}
+        paths["dest"] = {
+            "default": self.get_db_option("dest_dir", database) / spec_folder
+        }
         paths["file_list"] = {}
         paths["pkl"] = {}
 
@@ -148,60 +154,72 @@ class DataHandler:
             file_lists = self.load_file_lists(paths)
         return file_lists
 
-    def check_dataset(self, database, paths, file_list, db_type):
+    def generate_dataset(self, database, paths, file_list, db_type, overwrite):
+        x, y = [], []
+        print("Generating dataset: ", database["name"])
+
+        class_type = self.get_db_option("class_type", database, "biotic")
+        classes_file = self.get_db_option("classes_file", database, "classes.csv")
+
+        classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
+        classes = classes_df.loc[classes_df.class_type == class_type].tag.values
+        suffix = self.get_db_option("tags_suffix", database, "-sceneRect.csv")
+        tags_with_audio = self.get_db_option("tags_with_audio", database, False)
+
+        for file_path in file_list:
+            try:
+
+                annots, wav, sample_rate = tags.load_tags(
+                    file_path,
+                    paths["tags"][db_type],
+                    suffix=suffix,
+                    tags_with_audio=tags_with_audio,
+                    classes=classes,
+                )
+                spec = spectrogram.generate_spectrogram(
+                    wav, sample_rate, self.opts["spectrogram"]
+                )
+
+                # reshape annotations
+                factor = float(spec.shape[1]) / annots.shape[0]
+                annots = zoom(annots, factor)
+
+                # file_names_list.append(file_path)
+                x.append(spec)
+                y.append(annots)
+
+                if self.get_db_option("save_intermediates", database, False):
+                    savename = (
+                        paths["dest"][db_type] / "intermediate" / file_path.name
+                    ).with_suffix(".pkl")
+                    if not savename.exists() or overwrite:
+                        with open(savename, "wb") as f:
+                            pickle.dump((annots, spec), f, -1)
+            except Exception:
+                print("Error loading: " + str(file_path) + ", skipping.")
+                print(traceback.format_exc())
+
+        # Save all data
+        if x and y:
+            with open(paths["pkl"][db_type], "wb") as f:
+                pickle.dump((x, y), f, -1)
+                print("Saved file: ", paths["pkl"][db_type])
+        return (x, y)
+
+    def check_dataset(self, database, paths, file_list, db_type, load=False):
         # * Overwrite if generate_file_lists is true as file lists will be recreated
         overwrite = self.get_db_option(
             "overwrite", database, False
         ) or self.get_db_option("generate_file_lists", database, False)
+        res = []
         if not paths["pkl"][db_type].exists() or overwrite:
-            print("Generating dataset: ", database["name"])
-            tmp_vals = []
+            res = self.generate_dataset(database, paths, file_list, db_type, overwrite)
+        elif load:
+            with open(paths["pkl"][db_type], "rb") as f:
+                res = pickle.load(f, -1)
+                print("Loaded file: ", paths["pkl"][db_type])
 
-            class_type = self.get_db_option("class_type", database, "biotic")
-            classes_file = self.get_db_option("classes_file", database, "classes.csv")
-
-            classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
-            classes = classes_df.loc[classes_df.class_type == class_type].tag.values
-            suffix = self.get_db_option("tags_suffix", database, "-sceneRect.csv")
-            tags_with_audio = self.get_db_option("tags_with_audio", database, False)
-
-            for file_path in file_list:
-                try:
-
-                    annots, wav, sample_rate = load_tags(
-                        file_path,
-                        paths["tags"][db_type],
-                        suffix=suffix,
-                        tags_with_audio=tags_with_audio,
-                        classes=classes,
-                    )
-                    spec = generate_spectrogram(
-                        wav, sample_rate, self.opts["spectrogram"]
-                    )
-
-                    # reshape annotations
-                    factor = float(spec.shape[1]) / annots.shape[0]
-                    annots = zoom(annots, factor)
-
-                    # file_names_list.append(file_path)
-                    tmp_vals.append((annots, spec))
-
-                    if self.get_db_option("save_intermediates", database, False):
-                        savename = (
-                            paths["dest"][db_type] / "intermediate" / file_path.name
-                        ).with_suffix(".pkl")
-                        if not savename.exists() or overwrite:
-                            with open(savename, "wb") as f:
-                                pickle.dump((annots, spec), f, -1)
-                except Exception:
-                    print("Error loading: " + str(file_path) + ", skipping.")
-                    print(traceback.format_exc())
-
-            # Save all data
-            if tmp_vals:
-                with open(paths["pkl"][db_type], "wb") as f:
-                    pickle.dump(tmp_vals, f, -1)
-                    print("Saved file: ", paths["pkl"][db_type])
+        return res
 
     def check_datasets(self, split_funcs=None):
         for database in self.opts["databases"]:
@@ -209,49 +227,37 @@ class DataHandler:
             paths = self.get_database_paths(database)
             file_lists = self.check_file_lists(database, paths, split_funcs)
             for db_type, file_list in file_lists.items():
-                print(db_type)
                 self.check_dataset(database, paths, file_list, db_type)
 
+    def modify_spectrogram(self, spec):
+        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
+        spec = spec - np.median(spec, axis=1, keepdims=True)
+        return spec
+
     def load_file(self, file_name):
-        annots, spec = pickle.load(open(file_name, "rb"))
-        # annots = annots[self.opts["classname"]]
+        specs, tags = pickle.load(open(file_name, "rb"))
+
         if not self.opts["learn_log"]:
-            spec = np.log(self.opts["A"] + self.opts["B"] * spec)
-            spec = spec - np.median(spec, axis=1, keepdims=True)
+            specs = [self.modify_spectrogram(spec) for spec in specs]
 
-        return annots, spec
+        return specs, tags
 
-    def load_data(self, data_type="train"):
-        # load data and make list of specsamplers
-        X = []
-        y = []
-
-        for root_dir in self.opts["root_dirs"]:
-            X_tmp = []
-            y_tmp = []
-            src_dir = (
-                Path(root_dir)
-                / self.opts[data_type + "_dir"]
-                / self.opts["dest_dir"]
-                / self.opts["spec_type"]
-            )
-            all_path = Path(src_dir / "all.pkl")
-            if all_path.exists():
-                X_tmp, y_tmp = pickle.load(open(all_path, "rb"))
-
+    def load_data(self, db_type):
+        x_data = []
+        y_data = []
+        for database in self.opts["databases"]:
+            print("Loading data for database:", database["name"])
+            paths = self.get_database_paths(database)
+            if not paths["pkl"][db_type].exists():
+                raise ValueError(
+                    "Database file not found. Please run check_datasets() before"
+                )
             else:
-                for file_name in os.listdir(src_dir):
-                    print("Loading file: ", file_name)
-                    annots, spec = self.load_file(src_dir / file_name)
-                    X_tmp.append(spec)
-                    y_tmp.append(annots)
+                # x : spectrograms, y: tags
+                x, y = self.load_file(paths["pkl"][db_type])
+                x_data += x
+                y_data += y
 
-                height = min(xx.shape[0] for xx in X_tmp)
-                X_tmp = [xx[-height:, :] for xx in X_tmp]
-
-                with open(all_path, "wb") as f:
-                    pickle.dump((X_tmp, y_tmp), f, -1)
-
-            X += X_tmp
-            y += y_tmp
-        return X, y
+                # height = min(xx.shape[0] for xx in X_tmp)
+                # X_tmp = [xx[-height:, :] for xx in X_tmp]
+        return x_data, y_data

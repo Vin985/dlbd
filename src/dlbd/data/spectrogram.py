@@ -6,8 +6,15 @@ DEFAULT_HOP_LENGTH = 1024  # 512
 DEFAULT_N_MELS = 32  # 128
 
 
+def get_spec_subfolder(spec_opts):
+    spec_folder = "_".join(
+        [spec_opts["type"], str(spec_opts["n_mels"]), str(spec_opts["n_fft"]),]
+    )
+    return spec_folder
+
+
 def generate_spectrogram(wav, sample_rate, spec_opts):
-    if spec_opts["spec_type"] == "mel":
+    if spec_opts["type"] == "mel":
         spec = librosa.feature.melspectrogram(
             wav,
             sr=sample_rate,
