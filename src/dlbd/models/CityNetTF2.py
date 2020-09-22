@@ -1,26 +1,13 @@
 import datetime
-import random
+from time import time
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Model, layers, regularizers
 from tqdm import tqdm
 
-from analysis.detection.models.dl_model import DLModel
-from analysis.detection.lib.train_helpers import SpecSampler
-
-
-import sys
-from collections import namedtuple
-from time import time
-
-import librosa
-import numpy as np
-import tensorflow as tf
-from librosa.feature import melspectrogram
-from scipy.io import wavfile
-
-from analysis.detection.lib import train_helpers
-from analysis.spectrogram import Spectrogram
+from ..training.spectrogram_sampler import SpectrogramSampler
+from .dl_model import DLModel
 
 
 class CityNetTF2(DLModel):
@@ -127,15 +114,7 @@ class CityNetTF2(DLModel):
         train_x, train_y = train_data
         val_x, val_y = validation_data
 
-        train_sampler = SpecSampler(
-            128,
-            self.opts["HWW_X"],
-            self.opts["HWW_Y"],
-            self.opts["do_augmentation"],
-            self.opts["learn_log"],
-            randomise=True,
-            balanced=True,
-        )
+        train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
 
         current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         train_log_dir = "logs/gradient_tape/" + current_time + "/train"
@@ -158,7 +137,7 @@ class CityNetTF2(DLModel):
         # tf.keras.metrics.BinaryAccuracy(
         #     name="test_accuracy", threshold=0.8
         # )
-        self.save_params()
+        # self.save_params()
         for epoch in range(self.opts["max_epochs"]):
             # Reset the metrics at the start of the next epoch
             self.train_loss.reset_states()
@@ -178,9 +157,7 @@ class CityNetTF2(DLModel):
                 tf.summary.scalar("loss", self.test_loss.result(), step=epoch)
                 tf.summary.scalar("accuracy", self.test_accuracy.result(), step=epoch)
 
-            template = (
-                "Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}"
-            )
+            template = "Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}"
             print(
                 template.format(
                     epoch + 1,
@@ -190,7 +167,9 @@ class CityNetTF2(DLModel):
                     self.test_accuracy.result() * 100,
                 )
             )
-        self.model.save_weights(self.results_dir)
+
+    def save_weights(self, path):
+        self.model.save_weights(path)
 
     def classify(self, wavpath=None):
         """Apply the classifier"""
@@ -211,4 +190,3 @@ class CityNetTF2(DLModel):
         print("Classified {0} in {1}".format(wavpath, time() - tic))
 
         return (np.vstack(probas)[:, 1], sr)
-

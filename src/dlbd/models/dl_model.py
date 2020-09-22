@@ -1,15 +1,13 @@
 import datetime
 from time import time
 
-
 import librosa
-import yaml
 import numpy as np
+import yaml
 from librosa.feature import melspectrogram
 
-from analysis.detection.lib.spectrogram_sampler import SpectrogramSampler
-import utils.commons as commons
-
+from ..data import utils
+from ..training.spectrogram_sampler import SpectrogramSampler
 
 DEFAULT_N_FFT = 2048
 DEFAULT_HOP_LENGTH = 1024  # 512
@@ -98,7 +96,7 @@ class DLModel:
                 + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
                 + "/"
             )
-            commons.force_make_dir(results_dir)
+            utils.force_make_dir(results_dir)
             self.results_dir = results_dir
         # sys.stdout = ui.Logger(logging_dir + "log.txt")
 
