@@ -7,8 +7,9 @@ src/dlbd.egg-info/SOURCES.txt
 src/dlbd.egg-info/dependency_links.txt
 src/dlbd.egg-info/top_level.txt
 src/dlbd/data/__init__.py
-src/dlbd/data/annotation_matcher.py
 src/dlbd/data/data_handler.py
+src/dlbd/data/spectrogram.py
+src/dlbd/data/tags.py
 src/dlbd/data/utils.py
 src/dlbd/detectors/__init__.py
 src/dlbd/detectors/detector.py
@@ -20,5 +21,9 @@ src/dlbd/lib/spectrogram_sampler.py
 src/dlbd/lib/tf_classifier.py
 src/dlbd/lib/train_helpers.py
 src/dlbd/training/__init__.py
+src/dlbd/training/train_helpers.py
 src/dlbd/training/trainer.py
 src/dlbd/training/utils.py
+src/dlbd/utils/__init__.py
+src/dlbd/utils/file.py
+src/dlbd/utils/split.py
