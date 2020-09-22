@@ -12,5 +12,6 @@ class Trainer:
         if not self.model:
             raise AttributeError("No model found")
         self.model.train(
-            self.data_handler.load_data("train"), self.data_handler.load_data("test")
+            self.data_handler.load_data("training"),
+            self.data_handler.load_data("validation"),
         )
