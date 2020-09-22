@@ -38,8 +38,9 @@ class DataHandler:
 
     DB_TYPES = ["test", "training", "validation"]
 
-    def __init__(self, opts):
+    def __init__(self, opts, split_funcs=None):
         self.opts = opts
+        self.split_funcs = split_funcs
 
     @staticmethod
     def get_full_path(path, root):
@@ -130,7 +131,7 @@ class DataHandler:
             print("Loaded file: " + str(path))
         return res
 
-    def check_file_lists(self, database, paths, split_funcs):
+    def check_file_lists(self, database, paths):
         file_lists = {}
         msg = "Checking file lists for database {0}... ".format(database["name"])
         file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
@@ -141,8 +142,8 @@ class DataHandler:
             print(msg + "Generating file lists...")
             file_lists = {}
             # * Check if we have a dedicated function to split the original data
-            if split_funcs and database["name"] in split_funcs:
-                file_lists = split_funcs[database["name"]](paths, self, database)
+            if self.split_funcs and database["name"] in self.split_funcs:
+                file_lists = self.split_funcs[database["name"]](paths, self, database)
             else:
                 file_lists = self.get_audio_file_lists(paths, database)
             # * Save results
@@ -221,11 +222,11 @@ class DataHandler:
 
         return res
 
-    def check_datasets(self, split_funcs=None):
+    def check_datasets(self):
         for database in self.opts["databases"]:
             print("Checking database:", database["name"])
             paths = self.get_database_paths(database)
-            file_lists = self.check_file_lists(database, paths, split_funcs)
+            file_lists = self.check_file_lists(database, paths)
             for db_type, file_list in file_lists.items():
                 self.check_dataset(database, paths, file_list, db_type)
 
