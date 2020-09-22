@@ -57,6 +57,7 @@ spec_height: 32
 learn_log: 0
 do_augmentation: 1
 # network parameters
+batch_size: 128
 channels: 4
 do_batch_norm: 1
 num_filters: 128
