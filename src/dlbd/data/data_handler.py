@@ -229,6 +229,7 @@ class DataHandler:
             for db_type, file_list in file_lists.items():
                 self.check_dataset(database, paths, file_list, db_type)
 
+    # TODO : add spectrogram modification into the trainer, right before training/classifying
     def modify_spectrogram(self, spec):
         spec = np.log(self.opts["A"] + self.opts["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
