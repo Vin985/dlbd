@@ -125,21 +125,7 @@ class CityNetTF2(DLModel):
 
         # X: spectrograms, y: labels
         train_x, train_y = train_data
-        if validation_data:
-            val_x, val_y = validation_data
-        else:
-            n_val = int(self.opts.get("validation_split", 0.2) * len(train_x))
-            val_idx = random.sample(range(0, len(train_x)), n_val)
-            tmp_train_x, val_x, tmp_train_y, val_y = [], [], [], []
-            for i in range(0, len(train_x)):
-                if i in val_idx:
-                    val_x.append(train_x[i])
-                    val_y.append(train_y[i])
-                else:
-                    tmp_train_x.append(train_x[i])
-                    tmp_train_y.append(train_y[i])
-            train_x = tmp_train_x
-            train_y = tmp_train_y
+        val_x, val_y = validation_data
 
         train_sampler = SpecSampler(
             128,
