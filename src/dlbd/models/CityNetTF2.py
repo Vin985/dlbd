@@ -1,5 +1,4 @@
 import datetime
-from time import time
 
 import numpy as np
 import tensorflow as tf
@@ -12,6 +11,13 @@ from .dl_model import DLModel
 
 class CityNetTF2(DLModel):
     NAME = "CityNetTF2"
+
+    def __init__(self, opts):
+        super().__init__(opts)
+        self.optimizer = None
+        self.loss = {}
+        self.accuracy = {}
+        self.summary_writer = {}
 
     def create_net(self):
         print("init_create_net")
@@ -79,6 +85,7 @@ class CityNetTF2(DLModel):
 
     @tf.function
     def train_step(self, data, labels):
+        step = "train"
         with tf.GradientTape() as tape:
             # training=True is only needed if there are layers with different
             # behavior during training versus inference (e.g. Dropout).
@@ -87,18 +94,19 @@ class CityNetTF2(DLModel):
         gradients = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
-        self.train_loss(loss)
-        self.train_accuracy(labels, predictions)
+        self.loss[step](loss)
+        self.accuracy[step](labels, predictions)
 
     @tf.function
-    def test_step(self, data, labels):
+    def validation_step(self, data, labels):
+        step = "validation"
         # training=False is only needed if there are layers with different
         # behavior during training versus inference (e.g. Dropout).
         predictions = self.model(data, training=False)
         t_loss = self.tf_loss(labels, predictions)
 
-        self.test_loss(t_loss)
-        self.test_accuracy(labels, predictions)
+        self.loss[step](t_loss)
+        self.accuracy[step](labels, predictions)
 
     @staticmethod
     def tf_loss(y_true, y_pred):
@@ -106,87 +114,84 @@ class CityNetTF2(DLModel):
             tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
         )
 
-    def train(self, train_data, validation_data=None):
+    def train(self, train_data, validation_data):
         if not self.model:
             self.model = self.create_net()
 
         # X: spectrograms, y: labels
-        train_x, train_y = train_data
-        val_x, val_y = validation_data
 
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
+        validation_sampler = SpectrogramSampler(
+            self.opts, randomise=False, balanced=True
+        )
 
-        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        train_log_dir = "logs/gradient_tape/" + current_time + "/train"
-        test_log_dir = "logs/gradient_tape/" + current_time + "/test"
-        train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-        test_summary_writer = tf.summary.create_file_writer(test_log_dir)
+        # * Create logging writers
+        self.create_writers()
 
         self.optimizer = tf.keras.optimizers.Adam()
-        self.train_loss = tf.keras.metrics.Mean(name="train_loss")
-        self.train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(
+        # * Train functions
+        self.loss["train"] = tf.keras.metrics.Mean(name="train_loss")
+        self.accuracy["train"] = tf.keras.metrics.SparseCategoricalAccuracy(
             name="train_accuracy"
         )
-        # tf.keras.metrics.BinaryAccuracy(
-        #     name="train_accuracy", threshold=0.8
-        # )
-        self.test_loss = tf.keras.metrics.Mean(name="test_loss")
-        self.test_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(
-            name="test_accuracy"
+        # * Validation functions
+        self.loss["validation"] = tf.keras.metrics.Mean(name="test_loss")
+        self.accuracy["validation"] = tf.keras.metrics.SparseCategoricalAccuracy(
+            name="validation_accuracy"
         )
-        # tf.keras.metrics.BinaryAccuracy(
-        #     name="test_accuracy", threshold=0.8
-        # )
-        # self.save_params()
         for epoch in range(self.opts["max_epochs"]):
             # Reset the metrics at the start of the next epoch
-            self.train_loss.reset_states()
-            self.train_accuracy.reset_states()
-            self.test_loss.reset_states()
-            self.test_accuracy.reset_states()
+            self.reset_states()
 
-            for data, labels in tqdm(train_sampler(train_x, train_y)):
-                self.train_step(data, labels)
-            with train_summary_writer.as_default():
-                tf.summary.scalar("loss", self.train_loss.result(), step=epoch)
-                tf.summary.scalar("accuracy", self.train_accuracy.result(), step=epoch)
+            self.run_step("train", train_data, epoch, train_sampler)
+            self.run_step("validation", validation_data, epoch, validation_sampler)
+            # for data, labels in tqdm(train_sampler(train_x, train_y)):
+            #     self.train_step(data, labels)
+            # with train_summary_writer.as_default():
+            #     tf.summary.scalar("loss", self.loss["train"].result(), step=epoch)
+            #     tf.summary.scalar("accuracy", self.accuracy["train"].result(), step=epoch)
 
-            for test_data, test_labels in tqdm(train_sampler(val_x, val_y)):
-                self.test_step(test_data, test_labels)
-            with test_summary_writer.as_default():
-                tf.summary.scalar("loss", self.test_loss.result(), step=epoch)
-                tf.summary.scalar("accuracy", self.test_accuracy.result(), step=epoch)
+            # for test_data, test_labels in tqdm(self.test_sampler(val_x, val_y)):
+            #     self.test_step(test_data, test_labels)
+            # with test_summary_writer.as_default():
+            #     tf.summary.scalar("loss", self.loss["validation"].result(), step=epoch)
+            #     tf.summary.scalar("accuracy", self.accuracy["validation"].result(), step=epoch)
 
             template = "Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}"
             print(
                 template.format(
                     epoch + 1,
-                    self.train_loss.result(),
-                    self.train_accuracy.result() * 100,
-                    self.test_loss.result(),
-                    self.test_accuracy.result() * 100,
+                    self.loss["train"].result(),
+                    self.accuracy["train"].result() * 100,
+                    self.loss["validation"].result(),
+                    self.accuracy["validation"].result() * 100,
                 )
             )
+
+    def create_writers(self):
+        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        # TODO: externalize logging directory
+        train_log_dir = "logs/gradient_tape/" + current_time + "/train"
+        validation_log_dir = "logs/gradient_tape/" + current_time + "/validation"
+        self.summary_writer["train"] = tf.summary.create_file_writer(train_log_dir)
+        self.summary_writer["validation"] = tf.summary.create_file_writer(
+            validation_log_dir
+        )
+
+    def reset_states(self):
+        for x in ["train", "validation"]:
+            self.loss[x].reset_states()
+            self.accuracy[x].reset_states()
+
+    def run_step(self, step_type, data, step, sampler):
+        for data, labels in tqdm(sampler(*data)):
+            getattr(self, step_type + "_step")(data, labels)
+        with self.summary_writer[step_type].as_default():
+            tf.summary.scalar("loss", self.loss[step_type].result(), step=step)
+            tf.summary.scalar("accuracy", self.accuracy[step_type].result(), step=step)
 
     def save_weights(self, path):
         self.model.save_weights(path)
 
-    def classify(self, wavpath=None):
-        """Apply the classifier"""
-        tic = time()
-
-        if wavpath is not None:
-            wav, sr = self.load_wav(wavpath, loadmethod="librosa")
-            spec = self.compute_spec(wav, sr)
-
-        labels = np.zeros(spec.shape[1])
-        # print("Took %0.3fs to load" % (time() - tic))
-        tic = time()
-        probas = []
-        for Xb, _ in self.test_sampler([spec], [labels]):
-            pred = self.model.predict(Xb)
-            probas.append(pred)
-        # print("Took %0.3fs to classify" % (time() - tic))
-        print("Classified {0} in {1}".format(wavpath, time() - tic))
-
-        return (np.vstack(probas)[:, 1], sr)
+    def predict(self, x):
+        return self.model.predict(x)
