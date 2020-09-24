@@ -16,9 +16,9 @@ recursive: True
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-  # - name: 'citynet'
-  #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-  #   test_dir: "validation"
+  - name: 'citynet'
+    root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+    #test_dir: "validation"
   - name: 'arctic'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
     # overwrite: False
@@ -45,6 +45,22 @@ class_type: "biotic"
 model:
   model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
 
+
+net:
+  ensemble_members: 1
+  hww_x: 10
+  hww_y: 10
+  spec_height: 32
+  batch_size: 128
+  channels: 4
+  do_batch_norm: 1
+  num_filters: 128
+  num_dense_units: 512
+  conv_filter_width: 4
+  wiggle_room: 5
+  max_epochs: 15
+  learning_rate: 0.001
+  dropout: 0.5
 #overwrite: True
 # Spectrogram options
 spec_type: 'mel'
@@ -64,7 +80,7 @@ num_filters: 128
 num_dense_units: 512
 conv_filter_width: 4
 wiggle_room: 5
-max_epochs: 5
+max_epochs: 50
 learning_rate: 0.001
 dropout: 0.5
 classname: 'biotic'
