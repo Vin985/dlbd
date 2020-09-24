@@ -92,7 +92,11 @@ class SpectrogramSampler:
                     )
 
                     X[count, 2] = (X[count, 1] - X[count, 1].mean()) / X[count, 1].std()
-                    X[count, 3] = X[count, 1] / X[count, 1].max()
+                    x1max = X[count, 1].max()
+                    if x1max:
+                        X[count, 3] = X[count, 1] / x1max
+                    else:
+                        X[count, 3] = X[count, 1]
 
                 y[count] = self.labels[
                     (loc - self.opts["hww_y"]) : (loc + self.opts["hww_y"])
