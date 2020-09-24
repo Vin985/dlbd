@@ -24,16 +24,20 @@ class DLModel:
         self.sample_rate = None
         self.model = self.create_net()
         self.results_dir = ""
-        self.test_sampler = SpectrogramSampler(self.opts)
 
     def create_net(self):
-        return 0
+        raise NotImplementedError("create_net function not implemented for this class")
 
-    def run_net(self, input):
-        return 0
+    def predict(self, x):
+        raise NotImplementedError("predict function not implemented for this class")
 
     def train(self, training_data, validation_data):
-        return 0
+        raise NotImplementedError("train function not implemented for this class")
+
+    def save_weights(self, path):
+        raise NotImplementedError(
+            "save_weights function not implemented for this class"
+        )
 
     def load_wav(self, wavpath, loadmethod="librosa"):
         # tic = time()
@@ -69,18 +73,19 @@ class DLModel:
         """Apply the classifier"""
         tic = time()
 
-        if wavpath is not None:
-            wav, sr = self.load_wav(wavpath, loadmethod="librosa")
-            spec = self.compute_spec(wav, sr)
+        if wavpath is None:
+            raise AttributeError("No wave path is provided")
+
+        wav, sr = self.load_wav(wavpath, loadmethod="librosa")
+        spec = self.compute_spec(wav, sr)
 
         labels = np.zeros(spec.shape[1])
         # print("Took %0.3fs to load" % (time() - tic))
         tic = time()
         probas = []
-        for Xb, _ in self.test_sampler([spec], [labels]):
-            pred = self.run_net(
-                input=Xb
-            )  # self.sess.run(self.net["output"], feed_dict={self.net["input"]: Xb})
+        spec_sampler = SpectrogramSampler(self.opts)
+        for x, _ in spec_sampler([spec], [labels]):
+            pred = self.predict(x)
             probas.append(pred)
         # print("Took %0.3fs to classify" % (time() - tic))
         print("Classified {0} in {1}".format(wavpath, time() - tic))
