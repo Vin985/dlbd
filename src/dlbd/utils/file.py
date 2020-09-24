@@ -4,7 +4,10 @@ from pathlib import Path
 def list_files(path, extensions=None, recursive=False):
     files = []
     extensions = extensions or []
-    for item in Path(path).iterdir():
+    path = Path(path)
+    if not path.exists():
+        return files
+    for item in path.iterdir():
         if item.is_dir() and recursive:
             files += list_files(item, extensions, recursive)
         elif item.is_file() and item.suffix.lower() in extensions:
