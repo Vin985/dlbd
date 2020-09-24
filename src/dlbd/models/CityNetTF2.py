@@ -118,8 +118,6 @@ class CityNetTF2(DLModel):
         if not self.model:
             self.model = self.create_net()
 
-        # X: spectrograms, y: labels
-
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
@@ -145,17 +143,6 @@ class CityNetTF2(DLModel):
 
             self.run_step("train", train_data, epoch, train_sampler)
             self.run_step("validation", validation_data, epoch, validation_sampler)
-            # for data, labels in tqdm(train_sampler(train_x, train_y)):
-            #     self.train_step(data, labels)
-            # with train_summary_writer.as_default():
-            #     tf.summary.scalar("loss", self.loss["train"].result(), step=epoch)
-            #     tf.summary.scalar("accuracy", self.accuracy["train"].result(), step=epoch)
-
-            # for test_data, test_labels in tqdm(self.test_sampler(val_x, val_y)):
-            #     self.test_step(test_data, test_labels)
-            # with test_summary_writer.as_default():
-            #     tf.summary.scalar("loss", self.loss["validation"].result(), step=epoch)
-            #     tf.summary.scalar("accuracy", self.accuracy["validation"].result(), step=epoch)
 
             template = "Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}"
             print(
