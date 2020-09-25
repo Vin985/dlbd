@@ -232,14 +232,14 @@ class DataHandler:
 
     # TODO : add spectrogram modification into the trainer, right before training/classifying
     def modify_spectrogram(self, spec):
-        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
+        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
         return spec
 
     def load_file(self, file_name):
         specs, tags = pickle.load(open(file_name, "rb"))
 
-        if not self.opts["learn_log"]:
+        if not self.opts["model"]["learn_log"]:
             specs = [self.modify_spectrogram(spec) for spec in specs]
 
         return specs, tags
