@@ -23,7 +23,7 @@ class SpectrogramSampler:
     def __call__(self, X, y=None):
 
         # must pad X and Y the same amount
-        pad_hww = max(self.opts["hww_x"], self.opts["hww_y"])
+        pad_hww = max(self.opts["net"]["hww_x"], self.opts["net"]["hww_y"])
 
         blank_spec = np.zeros((X[0].shape[0], 2 * pad_hww))
         self.specs = np.hstack([blank_spec] + X + [blank_spec])[None, ...]
@@ -50,8 +50,15 @@ class SpectrogramSampler:
 
     def __iter__(self):  # , num_per_class, seed=None
         # num_samples = num_per_class * 2
+
+        do_augmentation = self.opts["model"].get("do_augmentation", False)
+        learn_log = self.opts["model"].get("learn_log", False)
+        hww_x = self.opts["net"]["hww_x"]
+        hww_y = self.opts["net"]["hww_y"]
+        batch_size = self.opts["net"]["batch_size"]
+
         channels = self.specs.shape[0]
-        if not self.opts["learn_log"]:
+        if not learn_log:
             channels += 3
         height = self.specs.shape[1]
 
@@ -62,7 +69,7 @@ class SpectrogramSampler:
         for sampled_locs, y in mbg.minibatch_iterator(
             idxs,
             self.labels[idxs],
-            self.opts["batch_size"],
+            batch_size,
             randomise=self.randomise,
             balanced=self.balanced,
             class_size="smallest",
@@ -71,20 +78,18 @@ class SpectrogramSampler:
             # extract the specs
             # avoid using self.batch_size as last batch may be smaller
             bs = y.shape[0]
-            X = np.zeros((bs, channels, height, self.opts["hww_x"] * 2), np.float32)
+            X = np.zeros((bs, channels, height, hww_x * 2), np.float32)
             y = np.zeros(bs) * np.nan
-            if self.opts["learn_log"]:
+            if learn_log:
                 X_medians = np.zeros((bs, channels, height), np.float32)
             count = 0
 
             for loc in sampled_locs:
                 which = self.which_spec[loc]
 
-                X[count] = self.specs[
-                    :, :, (loc - self.opts["hww_x"]) : (loc + self.opts["hww_x"])
-                ]
+                X[count] = self.specs[:, :, (loc - hww_x) : (loc + hww_x)]
 
-                if not self.opts["learn_log"]:
+                if not learn_log:
                     X[count, 1] = X[count, 0] - self.medians[which][:, None]
                     # X[count, 0] = (X[count, 0] - X[count, 0].mean()) / X[count, 0].std()
                     X[count, 0] = (X[count, 1] - X[count, 1].mean(1, keepdims=True)) / (
@@ -98,18 +103,16 @@ class SpectrogramSampler:
                     else:
                         X[count, 3] = X[count, 1]
 
-                y[count] = self.labels[
-                    (loc - self.opts["hww_y"]) : (loc + self.opts["hww_y"])
-                ].max()
-                if self.opts["learn_log"]:
+                y[count] = self.labels[(loc - hww_y) : (loc + hww_y)].max()
+                if learn_log:
                     which = self.which_spec[loc]
                     X_medians[count] = self.medians[which]
 
                 count += 1
 
             # doing augmentation
-            if self.opts["do_augmentation"]:
-                if self.opts["learn_log"]:
+            if do_augmentation:
+                if learn_log:
                     mult = 1.0 + np.random.randn(bs, 1, 1, 1) * 0.1
                     mult = np.clip(mult, 0.1, 200)
                     X *= mult
@@ -119,7 +122,7 @@ class SpectrogramSampler:
                     if np.random.rand() > 0.9:
                         X += np.roll(X, 1, axis=0) * np.random.randn()
 
-            if self.opts["learn_log"]:
+            if learn_log:
                 xb = {
                     "input": X.astype(np.float32),
                     "input_med": X_medians.astype(np.float32),
