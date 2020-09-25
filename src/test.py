@@ -6,12 +6,12 @@ from dlbd.data.data_handler import DataHandler
 from dlbd.training.trainer import Trainer
 from dlbd.utils.split import arctic_split
 from dlbd.models.CityNetTF2 import CityNetTF2
-from dlbd.models.CityNetV1 import CityNetRegularized
+from dlbd.models.CityNetRegularized import CityNetRegularized
 
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-stream = open("CONFIG.yaml", "r")
+stream = open("src/CONFIG.yaml", "r")
 opts = yaml.load(stream, Loader=yaml.Loader)
 
 dh = DataHandler(opts, split_funcs={"arctic": arctic_split})
