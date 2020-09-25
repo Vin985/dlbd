@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -18,24 +19,19 @@ class CityNetTF2(DLModel):
         self.loss = {}
         self.accuracy = {}
         self.summary_writer = {}
+        self.model_name = self.NAME + "_v" + str(self.version)
 
     def create_net(self):
         print("init_create_net")
+        opts = self.opts["net"]
         inputs = Input(
-            shape=(
-                self.opts["spec_height"],
-                self.opts["hww_x"] * 2,
-                self.opts["channels"],
-            ),
+            shape=(opts["spec_height"], opts["hww_x"] * 2, opts["channels"],),
             # batch_size=128,
             dtype=tf.float32,
         )
         x = layers.Conv2D(
-            self.opts.get("num_filters", 128),
-            (
-                self.opts["spec_height"] - self.opts["wiggle_room"],
-                self.opts["conv_filter_width"],
-            ),
+            opts.get("num_filters", 128),
+            (opts["spec_height"] - opts["wiggle_room"], opts["conv_filter_width"],),
             bias_initializer=None,
             padding="valid",
             activation=None,
@@ -44,7 +40,7 @@ class CityNetTF2(DLModel):
         )(inputs)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         x = layers.Conv2D(
-            self.opts.get("num_filters", 128),
+            opts.get("num_filters", 128),
             (1, 3),
             bias_initializer=None,
             padding="valid",
@@ -58,7 +54,7 @@ class CityNetTF2(DLModel):
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
-            self.opts["num_dense_units"],
+            opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             kernel_regularizer=regularizers.l2(0.001),
@@ -66,7 +62,7 @@ class CityNetTF2(DLModel):
         # x = layers.Dropout(self.opts["dropout"])(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
         x = layers.Dense(
-            self.opts["num_dense_units"],
+            opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             # kernel_regularizer=regularizers.l2(0.001),
@@ -137,8 +133,9 @@ class CityNetTF2(DLModel):
         self.accuracy["validation"] = tf.keras.metrics.SparseCategoricalAccuracy(
             name="validation_accuracy"
         )
-        for epoch in range(self.opts["max_epochs"]):
+        for epoch in range(self.opts["model"]["max_epochs"]):
             # Reset the metrics at the start of the next epoch
+            # TODO: save intermediate models?
             self.reset_states()
 
             self.run_step("train", train_data, epoch, train_sampler)
@@ -154,15 +151,18 @@ class CityNetTF2(DLModel):
                     self.accuracy["validation"].result() * 100,
                 )
             )
+        self.save_model()
 
     def create_writers(self):
-        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        # current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        log_dir = Path(self.opts["logs"]["log_dir"]) / self.model_name
+
         # TODO: externalize logging directory
-        train_log_dir = "logs/gradient_tape/" + current_time + "/train"
-        validation_log_dir = "logs/gradient_tape/" + current_time + "/validation"
-        self.summary_writer["train"] = tf.summary.create_file_writer(train_log_dir)
+        train_log_dir = log_dir / "train"
+        validation_log_dir = log_dir / "validation"
+        self.summary_writer["train"] = tf.summary.create_file_writer(str(train_log_dir))
         self.summary_writer["validation"] = tf.summary.create_file_writer(
-            validation_log_dir
+            str(validation_log_dir)
         )
 
     def reset_states(self):
@@ -177,8 +177,8 @@ class CityNetTF2(DLModel):
             tf.summary.scalar("loss", self.loss[step_type].result(), step=step)
             tf.summary.scalar("accuracy", self.accuracy[step_type].result(), step=step)
 
-    def save_weights(self, path):
-        self.model.save_weights(path)
+    def save_weights(self):
+        self.model.save_weights(str(self.results_dir / self.model_name))
 
     def predict(self, x):
         return self.model.predict(x)
