@@ -90,6 +90,9 @@ class CityNetRegularized(DLModel):
         val_x, val_y = validation_data
 
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
+        validation_sampler = SpectrogramSampler(
+            self.opts, randomise=False, balanced=True
+        )
 
         y_in = tf.compat.v1.placeholder(tf.int32, (None))
         x_in = self.model["input"]
@@ -146,7 +149,7 @@ class CityNetRegularized(DLModel):
             val_losses = []
             val_accs = []
 
-            for xx, yy in self.test_sampler(val_x, val_y):
+            for xx, yy in tqdm(validation_sampler(val_x, val_y)):
                 val_ls, val_acc = self.sess.run(
                     [_test_loss, _test_acc], feed_dict={x_in: xx, y_in: yy}
                 )
