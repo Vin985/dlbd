@@ -16,9 +16,8 @@ recursive: True
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-  - name: 'citynet'
-    root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-    #test_dir: "validation"
+  # - name: 'citynet'
+  #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
   - name: 'arctic'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
     # overwrite: False
@@ -34,6 +33,7 @@ databases:
     audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
     tags_with_audio: True
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
+    
 spectrogram:
   type: "mel"
   n_mels: 32
@@ -44,55 +44,64 @@ class_type: "biotic"
 
 model:
   model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
-
+  max_epochs: 15
+  learn_log: 0
+  do_augmentation: 1
+  A: 0.001 # biotic 
+  B: 10.0 #biotic
+  # # A: 0.025 # anthropic
+  # # B: 2.0 # anthropic
+  ensemble_members: 1
 
 net:
-  ensemble_members: 1
+  batch_size: 128
+  do_batch_norm: 1
   hww_x: 10
   hww_y: 10
   spec_height: 32
-  batch_size: 128
   channels: 4
-  do_batch_norm: 1
   num_filters: 128
   num_dense_units: 512
   conv_filter_width: 4
   wiggle_room: 5
-  max_epochs: 15
   learning_rate: 0.001
   dropout: 0.5
+
+logs:
+  log_dir: "logs/gradient_tape/"
+  use_version: True
 #overwrite: True
 # Spectrogram options
-spec_type: 'mel'
-ensemble_members: 1
-HWW_X: 10
-HWW_Y: 10
-hww_x: 10
-hww_y: 10
-spec_height: 32
-learn_log: 0
-do_augmentation: 1
-# network parameters
-batch_size: 128
-channels: 4
-do_batch_norm: 1
-num_filters: 128
-num_dense_units: 512
-conv_filter_width: 4
-wiggle_room: 5
-max_epochs: 50
-learning_rate: 0.001
-dropout: 0.5
-classname: 'biotic'
-run_type: 'test_citynet'
-validation_split: 0.3
-A: 0.001 # biotic 
-B: 10.0 #biotic
-# A: 0.025 # anthropic
-# B: 2.0 # anthropic
-DO_BATCH_NORM: 1
-NUM_FILTERS: 128
-NUM_DENSE_UNITS: 512
-CONV_FILTER_WIDTH: 4
-WIGGLE_ROOM: 5
-LEARN_LOG: 0
+# spec_type: 'mel'
+# ensemble_members: 1
+# HWW_X: 10
+# HWW_Y: 10
+# hww_x: 10
+# hww_y: 10
+# spec_height: 32
+# learn_log: 0
+# do_augmentation: 1
+# # network parameters
+# batch_size: 128
+# channels: 4
+# do_batch_norm: 1
+# num_filters: 128
+# num_dense_units: 512
+# conv_filter_width: 4
+# wiggle_room: 5
+# max_epochs: 1
+# learning_rate: 0.001
+# dropout: 0.5
+# classname: 'biotic'
+# run_type: 'test_citynet'
+# validation_split: 0.3
+# A: 0.001 # biotic 
+# B: 10.0 #biotic
+# # A: 0.025 # anthropic
+# # B: 2.0 # anthropic
+# DO_BATCH_NORM: 1
+# NUM_FILTERS: 128
+# NUM_DENSE_UNITS: 512
+# CONV_FILTER_WIDTH: 4
+# WIGGLE_ROOM: 5
+# LEARN_LOG: 0
