@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from time import time
 
 import librosa
@@ -23,10 +24,10 @@ class DLModel:
         self.wav = None
         self.sample_rate = None
         self.model = self.create_net()
-        self.results_dir = ""
+        self.results_dir, self.version = self.get_results_dir()
 
     def create_net(self):
-        raise NotImplementedError("create_net function not implemented for this class")
+        return 0
 
     def predict(self, x):
         raise NotImplementedError("predict function not implemented for this class")
@@ -34,7 +35,7 @@ class DLModel:
     def train(self, training_data, validation_data):
         raise NotImplementedError("train function not implemented for this class")
 
-    def save_weights(self, path):
+    def save_weights(self):
         raise NotImplementedError(
             "save_weights function not implemented for this class"
         )
@@ -93,17 +94,32 @@ class DLModel:
         return {"preds": np.vstack(probas)[:, 1], "sr": sr}
 
     def save_params(self):
-        if not self.results_dir:
-            results_dir = (
-                self.opts["model_dir"]
-                + self.NAME
-                + "/"
-                + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                + "/"
-            )
-            utils.force_make_dir(results_dir)
-            self.results_dir = results_dir
-        # sys.stdout = ui.Logger(logging_dir + "log.txt")
-
-        with open(self.results_dir + "network_opts.yaml", "w") as f:
+        utils.force_make_dir(self.results_dir)
+        with open(self.results_dir / "network_opts.yaml", "w") as f:
             yaml.dump(self.opts, f, default_flow_style=False)
+
+    def get_results_dir(self):
+        results_dir_root = Path(self.opts["model"]["model_dir"]) / self.NAME
+        version = self.get_model_version(results_dir_root)
+        # date = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        results_dir = results_dir_root / str(version)
+        return results_dir, version
+
+    @staticmethod
+    def get_model_version(path):
+        version = 1
+        if path.exists():
+            for item in path.iterdir():
+                if item.is_dir():
+                    try:
+                        res = int(item.name)
+                        if res >= version:
+                            version = res + 1
+                    except ValueError:
+                        continue
+        return version
+
+    def save_model(self):
+        self.save_params()
+        self.save_weights()
