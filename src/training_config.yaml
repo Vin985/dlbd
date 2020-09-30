@@ -70,6 +70,15 @@ net:
 logs:
   log_dir: "logs/gradient_tape/"
   use_version: True
+
+test: 
+  detectors: ["standard"]
+  models:
+    - name: "CityNetTF2"
+      # package: "dlbd.models.CityNetTF2"
+      versions: [1,2,3]
+
+
 #overwrite: True
 # Spectrogram options
 # spec_type: 'mel'

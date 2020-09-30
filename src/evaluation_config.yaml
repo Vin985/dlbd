@@ -1,0 +1,12 @@
+
+test_dir_root: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
+detectors: ["standard"]
+databases:
+  - name: "arctic"
+    dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/arctic'
+
+models:
+  - name: "CityNetTF2"
+    package: "dlbd.models.CityNetTF2"
+    versions: [1,2,3]
+    weights_dir: "results/models"
