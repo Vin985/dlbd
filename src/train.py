@@ -1,39 +1,37 @@
 import os
-
 import yaml
 
-from training.CityNet_trainer import CityNetTrainer
-from training.utils import create_detection_dataset, train_citynet
 
-# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-# try:
-#     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-# except:
-#     pass
+from dlbd.data.data_handler import DataHandler
+from dlbd.training.trainer import Trainer
+from dlbd.utils.split import arctic_split
+from dlbd.models.CityNetTF2 import CityNetTF2
+from dlbd.models.CityNetRegularized import CityNetRegularized
 
 
-os.sys.path.insert(0, "/mnt/win/UMoncton/Doctorat/dev/ecosongs/src")
-try:
-    # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-    from analysis.detection.models.CityNetTF2 import CityNetTF2
-    from analysis.detection.models.DCASE_SpeechLab import DCASESpeechLab
-except Exception:
-    print("Woops, module not found")
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-if __name__ == "__main__":
+stream = open("src/training_config.yaml", "r")
+opts = yaml.load(stream, Loader=yaml.Loader)
 
-    stream = open("src/test/citynet2/CONFIG.yaml", "r")
-    opts = yaml.load(stream, Loader=yaml.Loader)
-    opts["model_name"] = "citynet_augmented1"
-    print(opts)
+dh = DataHandler(opts, split_funcs={"arctic": arctic_split})
 
-    # trainer = CityNetTrainer(opts)
-    # trainer.create_detection_datasets()
 
-    model = CityNetTF2(opts)
+# # dh.create_datasets()
+# dh.check_datasets(split_funcs={"arctic": arctic_split})
 
-    trainer = CityNetTrainer(opts, model)
+# train = dh.load_data("training")
+# validate = dh.load_data("validation")
 
-    trainer.train()
-    # trainer.train_model2()
-    # spec_dir = generate_spectrograms(extracted_dir, extracted_dir + "spectrograms/")
+model = CityNetTF2(opts)
+# model = CityNetRegularized(opts)
+trainer = Trainer(opts, dh, model)
+trainer.train_model()
+
+# for database in dh.opts["data"]["databases"]:
+# print(dh.get_database_paths2(database, "train"))
+# dh.create_dataset(database)
+# paths = dh.get_database_paths(database)
+# print(paths)
+# arctic_split(paths, 0.2)
+
