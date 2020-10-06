@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import yaml
+
 
 def list_files(path, extensions=None, recursive=False):
     files = []
@@ -26,3 +28,8 @@ def list_folder(path, extensions=None):
             files.append(item)
     return (dirs, files)
 
+
+def load_config(path):
+    stream = open(path, "r")
+    config = yaml.load(stream, Loader=yaml.Loader)
+    return config

@@ -13,13 +13,12 @@ from .dl_model import DLModel
 class CityNetTF2(DLModel):
     NAME = "CityNetTF2"
 
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         super().__init__(opts)
         self.optimizer = None
         self.loss = {}
         self.accuracy = {}
         self.summary_writer = {}
-        self.model_name = self.NAME + "_v" + str(self.version)
 
     def create_net(self):
         print("init_create_net")
@@ -76,7 +75,6 @@ class CityNetTF2(DLModel):
         model = Model(inputs, outputs, name=self.NAME)
         print("after model")
         model.summary()
-        self.model = model
         return model
 
     @tf.function
@@ -110,7 +108,18 @@ class CityNetTF2(DLModel):
             tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
         )
 
-    def train(self, train_data, validation_data):
+    def modify_spectrogram(self, spec):
+        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
+        spec = spec - np.median(spec, axis=1, keepdims=True)
+        return spec
+
+    def prepare_data(self, data):
+        specs, tags = data
+        if not self.opts["model"]["learn_log"]:
+            specs = [self.modify_spectrogram(spec) for spec in specs]
+        return specs, tags
+
+    def train(self, training_data, validation_data):
         if not self.model:
             self.model = self.create_net()
 
@@ -138,7 +147,7 @@ class CityNetTF2(DLModel):
             # TODO: save intermediate models?
             self.reset_states()
 
-            self.run_step("train", train_data, epoch, train_sampler)
+            self.run_step("train", training_data, epoch, train_sampler)
             self.run_step("validation", validation_data, epoch, validation_sampler)
 
             template = "Epoch {}, Loss: {}, Accuracy: {}, Validation Loss: {}, Validation Accuracy: {}"
