@@ -41,6 +41,7 @@ class DataHandler:
     def __init__(self, opts, split_funcs=None):
         self.opts = opts
         self.split_funcs = split_funcs
+        print(split_funcs)
 
     @staticmethod
     def get_full_path(path, root):
@@ -237,12 +238,7 @@ class DataHandler:
         return spec
 
     def load_file(self, file_name):
-        specs, tags = pickle.load(open(file_name, "rb"))
-
-        if not self.opts["model"]["learn_log"]:
-            specs = [self.modify_spectrogram(spec) for spec in specs]
-
-        return specs, tags
+        return pickle.load(open(file_name, "rb"))
 
     def load_data(self, db_type):
         x_data = []

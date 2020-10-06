@@ -1,4 +1,3 @@
-import datetime
 from pathlib import Path
 from time import time
 
@@ -18,11 +17,34 @@ DEFAULT_N_MELS = 32  # 128
 class DLModel:
     NAME = "DLMODEL"
 
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         """Create the layers of the neural network, with the same options we used in training"""
-        self.opts = opts
         self.wav = None
         self.sample_rate = None
+        self.model = None
+        self.results_dir = None
+        self.version = None
+        self._opts = None
+        self._model_name = ""
+        if opts:
+            self.opts = opts
+
+    @property
+    def model_name(self):
+        if not self._model_name:
+            if self.version:
+                self._model_name = self.NAME + "_v" + str(self.version)
+            else:
+                return self.NAME
+        return self._model_name
+
+    @property
+    def opts(self):
+        return self._opts
+
+    @opts.setter
+    def opts(self, opts):
+        self._opts = opts
         self.model = self.create_net()
         self.results_dir, self.version = self.get_results_dir()
 
@@ -39,6 +61,9 @@ class DLModel:
         raise NotImplementedError(
             "save_weights function not implemented for this class"
         )
+
+    def prepare_data(self, data):
+        return data
 
     def load_wav(self, wavpath, loadmethod="librosa"):
         # tic = time()

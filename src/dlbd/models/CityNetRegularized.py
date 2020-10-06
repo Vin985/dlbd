@@ -13,7 +13,7 @@ from .dl_model import DLModel
 class CityNetRegularized(DLModel):
     NAME = "CityNet_regularized"
 
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         tf.compat.v1.disable_eager_execution()
         super().__init__(opts)
 
@@ -81,8 +81,18 @@ class CityNetRegularized(DLModel):
         net["fc8"] = slim.fully_connected(net["fc7"], 2, activation_fn=None)
         # net['fc8'] = tf.nn.leaky_relu(net['fc8'], alpha=1/3)
         net["output"] = tf.nn.softmax(net["fc8"])
-
         return net
+
+    def modify_spectrogram(self, spec):
+        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
+        spec = spec - np.median(spec, axis=1, keepdims=True)
+        return spec
+
+    def prepare_data(self, data):
+        specs, tags = data
+        if not self.opts["model"]["learn_log"]:
+            specs = [self.modify_spectrogram(spec) for spec in specs]
+        return specs, tags
 
     def train(self, training_data, validation_data):
 
