@@ -157,7 +157,7 @@ class DataHandler:
         return file_lists
 
     def generate_dataset(self, database, paths, file_list, db_type, overwrite):
-        x, y = [], []
+        spectrograms, annotations, infos = [], [], []
         print("Generating dataset: ", database["name"])
 
         class_type = self.get_db_option("class_type", database, "biotic")
@@ -177,18 +177,22 @@ class DataHandler:
                     suffix=suffix,
                     tags_with_audio=tags_with_audio,
                     classes=classes,
+                    sample_rate=self.opts["spectrogram"].get("sample_rate", None),
                 )
-                spec = spectrogram.generate_spectrogram(
+                spec, opts = spectrogram.generate_spectrogram(
                     wav, sample_rate, self.opts["spectrogram"]
                 )
+
+                info = {"file_path": file_path, "spec_opts": opts}
 
                 # reshape annotations
                 factor = float(spec.shape[1]) / annots.shape[0]
                 annots = zoom(annots, factor)
 
                 # file_names_list.append(file_path)
-                x.append(spec)
-                y.append(annots)
+                spectrograms.append(spec)
+                annotations.append(annots)
+                infos.append(info)
 
                 if self.get_db_option("save_intermediates", database, False):
                     savename = (
@@ -202,11 +206,11 @@ class DataHandler:
                 print(traceback.format_exc())
 
         # Save all data
-        if x and y:
+        if spectrograms and annotations:
             with open(paths["pkl"][db_type], "wb") as f:
-                pickle.dump((x, y), f, -1)
+                pickle.dump((spectrograms, annotations, infos), f, -1)
                 print("Saved file: ", paths["pkl"][db_type])
-        return (x, y)
+        return (spectrograms, annotations, infos)
 
     def check_dataset(self, database, paths, file_list, db_type, load=False):
         # * Overwrite if generate_file_lists is true as file lists will be recreated
@@ -241,8 +245,9 @@ class DataHandler:
         return pickle.load(open(file_name, "rb"))
 
     def load_data(self, db_type):
-        x_data = []
-        y_data = []
+        spectrograms = []
+        annotations = []
+        infos = []
         for database in self.opts["databases"]:
             print("Loading data for database:", database["name"])
             paths = self.get_database_paths(database)
@@ -252,10 +257,11 @@ class DataHandler:
                 )
             else:
                 # x : spectrograms, y: tags
-                x, y = self.load_file(paths["pkl"][db_type])
-                x_data += x
-                y_data += y
+                specs, annots, info = self.load_file(paths["pkl"][db_type])
+                spectrograms += specs
+                annotations += annots
+                infos += info
 
                 # height = min(xx.shape[0] for xx in X_tmp)
                 # X_tmp = [xx[-height:, :] for xx in X_tmp]
-        return x_data, y_data
+        return spectrograms, annotations, infos
