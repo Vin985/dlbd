@@ -111,7 +111,6 @@ class Evaluator(ModelHandler):
                     "recording_path": str(info["file_path"]),
                     "time": timeseq,
                     "activity": preds,
-                    "recording_id": i + 1,
                 }
             )
             res.append(res_df)
@@ -139,11 +138,39 @@ class Evaluator(ModelHandler):
             feather.write_dataframe(predictions, pred_file)
         return predictions
 
+    def prepare_tags(self, tags):
+        tags = pd.concat(tags)
+        tags = tags.astype({"recording_path": "category"})
+        tags.loc[:, "recording_id"] = tags.recording_path.cat.codes
+        res["tag_duration"] = res["tag_end"] - res["tag_start"]
+        res.reset_index(inplace=True)
+        res.rename(columns={"index": "tag_index"}, inplace=True)
+        return tags
+
+    def get_tags(self):
+        preds_dir = self.opts.get("predictions_dir", ".")
+        if not preds_dir:
+            raise AttributeError(
+                "Please provide a directory where to save the predictions using"
+                + " the predictions_dir option in the config file"
+            )
+        file_name = "test_tags.feather"
+        tags_file = Path(preds_dir) / file_name
+        print("tags_file", tags_file)
+        if tags_file.exists():
+            tags = feather.read_dataframe(tags_file)
+        else:
+            __, tag_list, _ = self.test_data
+            tags = self.prepare_tags(tag_list)
+            print(tags.dtypes)
+            feather.write_dataframe(tags, tags_file)
+        return tags
+
     def evaluate(self, models=None, recordings=None):
         self.data_handler.check_datasets()
+        tags = self.get_tags()
         models = models or self.opts["models"]
         for model in models:
             for version in model["versions"]:
-                print(version)
                 preds = self.get_predictions(model, version)
 
