@@ -40,3 +40,4 @@ spectrogram:
   hop_length: 1024
 
 class_type: "biotic"
+classes_file: "src/classes.csv"
