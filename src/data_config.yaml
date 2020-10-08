@@ -6,12 +6,27 @@ training_dir: 'training'
 validation_dir:  'validation'
 dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
-tags_suffix: "-sceneRect.csv"
+
 use_spectrogram_subfolder: True
 audio_extensions:
   - ".wav"
   - ".WAV"
 recursive: True
+
+
+tags_suffix: "-sceneRect.csv"
+tags_columns:
+  Label: "tag"
+  Related: "related"
+  LabelStartTime_Seconds: "tag_start"
+  LabelEndTime_Seconds: "tag_end"
+  overlap: "overlap"
+  background: "background"
+  noise: "noise"
+tags_columns_type:
+  overlap: "str"
+
+
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
