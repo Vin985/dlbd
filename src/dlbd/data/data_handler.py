@@ -3,13 +3,14 @@ import pickle
 import traceback
 from pathlib import Path
 
+import librosa
 import numpy as np
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
 from ..utils.file import list_files
 from . import spectrogram
-from . import tags
+from . import tag_manager
 
 
 class DataHandler:
@@ -165,34 +166,46 @@ class DataHandler:
 
         classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
         classes = classes_df.loc[classes_df.class_type == class_type].tag.values
-        suffix = self.get_db_option("tags_suffix", database, "-sceneRect.csv")
-        tags_with_audio = self.get_db_option("tags_with_audio", database, False)
+        as_df = db_type == "test"
+
+        tags_opts = {
+            "suffix": self.get_db_option("tags_suffix", database, "-sceneRect.csv"),
+            "tags_with_audio": self.get_db_option("tags_with_audio", database, False),
+            "classes": classes,
+            "as_df": as_df,
+            "columns": self.get_db_option("tags_columns", database, None),
+            "columns_type": self.get_db_option("tags_columns_type", database, None),
+        }
 
         for file_path in file_list:
             try:
+                # load file and convert to spectrogram
+                wav, sample_rate = librosa.load(
+                    str(file_path), self.opts["spectrogram"].get("sample_rate", None)
+                )
 
-                annots, wav, sample_rate = tags.load_tags(
-                    file_path,
-                    paths["tags"][db_type],
-                    suffix=suffix,
-                    tags_with_audio=tags_with_audio,
-                    classes=classes,
-                    sample_rate=self.opts["spectrogram"].get("sample_rate", None),
+                audio_info = {
+                    "file_path": file_path,
+                    "sample_rate": sample_rate,
+                    "length": len(wav),
+                }
+                tags = tag_manager.load_tags(
+                    audio_info, paths["tags"][db_type], tags_opts
                 )
                 spec, opts = spectrogram.generate_spectrogram(
                     wav, sample_rate, self.opts["spectrogram"]
                 )
 
-                info = {"file_path": file_path, "spec_opts": opts}
-
-                # reshape annotations
-                factor = float(spec.shape[1]) / annots.shape[0]
-                annots = zoom(annots, factor)
+                audio_info["spec_opts"] = opts
+                if not as_df:
+                    # reshape annotations
+                    factor = float(spec.shape[1]) / tags.shape[0]
+                    tags = zoom(tags, factor)
 
                 # file_names_list.append(file_path)
                 spectrograms.append(spec)
-                annotations.append(annots)
-                infos.append(info)
+                annotations.append(tags)
+                infos.append(audio_info)
 
                 if self.get_db_option("save_intermediates", database, False):
                     savename = (
@@ -200,7 +213,7 @@ class DataHandler:
                     ).with_suffix(".pkl")
                     if not savename.exists() or overwrite:
                         with open(savename, "wb") as f:
-                            pickle.dump((annots, spec), f, -1)
+                            pickle.dump((tags, spec), f, -1)
             except Exception:
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())
