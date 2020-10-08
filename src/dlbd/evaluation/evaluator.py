@@ -1,25 +1,25 @@
 #%%
-import os
-import traceback
 from pathlib import Path
-from importlib import import_module
 
+import feather
 import numpy as np
 import pandas as pd
-import yaml
-import feather
-
-from dlbd.data import data_handler
-from dlbd.data.data_handler import DataHandler
 
 from ..detectors import DETECTORS
-from ..models.dl_model import DLModel
+from ..utils import file as file_utils
+from ..utils.model_handler import ModelHandler
 
 
-class Evaluator:
-    def __init__(self, opts):
-        self.opts = opts
-        self.data_handler = DataHandler(opts)
+class Evaluator(ModelHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._test_data = None
+
+    @property
+    def test_data(self):
+        if not self._test_data:
+            self._test_data = self.data_handler.load_data("test")
+        return self._test_data
 
     # def get_model(self, model_opts):
     #     stream = open(model_opts["options_file"], "r")
@@ -79,29 +79,71 @@ class Evaluator:
     #     res = detector.evaluate(predictions, tags, {})
     #     return res
 
-    def get_model_class(self, model):
-        if isinstance(model, DLModel):
-            return model
-        if not isinstance(model, dict):
-            raise ValueError(
-                "Model should either be an instance of dlbd.models.DLModel or a dict"
-            )
-
-        pkg = import_module(model["package"])
-        cls = getattr(pkg, model["name"])
-        return cls(self.opts)
-
     def get_recordings(self, database):
         pass
 
+    def get_model(self, model_opts, version):
+        old_opts = file_utils.load_config(
+            Path(model_opts["weights_dir"])
+            / model_opts["name"]
+            / str(version)
+            / "network_opts.yaml"
+        )
+        model = self.get_model_instance(model_opts, old_opts, version)
+        model.load_weights()
+        return model
+
+    def classify_test_data(self, model_opts, version):
+        model = self.get_model(model_opts, version)
+        specs, _, infos = self.test_data
+        res = []
+        for i, spec in enumerate(specs):
+            preds = model.classify_spectrogram(spec)
+            info = infos[i]
+            len_in_s = (
+                preds.shape[0]
+                * info["spec_opts"]["hop_length"]
+                / info["spec_opts"]["sr"]
+            )
+            timeseq = np.linspace(0, len_in_s, preds.shape[0])
+            res_df = pd.DataFrame(
+                {
+                    "recording_path": str(info["file_path"]),
+                    "time": timeseq,
+                    "activity": preds,
+                    "recording_id": i + 1,
+                }
+            )
+            res.append(res_df)
+            if i > 10:
+                break
+        predictions = pd.concat(res)
+        predictions = predictions.astype({"recording_path": "category"})
+        # TODO: currently lacking correspondance between file name and spectrogram/labels
+        return predictions
+
+    def get_predictions(self, model, version):
+        preds_dir = self.get_option("predictions_dir", model)
+        if not preds_dir:
+            raise AttributeError(
+                "Please provide a directory where to save the predictions using"
+                + " the predictions_dir option in the config file"
+            )
+        file_name = "predictions_" + model["name"] + "_v" + str(version) + ".feather"
+        pred_file = Path(preds_dir) / file_name
+        if pred_file.exists():
+            predictions = feather.read_dataframe(pred_file)
+        else:
+            predictions = self.classify_test_data(model, version)
+            pred_file.parent.mkdir(parents=True, exist_ok=True)
+            feather.write_dataframe(predictions, pred_file)
+        return predictions
+
     def evaluate(self, models=None, recordings=None):
+        self.data_handler.check_datasets()
         models = models or self.opts["models"]
-
         for model in models:
-            model_instance = self.get_model_class(model)
+            for version in model["versions"]:
+                print(version)
+                preds = self.get_predictions(model, version)
 
-        if not recordings:
-            tmp = []
-            for database in self.opts["databases"]:
-                tmp.append(self.get_recordings(database))
-            recordings = pd.concat(tmp)
