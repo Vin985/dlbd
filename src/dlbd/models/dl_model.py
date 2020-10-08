@@ -17,15 +17,17 @@ DEFAULT_N_MELS = 32  # 128
 class DLModel:
     NAME = "DLMODEL"
 
-    def __init__(self, opts=None):
+    def __init__(self, opts=None, version=None):
         """Create the layers of the neural network, with the same options we used in training"""
         self.wav = None
         self.sample_rate = None
         self.model = None
-        self.results_dir = None
-        self.version = None
+        self._results_dir = None
+        self._version = None
         self._opts = None
         self._model_name = ""
+        self.results_dir_root = None
+        self.version = version
         if opts:
             self.opts = opts
 
@@ -39,6 +41,20 @@ class DLModel:
         return self._model_name
 
     @property
+    def version(self):
+        if not self._version:
+            self._version = self.get_model_version(self.results_dir_root)
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @property
+    def results_dir(self):
+        return self.results_dir_root / str(self.version)
+
+    @property
     def opts(self):
         return self._opts
 
@@ -46,7 +62,7 @@ class DLModel:
     def opts(self, opts):
         self._opts = opts
         self.model = self.create_net()
-        self.results_dir, self.version = self.get_results_dir()
+        self.results_dir_root = Path(self.opts["model"]["model_dir"]) / self.NAME
 
     def create_net(self):
         return 0
@@ -60,6 +76,16 @@ class DLModel:
     def save_weights(self):
         raise NotImplementedError(
             "save_weights function not implemented for this class"
+        )
+
+    def load_weights(self, path=None):
+        raise NotImplementedError(
+            "load_weights function not implemented for this class"
+        )
+
+    def classify_spectrogram(self, spectrogram):
+        raise NotImplementedError(
+            "classify_spectrogram function not implemented for this class"
         )
 
     def prepare_data(self, data):
@@ -122,14 +148,6 @@ class DLModel:
         utils.force_make_dir(self.results_dir)
         with open(self.results_dir / "network_opts.yaml", "w") as f:
             yaml.dump(self.opts, f, default_flow_style=False)
-
-    def get_results_dir(self):
-        results_dir_root = Path(self.opts["model"]["model_dir"]) / self.NAME
-        version = self.get_model_version(results_dir_root)
-        # date = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        results_dir = results_dir_root / str(version)
-        return results_dir, version
 
     @staticmethod
     def get_model_version(path):
