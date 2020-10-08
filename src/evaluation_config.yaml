@@ -8,5 +8,5 @@ weights_dir: "results/models"
 models:
   - name: "CityNetTF2"
     package: "dlbd.models.CityNetTF2"
-    versions: [1,2,3]
+    versions: [1]
     weights_dir: "results/models"
