@@ -1,9 +1,9 @@
 
-test_dir_root: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
+data_config: "src/data_config.yaml"
 detectors: ["standard"]
-databases:
-  - name: "arctic"
-    dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/arctic'
+predictions_dir: "results/predictions"
+weights_dir: "results/models"
+
 
 models:
   - name: "CityNetTF2"
