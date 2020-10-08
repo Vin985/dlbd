@@ -1,5 +1,5 @@
-import datetime
 from pathlib import Path
+from time import time
 
 import numpy as np
 import tensorflow as tf
@@ -13,8 +13,8 @@ from .dl_model import DLModel
 class CityNetTF2(DLModel):
     NAME = "CityNetTF2"
 
-    def __init__(self, opts=None):
-        super().__init__(opts)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.optimizer = None
         self.loss = {}
         self.accuracy = {}
@@ -180,7 +180,8 @@ class CityNetTF2(DLModel):
             self.accuracy[x].reset_states()
 
     def run_step(self, step_type, data, step, sampler):
-        for data, labels in tqdm(sampler(*data)):
+        specs, annots, _ = data
+        for data, labels in tqdm(sampler(specs, annots)):
             getattr(self, step_type + "_step")(data, labels)
         with self.summary_writer[step_type].as_default():
             tf.summary.scalar("loss", self.loss[step_type].result(), step=step)
@@ -189,5 +190,29 @@ class CityNetTF2(DLModel):
     def save_weights(self):
         self.model.save_weights(str(self.results_dir / self.model_name))
 
+    def load_weights(self, path=None):
+        if not path:
+            path = str(self.results_dir / self.model_name)
+        self.model.load_weights(path)
+
     def predict(self, x):
         return self.model.predict(x)
+
+    def classify_spectrogram(self, spec):
+        """Apply the classifier"""
+        tic = time()
+        test_sampler = SpectrogramSampler(self.opts)
+        labels = np.zeros(spec.shape[1])
+        preds = []
+        for data, _ in tqdm(test_sampler([spec], [labels])):
+            pred = tf.nn.softmax(self.model(data, training=False)).numpy()
+            # pred2 = self.predict(data)
+            # print(pred)
+            # print(pred2)
+            # print("pred_shape", pred.shape)
+            preds.append(pred)
+        # print("Took %0.3fs to classify" % (time() - tic))
+        print("Classified {0} in {1}".format("spectrogram", time() - tic))
+        res = np.vstack(preds)
+        # print("res_shape", res.shape)
+        return res[:, 1]
