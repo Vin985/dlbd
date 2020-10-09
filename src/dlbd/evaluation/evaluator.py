@@ -103,7 +103,7 @@ class Evaluator(ModelHandler):
             feather.write_dataframe(tags, tags_file)
         return tags
 
-    def evaluate(self):
+    def evaluate(self, models=None):
         self.data_handler.check_datasets()
         for database in self.data_handler.opts["databases"]:
             tags = self.get_tags(database["name"])
@@ -118,9 +118,11 @@ class Evaluator(ModelHandler):
                     for detector_opts in self.opts["detectors"]:
                         detector = DETECTORS[detector_opts["type"]]
                         print(
-                            "Evaluating model {0} on test dataset {1}".format(
+                            "\033[92m"
+                            + "Evaluating model {0} on test dataset {1}".format(
                                 model_name, database["name"]
                             )
+                            + "\033[0m"
                         )
                         detector.evaluate(preds, tags, detector_opts)
 
