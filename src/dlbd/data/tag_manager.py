@@ -40,7 +40,7 @@ def load_tags(audio_info, labels_dir, tag_opts):
         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
     else:
         csv_file_path = labels_dir / (audio_file_path.stem + suffix)
-
+    tags = np.zeros(audio_info["length"])
     print("Loading tags for file: " + str(audio_file_path))
     if os.path.exists(csv_file_path):
         pd_annots = pd.read_csv(
@@ -49,14 +49,13 @@ def load_tags(audio_info, labels_dir, tag_opts):
         # loop over each annotation...
         tmp = pd_annots.loc[~pd_annots.Filename.isna()]
         if tag_opts["as_df"]:
+            tmp = rename_columns(tmp, columns)
             # tmp.loc[:, "recording_id"] = audio_info["recording_id"]
             if not tmp.empty:
-                tmp = rename_columns(tmp, columns)
                 tmp.loc[:, "recording_path"] = str(audio_info["file_path"])
             return tmp
 
         # create label vector...
-        tags = np.zeros(audio_info["length"])
         for _, annot in tmp.iterrows():
             # fill in the label vector
             start_point = int(
@@ -70,7 +69,6 @@ def load_tags(audio_info, labels_dir, tag_opts):
             if label in tag_opts["classes"]:
                 tags[start_point:end_point] = 1
     else:
-        pd_annots = pd.DataFrame()
         print("Warning - no annotations found for %s" % str(audio_file_path))
 
     return tags
