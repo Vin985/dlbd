@@ -27,6 +27,9 @@ class SpectrogramSampler:
 
         blank_spec = np.zeros((X[0].shape[0], 2 * pad_hww))
         self.specs = np.hstack([blank_spec] + X + [blank_spec])[None, ...]
+        # print(X[0].shape)
+        # print(blank_spec.shape)
+        # print(self.specs.shape)
 
         blank_label = np.zeros(2 * pad_hww) - 1
         if y is not None:
