@@ -22,7 +22,6 @@ class StandardDetector(Detector):
         events.reset_index(inplace=True)
         events = events[self.EVENTS_COLUMNS.keys()]
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
-        print("get events done")
         return events
 
     def get_recording_events(self, predictions, options=None):
