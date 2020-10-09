@@ -1,6 +1,13 @@
 
 data_config: "src/data_config.yaml"
-detectors: ["standard"]
+detectors: 
+  - type: "standard"
+    min_activity: 0.95
+    min_duration: 0.3
+    end_threshold: 0.15
+    dtc_threshold: 0.3
+    gtc_threshold: 0.1
+    isolate_events: True
 predictions_dir: "results/predictions"
 weights_dir: "results/models"
 
@@ -9,4 +16,7 @@ models:
   - name: "CityNetTF2"
     package: "dlbd.models.CityNetTF2"
     versions: [1]
-    weights_dir: "results/models"
+  - name: "CityNetOriginal"
+    package: "dlbd.models.CityNetOriginal"
+    versions: [0]
+    #reclassify: True
