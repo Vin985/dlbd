@@ -196,23 +196,5 @@ class CityNetTF2(DLModel):
         self.model.load_weights(path)
 
     def predict(self, x):
-        return self.model.predict(x)
+        return tf.nn.softmax(self.model(x, training=False)).numpy()
 
-    def classify_spectrogram(self, spec):
-        """Apply the classifier"""
-        tic = time()
-        test_sampler = SpectrogramSampler(self.opts)
-        labels = np.zeros(spec.shape[1])
-        preds = []
-        for data, _ in tqdm(test_sampler([spec], [labels])):
-            pred = tf.nn.softmax(self.model(data, training=False)).numpy()
-            # pred2 = self.predict(data)
-            # print(pred)
-            # print(pred2)
-            # print("pred_shape", pred.shape)
-            preds.append(pred)
-        # print("Took %0.3fs to classify" % (time() - tic))
-        print("Classified {0} in {1}".format("spectrogram", time() - tic))
-        res = np.vstack(preds)
-        # print("res_shape", res.shape)
-        return res[:, 1]
