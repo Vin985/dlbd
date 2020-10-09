@@ -65,6 +65,6 @@ class ModelHandler:
         cls = getattr(pkg, model["name"])
         return cls(model_opts, version=version)
 
-    def get_option(self, name, group):
-        return group.get(name, self.opts.get(name, ""))
+    def get_option(self, name, group, default=""):
+        return group.get(name, self.opts.get(name, default))
 
