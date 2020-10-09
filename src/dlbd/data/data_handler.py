@@ -257,10 +257,11 @@ class DataHandler:
     def load_file(self, file_name):
         return pickle.load(open(file_name, "rb"))
 
-    def load_data(self, db_type):
+    def load_data(self, db_type, by_dataset=False):
         spectrograms = []
         annotations = []
         infos = []
+        res = {}
         for database in self.opts["databases"]:
             print("Loading data for database:", database["name"])
             paths = self.get_database_paths(database)
@@ -271,10 +272,14 @@ class DataHandler:
             else:
                 # x : spectrograms, y: tags
                 specs, annots, info = self.load_file(paths["pkl"][db_type])
-                spectrograms += specs
-                annotations += annots
-                infos += info
+                if by_dataset:
+                    res[database["name"]] = (specs, annots, info)
+                else:
+                    spectrograms += specs
+                    annotations += annots
+                    infos += info
 
                 # height = min(xx.shape[0] for xx in X_tmp)
                 # X_tmp = [xx[-height:, :] for xx in X_tmp]
-        return spectrograms, annotations, infos
+        res = res or (spectrograms, annotations, infos)
+        return res
