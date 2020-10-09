@@ -84,7 +84,7 @@ class Evaluator(ModelHandler):
 
     def get_model(self, model_opts, version):
         old_opts = file_utils.load_config(
-            Path(model_opts["weights_dir"])
+            Path(self.get_option("weights_dir", model_opts))
             / model_opts["name"]
             / str(version)
             / "network_opts.yaml"
@@ -114,26 +114,28 @@ class Evaluator(ModelHandler):
                 }
             )
             res.append(res_df)
-            if i > 10:
-                break
+            # if i > 10:
+            #     break
         predictions = pd.concat(res)
         predictions = predictions.astype({"recording_path": "category"})
         # TODO: currently lacking correspondance between file name and spectrogram/labels
         return predictions
 
-    def get_predictions(self, model, version):
-        preds_dir = self.get_option("predictions_dir", model)
+    def get_predictions(self, model_opts, version):
+        preds_dir = self.get_option("predictions_dir", model_opts)
         if not preds_dir:
             raise AttributeError(
                 "Please provide a directory where to save the predictions using"
                 + " the predictions_dir option in the config file"
             )
-        file_name = "predictions_" + model["name"] + "_v" + str(version) + ".feather"
+        file_name = (
+            "predictions_" + model_opts["name"] + "_v" + str(version) + ".feather"
+        )
         pred_file = Path(preds_dir) / file_name
-        if pred_file.exists():
+        if not model_opts.get("reclassify", False) and pred_file.exists():
             predictions = feather.read_dataframe(pred_file)
         else:
-            predictions = self.classify_test_data(model, version)
+            predictions = self.classify_test_data(model_opts, version)
             pred_file.parent.mkdir(parents=True, exist_ok=True)
             feather.write_dataframe(predictions, pred_file)
         return predictions
@@ -141,10 +143,11 @@ class Evaluator(ModelHandler):
     def prepare_tags(self, tags):
         tags = pd.concat(tags)
         tags = tags.astype({"recording_path": "category"})
-        tags.loc[:, "recording_id"] = tags.recording_path.cat.codes
-        res["tag_duration"] = res["tag_end"] - res["tag_start"]
-        res.reset_index(inplace=True)
-        res.rename(columns={"index": "tag_index"}, inplace=True)
+        tags["tag_duration"] = tags["tag_end"] - tags["tag_start"]
+        tags.reset_index(inplace=True)
+        tags.rename(columns={"index": "tag_index"}, inplace=True)
+        tags.reset_index(inplace=True)
+        tags.rename(columns={"index": "id"}, inplace=True)
         return tags
 
     def get_tags(self):
@@ -156,21 +159,25 @@ class Evaluator(ModelHandler):
             )
         file_name = "test_tags.feather"
         tags_file = Path(preds_dir) / file_name
-        print("tags_file", tags_file)
         if tags_file.exists():
             tags = feather.read_dataframe(tags_file)
         else:
             __, tag_list, _ = self.test_data
             tags = self.prepare_tags(tag_list)
-            print(tags.dtypes)
             feather.write_dataframe(tags, tags_file)
         return tags
 
     def evaluate(self, models=None, recordings=None):
         self.data_handler.check_datasets()
         tags = self.get_tags()
+        tags = tags.rename(columns={"recording_path": "recording_id"})
         models = models or self.opts["models"]
-        for model in models:
-            for version in model["versions"]:
-                preds = self.get_predictions(model, version)
+        detector_opts = self.opts
+        for model_opts in models:
+            for version in model_opts["versions"]:
+                preds = self.get_predictions(model_opts, version)
+                preds = preds.rename(columns={"recording_path": "recording_id"})
+                for detector_opts in self.opts["detectors"]:
+                    detector = DETECTORS[detector_opts["type"]]
+                    detector.evaluate(preds, tags, detector_opts)
 
