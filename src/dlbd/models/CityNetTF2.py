@@ -114,10 +114,10 @@ class CityNetTF2(DLModel):
         return spec
 
     def prepare_data(self, data):
-        specs, tags = data
+        specs, tags, infos = data
         if not self.opts["model"]["learn_log"]:
             specs = [self.modify_spectrogram(spec) for spec in specs]
-        return specs, tags
+        return specs, tags, infos
 
     def train(self, training_data, validation_data):
         if not self.model:
