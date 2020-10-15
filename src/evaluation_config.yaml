@@ -8,6 +8,11 @@ detectors:
     dtc_threshold: 0.3
     gtc_threshold: 0.1
     isolate_events: True
+  - type: "subsampling"
+    sample_step: 0
+    event_threshold: 0.5
+  - type: "subsampling"
+    sample_step: 1
 predictions_dir: "results/predictions"
 weights_dir: "results/models"
 
