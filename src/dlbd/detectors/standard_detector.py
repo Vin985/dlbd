@@ -217,8 +217,8 @@ class StandardDetector(Detector):
             dtc_threshold = options.get("dtc_threshold", 0.3)
             gtc_threshold = options.get("gtc_threshold", 0.1)
             res = matched.loc[
-                (matched.event_overlap >= dtc_threshold) & (matched.tag_overlap)
-                >= gtc_threshold
+                (matched.event_overlap >= dtc_threshold)
+                & (matched.tag_overlap >= gtc_threshold)
             ]
 
         true_positives = res.event_id.unique()
