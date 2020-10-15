@@ -93,6 +93,7 @@ class Evaluator(ModelHandler):
                 "Please provide a directory where to save the predictions using"
                 + " the predictions_dir option in the config file"
             )
+        # TODO: filter tags based on class
         file_name = database + "_test_tags.feather"
         tags_file = Path(preds_dir) / file_name
         if tags_file.exists():
@@ -106,23 +107,28 @@ class Evaluator(ModelHandler):
     def evaluate(self, models=None):
         self.data_handler.check_datasets()
         for database in self.data_handler.opts["databases"]:
-            tags = self.get_tags(database["name"])
-            tags = tags.rename(columns={"recording_path": "recording_id"})
-            models = models or self.opts["models"]
-            detector_opts = self.opts
-            for model_opts in models:
-                for version in model_opts["versions"]:
-                    model_name = model_opts["name"] + "_v" + str(version)
-                    preds = self.get_predictions(model_opts, version, database["name"])
-                    preds = preds.rename(columns={"recording_path": "recording_id"})
-                    for detector_opts in self.opts["detectors"]:
-                        detector = DETECTORS[detector_opts["type"]]
-                        print(
-                            "\033[92m"
-                            + "Evaluating model {0} on test dataset {1}".format(
-                                model_name, database["name"]
-                            )
-                            + "\033[0m"
+            if "test" in self.data_handler.get_db_option(
+                "db_types", database, self.data_handler.DB_TYPES
+            ):
+                tags = self.get_tags(database["name"])
+                tags = tags.rename(columns={"recording_path": "recording_id"})
+                models = models or self.opts["models"]
+                detector_opts = self.opts
+                for model_opts in models:
+                    for version in model_opts["versions"]:
+                        model_name = model_opts["name"] + "_v" + str(version)
+                        preds = self.get_predictions(
+                            model_opts, version, database["name"]
                         )
-                        detector.evaluate(preds, tags, detector_opts)
+                        preds = preds.rename(columns={"recording_path": "recording_id"})
+                        for detector_opts in self.opts["detectors"]:
+                            detector = DETECTORS[detector_opts["type"]]
+                            print(
+                                "\033[92m"
+                                + "Evaluating model {0} on test dataset {1}".format(
+                                    model_name, database["name"]
+                                )
+                                + "\033[0m"
+                            )
+                            detector.evaluate(preds, tags, detector_opts)
 
