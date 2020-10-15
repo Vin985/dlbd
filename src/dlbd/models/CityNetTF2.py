@@ -142,6 +142,9 @@ class CityNetTF2(DLModel):
         self.accuracy["validation"] = tf.keras.metrics.SparseCategoricalAccuracy(
             name="validation_accuracy"
         )
+        tf.profiler.experimental.start(
+            str(Path(self.opts["logs"]["log_dir"]) / self.model_name)
+        )
         for epoch in range(self.opts["model"]["max_epochs"]):
             # Reset the metrics at the start of the next epoch
             # TODO: save intermediate models?
@@ -160,6 +163,7 @@ class CityNetTF2(DLModel):
                     self.accuracy["validation"].result() * 100,
                 )
             )
+        tf.profiler.experimental.stop()
         self.save_model()
 
     def create_writers(self):
