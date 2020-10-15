@@ -79,7 +79,7 @@ class DataHandler:
         paths["file_list"] = {}
         paths["pkl"] = {}
 
-        for db_type in self.DB_TYPES:
+        for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
             db_type_dir = self.get_full_path(
                 self.get_db_option(db_type + "_dir", database), root_dir
             )
@@ -263,23 +263,28 @@ class DataHandler:
         infos = []
         res = {}
         for database in self.opts["databases"]:
-            print("Loading data for database:", database["name"])
-            paths = self.get_database_paths(database)
-            if not paths["pkl"][db_type].exists():
-                raise ValueError(
-                    "Database file not found. Please run check_datasets() before"
+            if db_type in self.get_db_option("db_types", database, self.DB_TYPES):
+                print(
+                    "Loading {0} data for database: {1}".format(
+                        db_type, database["name"]
+                    )
                 )
-            else:
-                # x : spectrograms, y: tags
-                specs, annots, info = self.load_file(paths["pkl"][db_type])
-                if by_dataset:
-                    res[database["name"]] = (specs, annots, info)
+                paths = self.get_database_paths(database)
+                if not paths["pkl"][db_type].exists():
+                    raise ValueError(
+                        "Database file not found. Please run check_datasets() before"
+                    )
                 else:
-                    spectrograms += specs
-                    annotations += annots
-                    infos += info
+                    # x : spectrograms, y: tags
+                    specs, annots, info = self.load_file(paths["pkl"][db_type])
+                    if by_dataset:
+                        res[database["name"]] = (specs, annots, info)
+                    else:
+                        spectrograms += specs
+                        annotations += annots
+                        infos += info
 
-                # height = min(xx.shape[0] for xx in X_tmp)
-                # X_tmp = [xx[-height:, :] for xx in X_tmp]
+                    # height = min(xx.shape[0] for xx in X_tmp)
+                    # X_tmp = [xx[-height:, :] for xx in X_tmp]
         res = res or (spectrograms, annotations, infos)
         return res
