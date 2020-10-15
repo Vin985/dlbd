@@ -20,8 +20,3 @@ class Detector:
     def __init__(self):
         pass
 
-    def get_recording_events(self, predictions, options=None):
-        pass
-
-    def get_events(self, predictions, options):
-        pass
