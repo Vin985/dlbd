@@ -28,6 +28,7 @@ class CityNetTF2(DLModel):
             # batch_size=128,
             dtype=tf.float32,
         )
+        # * First block
         x = layers.Conv2D(
             opts.get("num_filters", 128),
             (opts["spec_height"] - opts["wiggle_room"], opts["conv_filter_width"],),
@@ -37,7 +38,11 @@ class CityNetTF2(DLModel):
             # name="conv1_1",
             kernel_regularizer=regularizers.l2(0.001),
         )(inputs)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
+
+        x = layers.Dropout(0.5)(x)
+        # * Second block
         x = layers.Conv2D(
             opts.get("num_filters", 128),
             (1, 3),
@@ -47,9 +52,11 @@ class CityNetTF2(DLModel):
             # name="conv1_2",
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
         W = x.shape[2]
         x = layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
+        x = layers.Dropout(0.5)(x)
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
@@ -59,7 +66,9 @@ class CityNetTF2(DLModel):
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
         # x = layers.Dropout(self.opts["dropout"])(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
+        x = layers.Dropout(0.5)(x)
         x = layers.Dense(
             opts["num_dense_units"],
             activation=None,
@@ -67,7 +76,9 @@ class CityNetTF2(DLModel):
             # kernel_regularizer=regularizers.l2(0.001),
         )(x)
         # x = layers.Dropout(self.opts["dropout"])(x)
+        x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
+        x = layers.Dropout(0.5)(x)
         outputs = layers.Dense(
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)
