@@ -35,7 +35,7 @@ class DLModel:
     @property
     def model_name(self):
         if not self._model_name:
-            if self.version is not None:
+            if self._version is not None:
                 self._model_name = self.NAME + "_v" + str(self.version)
             else:
                 return self.NAME
@@ -74,7 +74,7 @@ class DLModel:
     def train(self, training_data, validation_data):
         raise NotImplementedError("train function not implemented for this class")
 
-    def save_weights(self):
+    def save_weights(self, path=None):
         raise NotImplementedError(
             "save_weights function not implemented for this class"
         )
@@ -148,6 +148,6 @@ class DLModel:
                         continue
         return version
 
-    def save_model(self):
+    def save_model(self, path=None):
         self.save_params()
-        self.save_weights()
+        self.save_weights(path)
