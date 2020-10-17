@@ -139,9 +139,6 @@ class CityNetTF2(DLModel):
             self.opts, randomise=False, balanced=True
         )
 
-        # * Create logging writers
-        self.create_writers()
-
         self.optimizer = tf.keras.optimizers.Adam()
         # * Train functions
         self.loss["train"] = tf.keras.metrics.Mean(name="train_loss")
@@ -153,10 +150,23 @@ class CityNetTF2(DLModel):
         self.accuracy["validation"] = tf.keras.metrics.SparseCategoricalAccuracy(
             name="validation_accuracy"
         )
+
+        from_epoch = self.opts["model"].get("from_epoch", 0)
+        if from_epoch:
+            self.version = self.version - 1
+            self.load_weights(
+                str(self.results_dir / self.model_name / ("epoch_" + str(from_epoch)))
+            )
+        epoch_save_step = self.opts["model"].get("epoch_save_step", None)
+
+        # * Create logging writers
+        self.create_writers()
+
         tf.profiler.experimental.start(
             str(Path(self.opts["logs"]["log_dir"]) / self.model_name)
         )
-        for epoch in range(self.opts["model"]["max_epochs"]):
+
+        for epoch in range(from_epoch, self.opts["model"]["max_epochs"]):
             # Reset the metrics at the start of the next epoch
             # TODO: save intermediate models?
             self.reset_states()
@@ -174,6 +184,11 @@ class CityNetTF2(DLModel):
                     self.accuracy["validation"].result() * 100,
                 )
             )
+
+            if epoch_save_step is not None and epoch % epoch_save_step == 0:
+                self.save_model(
+                    str(self.results_dir / self.model_name / ("epoch_" + str(epoch)))
+                )
         tf.profiler.experimental.stop()
         self.save_model()
 
@@ -196,14 +211,20 @@ class CityNetTF2(DLModel):
 
     def run_step(self, step_type, data, step, sampler):
         specs, annots, _ = data
+        # i = 0
         for data, labels in tqdm(sampler(specs, annots)):
+            # if i == 10:
+            #     break
+            # i += 1
             getattr(self, step_type + "_step")(data, labels)
         with self.summary_writer[step_type].as_default():
             tf.summary.scalar("loss", self.loss[step_type].result(), step=step)
             tf.summary.scalar("accuracy", self.accuracy[step_type].result(), step=step)
 
-    def save_weights(self):
-        self.model.save_weights(str(self.results_dir / self.model_name))
+    def save_weights(self, path=None):
+        if not path:
+            path = str(self.results_dir / self.model_name)
+        self.model.save_weights(path)
 
     def load_weights(self, path=None):
         if not path:
