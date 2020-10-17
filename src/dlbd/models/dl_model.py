@@ -35,16 +35,18 @@ class DLModel:
     @property
     def model_name(self):
         if not self._model_name:
-            if self._version is not None:
+            if self.version is not None:
                 self._model_name = self.NAME + "_v" + str(self.version)
-            else:
                 return self.NAME
         return self._model_name
 
     @property
     def version(self):
         if self._version is None:
-            self._version = self.get_model_version(self.results_dir_root)
+            v = self.get_model_version(self.results_dir_root)
+            if self.opts["model"].get("from_epoch", 0) and v > 0:
+                v -= 1
+            self._version = v
         return self._version
 
     @version.setter

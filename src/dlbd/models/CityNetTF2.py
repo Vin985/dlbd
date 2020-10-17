@@ -153,7 +153,6 @@ class CityNetTF2(DLModel):
 
         from_epoch = self.opts["model"].get("from_epoch", 0)
         if from_epoch:
-            self.version = self.version - 1
             self.load_weights(
                 str(self.results_dir / self.model_name / ("epoch_" + str(from_epoch)))
             )
