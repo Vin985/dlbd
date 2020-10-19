@@ -240,6 +240,8 @@ class StandardDetector(Detector):
         events.loc[:, "matched"] = 0
         events.loc[events.event_id.isin(true_positives), "matched"] = 1
 
+        f1_score = round(2 * precision * recall / (precision + recall), 3)
+
         stats = {
             "n_events": events.shape[0],
             "n_tags": tags.shape[0],
@@ -251,18 +253,18 @@ class StandardDetector(Detector):
             "false_positive_rate": false_positive_rate,
             "precision": precision,
             "recall": recall,
+            "f1_score": f1_score,
         }
-        return {
-            "stats": stats,
-            "events": events,
-            "tags": tags,
-            "matched": matched,
-            "options": options,
-        }
+        return stats
 
     def evaluate(self, predictions, tags, options):
         events = self.get_events(predictions, options)
         matches = self.get_matches(events, tags)
         stats = self.get_stats(events, tags, matches, options)
-        print("Stats for options {0}: {1}".format(options, stats["stats"]))
-        return stats
+        print("Stats for options {0}: {1}".format(options, stats))
+        return {
+            "options": options,
+            "stats": stats,
+            "matches": matches,
+        }
+
