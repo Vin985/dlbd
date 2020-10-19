@@ -5,6 +5,8 @@ import feather
 import numpy as np
 import pandas as pd
 
+from dlbd import data
+
 from ..detectors import DETECTORS
 from ..utils import file as file_utils
 from ..utils.model_handler import ModelHandler
@@ -106,6 +108,7 @@ class Evaluator(ModelHandler):
 
     def evaluate(self, models=None):
         self.data_handler.check_datasets()
+        stats = []
         for database in self.data_handler.opts["databases"]:
             if "test" in self.data_handler.get_db_option(
                 "db_types", database, self.data_handler.DB_TYPES
@@ -114,7 +117,9 @@ class Evaluator(ModelHandler):
                 tags = tags.rename(columns={"recording_path": "recording_id"})
                 models = models or self.opts["models"]
                 detector_opts = self.opts
+
                 for model_opts in models:
+
                     for version in model_opts["versions"]:
                         model_name = model_opts["name"] + "_v" + str(version)
                         preds = self.get_predictions(
@@ -130,5 +135,10 @@ class Evaluator(ModelHandler):
                                 )
                                 + "\033[0m"
                             )
-                            detector.evaluate(preds, tags, detector_opts)
-
+                            model_stats = detector.evaluate(preds, tags, detector_opts)
+                            model_stats["stats"]["database"] = database["name"]
+                            model_stats["stats"]["model"] = model_name
+                            model_stats["stats"]["type"] = str(detector_opts)
+                            stats.append(pd.Series(model_stats["stats"]))
+        res = pd.DataFrame(stats)
+        return res

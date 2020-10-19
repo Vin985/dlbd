@@ -17,4 +17,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 evaluator = Evaluator(opts_path="src/evaluation_config.yaml")
 
-evaluator.evaluate()
+res = evaluator.evaluate()
+
+res.to_csv("results/evaluation/stats.csv")
+print(res)
