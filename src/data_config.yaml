@@ -55,5 +55,5 @@ spectrogram:
   n_fft: 2048
   hop_length: 1024
 
-class_type: "biotic2"
+class_type: "biotic"
 classes_file: "src/classes.csv"

@@ -4,9 +4,7 @@ data_config: "src/data_config.yaml"
 
 model:
   model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
-  max_epochs: 100
-  # from_epoch: 0
-  epoch_save_step: 10
+  max_epochs: 1
   learn_log: 0
   do_augmentation: 1
   A: 0.001 # biotic 

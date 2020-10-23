@@ -37,7 +37,6 @@ class DLModel:
         if not self._model_name:
             if self.version is not None:
                 self._model_name = self.NAME + "_v" + str(self.version)
-            else:
                 return self.NAME
         return self._model_name
 
