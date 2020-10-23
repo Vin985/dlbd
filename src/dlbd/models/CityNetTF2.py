@@ -228,7 +228,6 @@ class CityNetTF2(DLModel):
     def load_weights(self, path=None):
         if not path:
             path = str(self.results_dir / self.model_name)
-        print(path)
         self.model.load_weights(path)
 
     def predict(self, x):
