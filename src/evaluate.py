@@ -19,5 +19,5 @@ evaluator = Evaluator(opts_path="src/evaluation_config.yaml")
 
 res = evaluator.evaluate()
 
-res.to_csv("results/evaluation/stats.csv")
+# res.to_csv("results/evaluation/stats3.csv")
 print(res)

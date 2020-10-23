@@ -2,6 +2,7 @@ import csv
 import pickle
 import traceback
 from pathlib import Path
+import feather
 
 import librosa
 import numpy as np
@@ -66,18 +67,29 @@ class DataHandler:
         root_dir = self.get_db_option("root_dir", database)
 
         use_spec_subfolder = self.get_db_option("use_spec_subfolder", database, True)
-        spec_folder = ""
-        if use_spec_subfolder:
-            spec_folder = spectrogram.get_spec_subfolder(self.opts["spectrogram"])
+        use_class_subfolder = self.get_db_option("use_class_subfolder", database, True)
+        spec_folder = (
+            spectrogram.get_spec_subfolder(self.opts["spectrogram"])
+            if use_spec_subfolder
+            else ""
+        )
+        class_folder = (
+            self.get_db_option("class_type", database, "biotic")
+            if use_class_subfolder
+            else ""
+        )
 
         paths["root"] = root_dir
         paths["audio"] = {"default": self.get_db_option("audio_dir", database)}
         paths["tags"] = {"default": self.get_db_option("tags_dir", database)}
         paths["dest"] = {
-            "default": self.get_db_option("dest_dir", database) / spec_folder
+            "default": self.get_db_option("dest_dir", database)
+            / class_folder
+            / spec_folder
         }
         paths["file_list"] = {}
         paths["pkl"] = {}
+        paths["tag_df"] = {}
 
         for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
             db_type_dir = self.get_full_path(
@@ -97,6 +109,7 @@ class DataHandler:
             paths["dest"][db_type] = dest_dir
             paths["file_list"][db_type] = dest_dir / (db_type + "_file_list.csv")
             paths["pkl"][db_type] = dest_dir / (db_type + "_data.pkl")
+            paths["tag_df"][db_type] = dest_dir / (db_type + "_tags.feather")
 
         return paths
 
@@ -157,25 +170,31 @@ class DataHandler:
             file_lists = self.load_file_lists(paths)
         return file_lists
 
-    def generate_dataset(self, database, paths, file_list, db_type, overwrite):
-        spectrograms, annotations, infos = [], [], []
-        print("Generating dataset: ", database["name"])
-
+    def load_classes(self, database):
         class_type = self.get_db_option("class_type", database, "biotic")
         classes_file = self.get_db_option("classes_file", database, "classes.csv")
 
         classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
-        classes = classes_df.loc[classes_df.class_type == class_type].tag.values
-        as_df = db_type == "test"
+        classes = (
+            classes_df.loc[classes_df.class_type == class_type].tag.str.lower().values
+        )
+        return classes
 
+    def load_tags_opts(self, database, db_type):
         tags_opts = {
             "suffix": self.get_db_option("tags_suffix", database, "-sceneRect.csv"),
             "tags_with_audio": self.get_db_option("tags_with_audio", database, False),
-            "classes": classes,
-            "as_df": as_df,
+            "classes": self.load_classes(database),
             "columns": self.get_db_option("tags_columns", database, None),
             "columns_type": self.get_db_option("tags_columns_type", database, None),
         }
+        return tags_opts
+
+    def generate_dataset(self, database, paths, file_list, db_type, overwrite):
+        spectrograms, tags_df, training_tags, infos = [], [], [], []
+        print("Generating dataset: ", database["name"])
+
+        tags_opts = self.load_tags_opts(database, db_type)
 
         for file_path in file_list:
             try:
@@ -189,22 +208,28 @@ class DataHandler:
                     "sample_rate": sample_rate,
                     "length": len(wav),
                 }
-                tags = tag_manager.load_tags(
+                tag_df = tag_manager.get_tag_df(
                     audio_info, paths["tags"][db_type], tags_opts
                 )
+
                 spec, opts = spectrogram.generate_spectrogram(
                     wav, sample_rate, self.opts["spectrogram"]
                 )
 
                 audio_info["spec_opts"] = opts
-                if not as_df:
-                    # reshape annotations
-                    factor = float(spec.shape[1]) / tags.shape[0]
-                    tags = zoom(tags, factor)
+                if not db_type == "test":
+                    tag_presence = tag_manager.get_tag_presence(
+                        tag_df, audio_info, tags_opts
+                    )
+                    factor = float(spec.shape[1]) / tag_presence.shape[0]
+                    train_tags = zoom(tag_presence, factor)
+                else:
+                    train_tags = []
 
                 # file_names_list.append(file_path)
                 spectrograms.append(spec)
-                annotations.append(tags)
+                tags_df.append(tag_df)
+                training_tags.append(train_tags)
                 infos.append(audio_info)
 
                 if self.get_db_option("save_intermediates", database, False):
@@ -213,17 +238,20 @@ class DataHandler:
                     ).with_suffix(".pkl")
                     if not savename.exists() or overwrite:
                         with open(savename, "wb") as f:
-                            pickle.dump((tags, spec), f, -1)
+                            pickle.dump((spec, training_tags), f, -1)
             except Exception:
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())
 
         # Save all data
-        if spectrograms and annotations:
+        if spectrograms and tags_df:
             with open(paths["pkl"][db_type], "wb") as f:
-                pickle.dump((spectrograms, annotations, infos), f, -1)
+                pickle.dump((spectrograms, training_tags, infos), f, -1)
                 print("Saved file: ", paths["pkl"][db_type])
-        return (spectrograms, annotations, infos)
+            tags_df = pd.concat(tags_df)
+            print(tags_df)
+            feather.write_dataframe(tags_df, str(paths["tag_df"][db_type]))
+        return (spectrograms, training_tags, infos)
 
     def check_dataset(self, database, paths, file_list, db_type, load=False):
         # * Overwrite if generate_file_lists is true as file lists will be recreated
@@ -231,7 +259,11 @@ class DataHandler:
             "overwrite", database, False
         ) or self.get_db_option("generate_file_lists", database, False)
         res = []
-        if not paths["pkl"][db_type].exists() or overwrite:
+        if (
+            not paths["pkl"][db_type].exists()
+            or not paths["tag_df"][db_type].exists()
+            or overwrite
+        ):
             res = self.generate_dataset(database, paths, file_list, db_type, overwrite)
         elif load:
             with open(paths["pkl"][db_type], "rb") as f:
