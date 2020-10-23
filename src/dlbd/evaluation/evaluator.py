@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from dlbd import data
+from dlbd.data import tag_manager
 
 from ..detectors import DETECTORS
 from ..utils import file as file_utils
@@ -119,7 +120,6 @@ class Evaluator(ModelHandler):
                 detector_opts = self.opts
 
                 for model_opts in models:
-
                     for version in model_opts["versions"]:
                         model_name = model_opts["name"] + "_v" + str(version)
                         preds = self.get_predictions(

@@ -6,10 +6,11 @@ from dlbd.data.data_handler import DataHandler
 from dlbd.training.trainer import Trainer
 from dlbd.utils.split import arctic_split
 from dlbd.models.CityNetTF2 import CityNetTF2
+from dlbd.models.CityNetTF22 import CityNetTF22
 from dlbd.models.CityNetRegularized import CityNetRegularized
 
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 trainer = Trainer(
