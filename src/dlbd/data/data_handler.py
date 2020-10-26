@@ -218,6 +218,7 @@ class DataHandler:
 
                 audio_info["spec_opts"] = opts
                 if not db_type == "test":
+                    tmp_tags = tag_manager.filter_classes(tag_df, tag_opts["classes"])
                     tag_presence = tag_manager.get_tag_presence(
                         tag_df, audio_info, tags_opts
                     )
