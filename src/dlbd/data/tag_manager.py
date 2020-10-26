@@ -64,6 +64,7 @@ def filter_classes(tag_df, classes):
                 if c in related_tags:
                     res[i] = True
                     match[i] = c
+                    break
         i += 1
     tag_df.loc[:, "tag"] = match
     return tag_df[res]
@@ -87,7 +88,6 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
         # loop over each annotation...
         tag_df = pd_annots.loc[~pd_annots.Filename.isna()].copy()
         tag_df = rename_columns(tag_df, columns)
-        tag_df = filter_classes(tag_df, tag_opts["classes"])
         # tmp.loc[:, "recording_id"] = audio_info["recording_id"]
         if not tag_df.empty:
             tag_df.loc[:, "recording_path"] = str(audio_info["file_path"])

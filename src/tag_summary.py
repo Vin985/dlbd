@@ -33,7 +33,8 @@ for database in opts["databases"]:
     paths = dh.get_database_paths(database)
     for db_type in dh.get_db_option("db_types", database, dh.DB_TYPES):
         tag_df = feather.read_dataframe(paths["tag_df"][db_type])
-        print(tag_df)
+        print(set(tag_df.related.str.cat(sep=",").split(sep=",")))
+        tag_df = tag_manager.filter_classes(tag_df, dh.load_classes(database))
         if "background" in tag_df.columns:
             tags_summary = (
                 tag_df.groupby(["tag", "background"])
@@ -87,5 +88,5 @@ for database in opts["databases"]:
         #     ), width=10, height=8
         # )
         # print(tags_summary)
-save_as_pdf_pages(plots, "tag_summaries_" + opts["class_type"] + ".pdf")
+save_as_pdf_pages(plots, "tag_summaries3_" + opts["class_type"] + ".pdf")
 
