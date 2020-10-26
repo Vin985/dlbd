@@ -3,6 +3,16 @@ from pathlib import Path
 import yaml
 
 
+def ensure_path_exists(path, is_file=False):
+    if is_file:
+        tmp = path.parent
+    else:
+        tmp = path
+    if not tmp.exists():
+        tmp.mkdir(exist_ok=True, parents=True)
+    return path
+
+
 def list_files(path, extensions=None, recursive=False):
     files = []
     extensions = extensions or []
