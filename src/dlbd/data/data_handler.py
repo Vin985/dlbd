@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
-from ..utils.file import list_files
+from ..utils.file import list_files, ensure_path_exists
 from . import spectrogram
 from . import tag_manager
 
@@ -43,7 +43,6 @@ class DataHandler:
     def __init__(self, opts, split_funcs=None):
         self.opts = opts
         self.split_funcs = split_funcs
-        print(split_funcs)
 
     @staticmethod
     def get_full_path(path, root):
@@ -83,9 +82,7 @@ class DataHandler:
         paths["audio"] = {"default": self.get_db_option("audio_dir", database)}
         paths["tags"] = {"default": self.get_db_option("tags_dir", database)}
         paths["dest"] = {
-            "default": self.get_db_option("dest_dir", database)
-            / class_folder
-            / spec_folder
+            "default": self.get_db_option("dest_dir", database) / database["name"]
         }
         paths["file_list"] = {}
         paths["pkl"] = {}
@@ -102,22 +99,19 @@ class DataHandler:
             paths["tags"][db_type] = self.get_full_path(
                 paths["tags"]["default"], db_type_dir
             )
-            dest_dir = (
-                self.get_full_path(paths["dest"]["default"], db_type_dir)
-                / database["name"]
-            )
+            dest_dir = self.get_full_path(paths["dest"]["default"], db_type_dir)
             paths["dest"][db_type] = dest_dir
             paths["file_list"][db_type] = dest_dir / (db_type + "_file_list.csv")
-            paths["pkl"][db_type] = dest_dir / (db_type + "_data.pkl")
+            paths["pkl"][db_type] = (
+                dest_dir / class_folder / spec_folder / (db_type + "_data.pkl")
+            )
             paths["tag_df"][db_type] = dest_dir / (db_type + "_tags.feather")
-
         return paths
 
     @staticmethod
     def save_file_list(db_type, file_list, paths):
         file_list_path = paths["dest"][db_type] / (db_type + "_file_list.csv")
-        file_list_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_list_path, mode="w") as f:
+        with open(ensure_path_exists(file_list_path, is_file=True), mode="w") as f:
             writer = csv.writer(f)
             for name in file_list:
                 writer.writerow([name])
@@ -125,7 +119,7 @@ class DataHandler:
 
     def get_audio_file_lists(self, paths, database):
         res = {}
-        for db_type in self.DB_TYPES:
+        for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
             res[db_type] = list_files(
                 paths["audio"][db_type],
                 self.get_db_option("audio_ext", database, [".wav"]),
@@ -194,7 +188,7 @@ class DataHandler:
         spectrograms, tags_df, training_tags, infos = [], [], [], []
         print("Generating dataset: ", database["name"])
 
-        tags_opts = self.load_tags_opts(database, db_type)
+        tag_opts = self.load_tags_opts(database, db_type)
 
         for file_path in file_list:
             try:
@@ -209,7 +203,7 @@ class DataHandler:
                     "length": len(wav),
                 }
                 tag_df = tag_manager.get_tag_df(
-                    audio_info, paths["tags"][db_type], tags_opts
+                    audio_info, paths["tags"][db_type], tag_opts
                 )
 
                 spec, opts = spectrogram.generate_spectrogram(
@@ -220,7 +214,7 @@ class DataHandler:
                 if not db_type == "test":
                     tmp_tags = tag_manager.filter_classes(tag_df, tag_opts["classes"])
                     tag_presence = tag_manager.get_tag_presence(
-                        tag_df, audio_info, tags_opts
+                        tmp_tags, audio_info, tag_opts
                     )
                     factor = float(spec.shape[1]) / tag_presence.shape[0]
                     train_tags = zoom(tag_presence, factor)
@@ -246,11 +240,12 @@ class DataHandler:
 
         # Save all data
         if spectrograms and tags_df:
-            with open(paths["pkl"][db_type], "wb") as f:
+            with open(
+                ensure_path_exists(paths["pkl"][db_type], is_file=True), "wb"
+            ) as f:
                 pickle.dump((spectrograms, training_tags, infos), f, -1)
                 print("Saved file: ", paths["pkl"][db_type])
             tags_df = pd.concat(tags_df)
-            print(tags_df)
             feather.write_dataframe(tags_df, str(paths["tag_df"][db_type]))
         return (spectrograms, training_tags, infos)
 
