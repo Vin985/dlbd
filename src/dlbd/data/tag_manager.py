@@ -55,7 +55,8 @@ def filter_classes(tag_df, classes):
     match = [""] * tag_df.shape[0]
     i = 0
     for tag, related in df2.itertuples(name=None, index=False):
-        if tag.lower() in classes:
+        tag = tag.lower()
+        if tag in classes:
             res[i] = True
             match[i] = tag
         else:
