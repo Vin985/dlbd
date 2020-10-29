@@ -3,6 +3,26 @@ import numpy as np
 
 from .detector import Detector
 
+from plotnine import (
+    aes,
+    element_text,
+    geom_bar,
+    geom_text,
+    ggplot,
+    ggtitle,
+    save_as_pdf_pages,
+    scale_x_discrete,
+    facet_wrap,
+    theme,
+    theme_classic,
+    xlab,
+    ylab,
+)
+from plotnine.labels import ggtitle
+from plotnine.positions.position_dodge import position_dodge
+
+from functools import partial
+
 
 class StandardDetector(Detector):
     def __init__(self):
@@ -192,6 +212,135 @@ class StandardDetector(Detector):
                 duration += end - start
         return duration
 
+    @staticmethod
+    def get_proportion(x, n_total=-1):
+        print(x)
+        if n_total < 0:
+            n_total = x.shape[0]
+            # raise ValueError("n_total should be provided and positive")
+        return round(len(x) / n_total * 100, 1)
+
+    def test_func(self, x, n_total):
+        total_func = partial(self.get_proportion, n_total=n_total)
+        match_func = partial(self.get_proportion, n_total=x.shape[0])
+        res = (
+            x.groupby(["tag", "background"])
+            .agg({"tag": "count", "prop_total": total_func, "prop_match": match_func})
+            .rename(columns={"tag": "n_tags"})
+            .reset_index()
+            .astype({"background": "category", "tag": "category"})
+        )
+        return res
+
+    @staticmethod
+    def get_matched_label(x, n_total, n_matched):
+        x = int(x)
+        label = x == 1 and "matched" or "unmatched"
+        label += " (n={}, {}%)".format(
+            n_matched[x], round(n_matched[x] / n_total * 100, 1)
+        )
+        return label
+
+    def get_tag_repartition(self, tag_df):
+        test = tag_df[["tag", "matched", "background", "id"]].copy()
+        test.loc[:, "prop_total"] = -1
+        test.loc[:, "prop_match"] = -1
+        test.loc[:, "tag_match"] = -1
+
+        n_total = test.shape[0]
+        n_matched = test.matched.value_counts()
+
+        test2 = test.groupby("matched").apply(self.test_func, n_total=test.shape[0])
+        print(test2.reset_index())
+        print(test2.dtypes)
+        if "background" in tag_df.columns:
+            tags_summary = (
+                tag_df.groupby(["matched", "tag", "background"])
+                .agg({"tag": "count"})
+                .rename(columns={"tag": "n_tags"})
+                .reset_index()
+                .astype(
+                    {"background": "category", "tag": "category", "matched": "category"}
+                )
+            )
+            print(tags_summary)
+            plt = ggplot(
+                data=tags_summary,
+                mapping=aes(
+                    x="tag",  # "factor(species, ordered=False)",
+                    y="n_tags",
+                    fill="background",  # "factor(species, ordered=False)",
+                ),
+            )
+        else:
+            tags_summary = (
+                tag_df.groupby(["tag", "matched"])
+                .agg({"tag": "count"})
+                .rename(columns={"tag": "n_tags"})
+                .reset_index()
+                .astype({"tag": "category", "matched": "category"})
+            )
+            plt = ggplot(
+                data=tags_summary,
+                mapping=aes(x="tag", y="n_tags",),  # "factor(species, ordered=False)",
+            )
+
+        plt = (
+            plt
+            + geom_bar(stat="identity", show_legend=True, position=position_dodge())
+            + facet_wrap(
+                "matched",
+                nrow=1,
+                ncol=2,
+                scales="fixed",
+                labeller=(lambda x: self.get_matched_label(x, n_total, n_matched)),
+                # partial(
+                #     self.get_matched_label, n_total=n_total, n_matched=n_matched
+                # )
+                # (lambda x: x == "1" and "matched" or "unmatched"),
+            )
+            + xlab("Species")
+            + ylab("Number of annotations")
+            + geom_text(
+                mapping=aes(y=tags_summary.n_tags + 2, label="n_tags"),
+                position=position_dodge(width=0.9),
+            )
+            + geom_text(
+                mapping=aes(
+                    x=[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
+                    y=200,
+                    label=[
+                        "toto",
+                        "tutu",
+                        "titi",
+                        "",
+                        "",
+                        "",
+                        "toto2",
+                        "titi2",
+                        "tutu2",
+                        "",
+                        "",
+                        "",
+                    ],
+                )
+            )
+            + theme_classic()
+            + theme(
+                axis_text_x=element_text(angle=90, vjust=1, hjust=1, margin={"r": -30}),
+                figure_size=(20, 8),
+            )
+            # + ggtitle(
+            #     "_".join([database["name"], db_type, "tag_species.png"])
+            #     + "(n = "
+            #     + str(tag_df.shape[0])
+            #     + ")"
+            # )
+            # + scale_x_discrete(limits=SPECIES_LIST, labels=xlabels)
+        )
+
+        return plt
+
     def get_stats(self, events, tags, matches, options):
 
         matched = matches.loc[
@@ -255,16 +404,19 @@ class StandardDetector(Detector):
             "recall": recall,
             "f1_score": f1_score,
         }
-        return stats
+
+        tag_repartition = self.get_tag_repartition(tags)
+        return stats, tag_repartition
 
     def evaluate(self, predictions, tags, options):
         events = self.get_events(predictions, options)
         matches = self.get_matches(events, tags)
-        stats = self.get_stats(events, tags, matches, options)
+        stats, tag_repartition = self.get_stats(events, tags, matches, options)
         print("Stats for options {0}: {1}".format(options, stats))
         return {
             "options": options,
             "stats": stats,
             "matches": matches,
+            "tag_repartition": tag_repartition,
         }
 
