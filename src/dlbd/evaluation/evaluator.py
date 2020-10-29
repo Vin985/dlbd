@@ -4,7 +4,7 @@ from pathlib import Path
 import feather
 import numpy as np
 import pandas as pd
-
+import plotnine
 from dlbd import data
 from dlbd.data import tag_manager
 
@@ -80,7 +80,7 @@ class Evaluator(ModelHandler):
         return predictions
 
     def prepare_tags(self, tags):
-        tags = pd.concat(tags)
+        # tags = pd.concat(tags)
         tags = tags.astype({"recording_path": "category"})
         tags["tag_duration"] = tags["tag_end"] - tags["tag_start"]
         tags.reset_index(inplace=True)
@@ -90,31 +90,30 @@ class Evaluator(ModelHandler):
         return tags
 
     def get_tags(self, database):
-        preds_dir = self.opts.get("predictions_dir", ".")
-        if not preds_dir:
-            raise AttributeError(
-                "Please provide a directory where to save the predictions using"
-                + " the predictions_dir option in the config file"
-            )
-        # TODO: filter tags based on class
-        file_name = database + "_test_tags.feather"
-        tags_file = Path(preds_dir) / file_name
-        if tags_file.exists():
-            tags = feather.read_dataframe(tags_file)
-        else:
-            __, tag_list, _ = self.test_data[database]
-            tags = self.prepare_tags(tag_list)
-            feather.write_dataframe(tags, tags_file)
+        paths = self.data_handler.get_database_paths(database)
+        # file_name = database + "_test_tags.feather"
+        tags_file = paths["tag_df"]["test"]
+        # if tags_file.exists():
+        tags = feather.read_dataframe(tags_file)
+        classes = self.data_handler.load_classes(database)
+        tags = tag_manager.filter_classes(tags, classes)
+        tags = self.prepare_tags(tags)
+        # else:
+        #     __, tag_list, _ = self.test_data[database]
+        #     tags = self.prepare_tags(tag_list)
+        #     feather.write_dataframe(tags, tags_file)
         return tags
 
     def evaluate(self, models=None):
-        self.data_handler.check_datasets()
+        # self.data_handler.check_datasets()
         stats = []
+        plots = []
+        class_type = self.data_handler.opts["class_type"]
         for database in self.data_handler.opts["databases"]:
             if "test" in self.data_handler.get_db_option(
                 "db_types", database, self.data_handler.DB_TYPES
             ):
-                tags = self.get_tags(database["name"])
+                tags = self.get_tags(database)
                 tags = tags.rename(columns={"recording_path": "recording_id"})
                 models = models or self.opts["models"]
                 detector_opts = self.opts
@@ -139,6 +138,21 @@ class Evaluator(ModelHandler):
                             model_stats["stats"]["database"] = database["name"]
                             model_stats["stats"]["model"] = model_name
                             model_stats["stats"]["type"] = str(detector_opts)
+                            model_stats["stats"]["tag_class"] = class_type
                             stats.append(pd.Series(model_stats["stats"]))
-        res = pd.DataFrame(stats)
-        return res
+                            plots.append(model_stats["tag_repartition"])
+        stats_df = pd.DataFrame(stats)
+        if self.opts.get("save_stats", True):
+            res_dir = Path(self.opts.get("evaluation_dir", "."))
+            stats_df.to_csv(
+                str(
+                    file_utils.ensure_path_exists(
+                        res_dir / (class_type + "_stats.csv"), is_file=True,
+                    )
+                ),
+            )
+            plotnine.save_as_pdf_pages(
+                plots, res_dir / (class_type + "_tag_repartition.pdf")
+            )
+        return stats_df
+
