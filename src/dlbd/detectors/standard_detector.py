@@ -232,6 +232,23 @@ class StandardDetector(Detector):
         )
         return res
 
+    def get_props(self, x, by, col="", total=0):
+        if not total:
+            total = x.shape[0]
+        if by:
+            by = by.copy()
+            ncol = by.pop(0)
+            res = x.groupby(ncol).apply(self.get_props, by, ncol, x.shape[0])
+        else:
+            res = x.iloc[0]
+            res["n_tags"] = x.shape[0]
+        if col:
+            res["prop_" + col] = x.shape[0] / total * 100
+            res["lbl_" + col] = "n = {}\n({}%)".format(
+                x.shape[0], round(x.shape[0] / total * 100, 2)
+            )
+        return res
+
     @staticmethod
     def get_matched_label(x, n_total, n_matched):
         x = int(x)
@@ -242,48 +259,60 @@ class StandardDetector(Detector):
         return label
 
     def get_tag_repartition(self, tag_df):
+        if not "background" in tag_df.columns:
+            tag_df["background"] = False
         test = tag_df[["tag", "matched", "background", "id"]].copy()
-        test.loc[:, "prop_total"] = -1
-        test.loc[:, "prop_match"] = -1
-        test.loc[:, "tag_match"] = -1
+        test.loc[:, "prop_matched"] = -1
+        test.loc[:, "prop_background"] = -1
+        test.loc[:, "lbl_matched"] = ""
+        test.loc[:, "lbl_background"] = ""
+        test.loc[:, "n_tags"] = -1
 
         n_total = test.shape[0]
         n_matched = test.matched.value_counts()
 
-        test2 = test.groupby("matched").apply(self.test_func, n_total=test.shape[0])
-        print(test2.reset_index())
-        print(test2.dtypes)
-        if "background" in tag_df.columns:
-            tags_summary = (
-                tag_df.groupby(["matched", "tag", "background"])
-                .agg({"tag": "count"})
-                .rename(columns={"tag": "n_tags"})
-                .reset_index()
-                .astype(
-                    {"background": "category", "tag": "category", "matched": "category"}
-                )
-            )
-            print(tags_summary)
-            plt = ggplot(
-                data=tags_summary,
-                mapping=aes(
-                    x="tag",  # "factor(species, ordered=False)",
-                    y="n_tags",
-                    fill="background",  # "factor(species, ordered=False)",
-                ),
-            )
-        else:
-            tags_summary = (
-                tag_df.groupby(["tag", "matched"])
-                .agg({"tag": "count"})
-                .rename(columns={"tag": "n_tags"})
-                .reset_index()
-                .astype({"tag": "category", "matched": "category"})
-            )
-            plt = ggplot(
-                data=tags_summary,
-                mapping=aes(x="tag", y="n_tags",),  # "factor(species, ordered=False)",
-            )
+        tags_summary = (
+            test.groupby("tag")
+            .apply(self.get_props, by=["matched", "background"])
+            .reset_index(drop=True)
+        )
+        tags_summary = tags_summary.sort_values(["tag", "matched", "background"])
+        print(tags_summary)
+
+        # test2 = test.groupby("matched").apply(self.test_func, n_total=test.shape[0])
+        # print(test2.reset_index())
+        # print(test2.dtypes)
+        # if "background" in tag_df.columns:
+        #     tags_summary = (
+        #         tag_df.groupby(["matched", "tag", "background"])
+        #         .agg({"tag": "count"})
+        #         .rename(columns={"tag": "n_tags"})
+        #         .reset_index()
+        #         .astype(
+        #             {"background": "category", "tag": "category", "matched": "category"}
+        #         )
+        #     )
+        #     print(tags_summary)
+        plt = ggplot(
+            data=tags_summary,
+            mapping=aes(
+                x="tag",  # "factor(species, ordered=False)",
+                y="n_tags",
+                fill="background",  # "factor(species, ordered=False)",
+            ),
+        )
+        # else:
+        #     tags_summary = (
+        #         tag_df.groupby(["tag", "matched"])
+        #         .agg({"tag": "count"})
+        #         .rename(columns={"tag": "n_tags"})
+        #         .reset_index()
+        #         .astype({"tag": "category", "matched": "category"})
+        #     )
+        #     plt = ggplot(
+        #         data=tags_summary,
+        #         mapping=aes(x="tag", y="n_tags",),  # "factor(species, ordered=False)",
+        #     )
 
         plt = (
             plt
@@ -301,28 +330,19 @@ class StandardDetector(Detector):
             )
             + xlab("Species")
             + ylab("Number of annotations")
+            # + geom_text(
+            #     mapping=aes(y=tags_summary.n_tags + 2, label="n_tags"),
+            #     position=position_dodge(width=0.9),
+            # )
             + geom_text(
-                mapping=aes(y=tags_summary.n_tags + 2, label="n_tags"),
+                mapping=aes(y=tags_summary.n_tags + 10, label="lbl_background"),
                 position=position_dodge(width=0.9),
             )
             + geom_text(
                 mapping=aes(
-                    x=[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
-                    y=200,
-                    label=[
-                        "toto",
-                        "tutu",
-                        "titi",
-                        "",
-                        "",
-                        "",
-                        "toto2",
-                        "titi2",
-                        "tutu2",
-                        "",
-                        "",
-                        "",
-                    ],
+                    # x=[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
+                    y=max(tags_summary.n_tags) + 40,
+                    label="lbl_matched",
                 )
             )
             + theme_classic()
