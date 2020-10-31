@@ -1,5 +1,7 @@
 import datetime
+from time import time
 import functools
+from functools import partial
 
 import numpy as np
 import pandas as pd
@@ -12,7 +14,6 @@ class SubsamplingDetector(Detector):
 
     DEFAULT_ISOLATE_EVENTS = True
     DEFAULT_EVENT_THRESHOLD = 0.5
-    # DEFAULT_EVALUATION = "time"
 
     def resample_max(self, x, threshold=0.98):
         if max(x) >= threshold:
@@ -28,8 +29,7 @@ class SubsamplingDetector(Detector):
         start = x.index.values[0].item() / 10 ** 9
         end = start + step / 1000
         tmp = np.unique(tags["id"][(tags["start"] < end) & (tags["end"] >= start)])
-        idx = " ".join(tmp)
-        return idx
+        return tmp.tolist()
 
     def isolate_events(self, predictions, step):
         tmp = predictions.loc[predictions.event > 0]
@@ -79,6 +79,10 @@ class SubsamplingDetector(Detector):
         ).apply(self.get_recording_events, tags, options)
         return events
 
+    @staticmethod
+    def list_append(x, y):
+        x.append(y)
+
     def get_recording_events(self, predictions, tags, options=None):
         options = options or {}
         tags = tags[tags.recording_id == predictions.name]
@@ -89,10 +93,8 @@ class SubsamplingDetector(Detector):
             for tag in tags.itertuples():
                 start = math.ceil(tag.tag_start / step)
                 end = math.ceil(tag.tag_end / step)
-                predictions.tag.iloc[start:end] = 1
-                predictions.tag_index.iloc[start:end] = (
-                    predictions.tag_index.iloc[start:end] + " " + str(tag.id)
-                )
+                f = partial(self.list_append, y=tag.id)
+                predictions.tag_index[start:end].map(f)
         return predictions
 
     def match_events_apply(self, predictions, tags, options):
@@ -111,12 +113,10 @@ class SubsamplingDetector(Detector):
         res = resampler.agg({"activity": resample_func, "tag_index": tag_func}).rename(
             columns={"activity": "event"}
         )
-        res["recording_id"] = recording_id
-        res["tag"] = 0
-        res.tag.loc[res.tag_index != ""] = 1
+        # res["recording_id"] = recording_id
         return res
 
-    def get_stats(self, df, expand_index=False):
+    def get_stats(self, df, tags):
         # TODO: make stats coherent between no resampling and resampling: use tag index in the same way
         res = df.tag + df.event
 
@@ -125,18 +125,12 @@ class SubsamplingDetector(Detector):
         n_false_positives = len(res[res == 2])
         n_false_negatives = len(res[res == 1])
 
-        if expand_index:
-            df2 = df.loc[(df.tag_index != "") & (df.event > 0)]
-            tmp = df2.tag_index.unique()
-            matched_tags = set(" ".join(tmp).split())
-            all_tags = df.tag_index[df.tag_index != ""].unique()
-            all_tags = set(" ".join(all_tags).split())
-        else:
-            df2 = df.loc[(df.tag_index != "") & (df.event > 0)]
-            matched_tags = df2.tag_index.unique()
-            all_tags = df.tag_index[df.tag_index != ""].unique()
+        matched_tags = set(
+            df.tag_index.loc[(df.tag_index.str.len() > 0) & (df.event > 0)].sum()
+        )
 
-        n_unmatched_tags = len(all_tags) - len(matched_tags)
+        n_tags = tags.shape[0]
+        n_unmatched_tags = n_tags - len(matched_tags)
 
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
@@ -144,7 +138,7 @@ class SubsamplingDetector(Detector):
         f1_score = round(2 * precision * recall / (precision + recall), 3)
         return {
             "n_events": int(df.event.sum() / 2),
-            "n_tags": len(all_tags),
+            "n_tags": n_tags,
             "n_true_positives": n_true_positives,
             "n_false_positives": n_false_positives,
             "n_true_negatives": n_true_negatives,
@@ -159,23 +153,27 @@ class SubsamplingDetector(Detector):
 
     def evaluate(self, predictions, tags, options):
         preds = predictions.copy()
-        preds.loc[:, "tag"] = 0
-        preds.loc[:, "tag_index"] = ""
+        # preds.loc[:, "tag_index"] = ""
+        preds.loc[:, "tag_index"] = pd.Series([[] for i in range(preds.shape[0])])
         preds.loc[:, "event"] = 0
-        preds.loc[:, "datetime"] = pd.to_datetime(preds.time * 10 ** 9)
-        preds.set_index("datetime", inplace=True)
+        preds.recording_id = preds.recording_id.astype("category")
         step = options.get("sample_step", self.DEFAULT_MIN_DURATION) * 1000
 
         if step:
+            preds.loc[:, "datetime"] = pd.to_datetime(preds.time * 10 ** 9)
+            preds.set_index("datetime", inplace=True)
             apply_func = self.match_events_apply
-            as_index = False
         else:
             apply_func = self.get_recording_events
-            as_index = True
 
-        events = preds.groupby("recording_id", as_index=as_index, observed=True).apply(
-            apply_func, tags, options
+        events = (
+            preds.groupby("recording_id", as_index=False, observed=True)
+            .apply(apply_func, tags=tags, options=options)
+            .reset_index()
         )
-        stats = self.get_stats(events, expand_index=True)
+        events.loc[:, "tag"] = 0
+        events.loc[events.tag_index.str.len() > 0, "tag"] = 1
+
+        stats = self.get_stats(events, tags)
         print("Stats for options {0}: {1}".format(options, stats))
         return {"options": options, "stats": stats, "matches": events}
