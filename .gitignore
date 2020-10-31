@@ -5,3 +5,4 @@ pr_curve.pdf
 test_*
 *.pdf
 *.png
+evaluate.py.lprof
