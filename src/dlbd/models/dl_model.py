@@ -18,6 +18,9 @@ DEFAULT_N_MELS = 32  # 128
 class DLModel:
     NAME = "DLMODEL"
 
+    STEP_TRAINING = "train"
+    STEP_VALIDATION = "validation"
+
     def __init__(self, opts=None, version=None):
         """Create the layers of the neural network, with the same options we used in training"""
         self.wav = None
