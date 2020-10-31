@@ -1,33 +1,22 @@
 import pandas as pd
-import numpy as np
-
-from .detector import Detector
-
 from plotnine import (
     aes,
     element_text,
+    facet_wrap,
     geom_bar,
     geom_text,
     ggplot,
-    ggtitle,
-    save_as_pdf_pages,
-    scale_x_discrete,
-    facet_wrap,
     theme,
     theme_classic,
     xlab,
     ylab,
 )
-from plotnine.labels import ggtitle
 from plotnine.positions.position_dodge import position_dodge
 
-from functools import partial
+from .detector import Detector
 
 
 class StandardDetector(Detector):
-    def __init__(self):
-        super().__init__()
-
     def get_events(self, predictions, options):
         predictions = predictions[["activity", "recording_id", "time"]]
         events = predictions.groupby("recording_id", as_index=False, observed=True)
@@ -212,39 +201,39 @@ class StandardDetector(Detector):
                 duration += end - start
         return duration
 
-    @staticmethod
-    def get_proportion(x, n_total=-1):
-        print(x)
-        if n_total < 0:
-            n_total = x.shape[0]
-            # raise ValueError("n_total should be provided and positive")
-        return round(len(x) / n_total * 100, 1)
+    # @staticmethod
+    # def get_proportion(x, n_total=-1):
+    #     print(x)
+    #     if n_total < 0:
+    #         n_total = x.shape[0]
+    #         # raise ValueError("n_total should be provided and positive")
+    #     return round(len(x) / n_total * 100, 1)
 
-    def test_func(self, x, n_total):
-        total_func = partial(self.get_proportion, n_total=n_total)
-        match_func = partial(self.get_proportion, n_total=x.shape[0])
-        res = (
-            x.groupby(["tag", "background"])
-            .agg({"tag": "count", "prop_total": total_func, "prop_match": match_func})
-            .rename(columns={"tag": "n_tags"})
-            .reset_index()
-            .astype({"background": "category", "tag": "category"})
-        )
-        return res
+    # def test_func(self, x, n_total):
+    #     total_func = partial(self.get_proportion, n_total=n_total)
+    #     match_func = partial(self.get_proportion, n_total=x.shape[0])
+    #     res = (
+    #         x.groupby(["tag", "background"])
+    #         .agg({"tag": "count", "prop_total": total_func, "prop_match": match_func})
+    #         .rename(columns={"tag": "n_tags"})
+    #         .reset_index()
+    #         .astype({"background": "category", "tag": "category"})
+    #     )
+    #     return res
 
-    def get_props(self, x, by, col="", total=0):
+    def get_proportions(self, x, by, col="", total=0):
         if not total:
             total = x.shape[0]
         if by:
             by = by.copy()
             ncol = by.pop(0)
-            res = x.groupby(ncol).apply(self.get_props, by, ncol, x.shape[0])
+            res = x.groupby(ncol).apply(self.get_proportions, by, ncol, x.shape[0])
         else:
             res = x.iloc[0]
             res["n_tags"] = x.shape[0]
         if col:
             res["prop_" + col] = x.shape[0] / total * 100
-            res["lbl_" + col] = "n = {}\n({}%)".format(
+            res["lbl_" + col] = "n = {}\n({}%)\n\n".format(
                 x.shape[0], round(x.shape[0] / total * 100, 2)
             )
         return res
@@ -273,46 +262,20 @@ class StandardDetector(Detector):
 
         tags_summary = (
             test.groupby("tag")
-            .apply(self.get_props, by=["matched", "background"])
+            .apply(self.get_proportions, by=["matched", "background"])
             .reset_index(drop=True)
         )
         tags_summary = tags_summary.sort_values(["tag", "matched", "background"])
-        print(tags_summary)
 
-        # test2 = test.groupby("matched").apply(self.test_func, n_total=test.shape[0])
-        # print(test2.reset_index())
-        # print(test2.dtypes)
-        # if "background" in tag_df.columns:
-        #     tags_summary = (
-        #         tag_df.groupby(["matched", "tag", "background"])
-        #         .agg({"tag": "count"})
-        #         .rename(columns={"tag": "n_tags"})
-        #         .reset_index()
-        #         .astype(
-        #             {"background": "category", "tag": "category", "matched": "category"}
-        #         )
-        #     )
-        #     print(tags_summary)
         plt = ggplot(
             data=tags_summary,
             mapping=aes(
                 x="tag",  # "factor(species, ordered=False)",
                 y="n_tags",
-                fill="background",  # "factor(species, ordered=False)",
+                fill="background",
+                ymax=max(tags_summary.n_tags) + 35,  # "factor(species, ordered=False)",
             ),
         )
-        # else:
-        #     tags_summary = (
-        #         tag_df.groupby(["tag", "matched"])
-        #         .agg({"tag": "count"})
-        #         .rename(columns={"tag": "n_tags"})
-        #         .reset_index()
-        #         .astype({"tag": "category", "matched": "category"})
-        #     )
-        #     plt = ggplot(
-        #         data=tags_summary,
-        #         mapping=aes(x="tag", y="n_tags",),  # "factor(species, ordered=False)",
-        #     )
 
         plt = (
             plt
@@ -323,40 +286,26 @@ class StandardDetector(Detector):
                 ncol=2,
                 scales="fixed",
                 labeller=(lambda x: self.get_matched_label(x, n_total, n_matched)),
-                # partial(
-                #     self.get_matched_label, n_total=n_total, n_matched=n_matched
-                # )
-                # (lambda x: x == "1" and "matched" or "unmatched"),
             )
             + xlab("Species")
             + ylab("Number of annotations")
-            # + geom_text(
-            #     mapping=aes(y=tags_summary.n_tags + 2, label="n_tags"),
-            #     position=position_dodge(width=0.9),
-            # )
             + geom_text(
-                mapping=aes(y=tags_summary.n_tags + 10, label="lbl_background"),
+                mapping=aes(label="lbl_background"),
+                # nudge_y=10,
                 position=position_dodge(width=0.9),
             )
             + geom_text(
-                mapping=aes(
-                    # x=[1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3],
-                    y=max(tags_summary.n_tags) + 40,
-                    label="lbl_matched",
-                )
+                mapping=aes(y=max(tags_summary.n_tags) + 30, label="lbl_matched",)
             )
             + theme_classic()
             + theme(
                 axis_text_x=element_text(angle=90, vjust=1, hjust=1, margin={"r": -30}),
-                figure_size=(20, 8),
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                figure_size=(20, 10),
+                text=element_text(size=12, weight="bold"),
             )
-            # + ggtitle(
-            #     "_".join([database["name"], db_type, "tag_species.png"])
-            #     + "(n = "
-            #     + str(tag_df.shape[0])
-            #     + ")"
-            # )
-            # + scale_x_discrete(limits=SPECIES_LIST, labels=xlabels)
         )
 
         return plt
@@ -439,4 +388,3 @@ class StandardDetector(Detector):
             "matches": matches,
             "tag_repartition": tag_repartition,
         }
-
