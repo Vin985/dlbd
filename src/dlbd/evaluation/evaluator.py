@@ -5,6 +5,7 @@ import feather
 import numpy as np
 import pandas as pd
 import plotnine
+from plotnine.labels import ggtitle
 from dlbd import data
 from dlbd.data import tag_manager
 
@@ -68,7 +69,13 @@ class Evaluator(ModelHandler):
                 + " the predictions_dir option in the config file"
             )
         file_name = (
-            "predictions_" + model_opts["name"] + "_v" + str(version) + ".feather"
+            "predictions_"
+            + database
+            + "_"
+            + model_opts["name"]
+            + "_v"
+            + str(version)
+            + ".feather"
         )
         pred_file = Path(preds_dir) / file_name
         if not model_opts.get("reclassify", False) and pred_file.exists():
@@ -105,7 +112,7 @@ class Evaluator(ModelHandler):
         return tags
 
     def evaluate(self, models=None):
-        # self.data_handler.check_datasets()
+        self.data_handler.check_datasets()
         stats = []
         plots = []
         class_type = self.data_handler.opts["class_type"]
@@ -140,7 +147,16 @@ class Evaluator(ModelHandler):
                             model_stats["stats"]["type"] = str(detector_opts)
                             model_stats["stats"]["tag_class"] = class_type
                             stats.append(pd.Series(model_stats["stats"]))
-                            plots.append(model_stats["tag_repartition"])
+                            plt = model_stats.get("tag_repartition", None)
+                            if plt:
+                                plt += ggtitle(
+                                    "Tag repartition for model {}, database {}\nwith detector options {}".format(
+                                        model_name,
+                                        database["name"],
+                                        model_stats["stats"]["type"],
+                                    )
+                                )
+                                plots.append(plt)
         stats_df = pd.DataFrame(stats)
         if self.opts.get("save_stats", True):
             res_dir = Path(self.opts.get("evaluation_dir", "."))
@@ -151,8 +167,9 @@ class Evaluator(ModelHandler):
                     )
                 ),
             )
-            plotnine.save_as_pdf_pages(
-                plots, res_dir / (class_type + "_tag_repartition.pdf")
-            )
+            if plots:
+                plotnine.save_as_pdf_pages(
+                    plots, res_dir / (class_type + "_tag_repartition.pdf")
+                )
         return stats_df
 
