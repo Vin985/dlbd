@@ -81,7 +81,7 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
     else:
         csv_file_path = labels_dir / (audio_file_path.stem + suffix)
-    print("Loading tags for file: " + str(audio_file_path))
+    print("Trying to load tag file: " + str(csv_file_path))
     if os.path.exists(csv_file_path):
         pd_annots = pd.read_csv(
             csv_file_path, skip_blank_lines=True, dtype=columns_type
