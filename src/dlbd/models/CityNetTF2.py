@@ -1,4 +1,3 @@
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Model, layers, regularizers
@@ -40,7 +39,7 @@ class CityNetTF2(TF2Model):
             # name="conv1_2",
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
-        #x = layers.BatchNormalization()(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
         W = x.shape[2]
         x = layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
@@ -54,9 +53,9 @@ class CityNetTF2(TF2Model):
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
         # x = layers.Dropout(self.opts["dropout"])(x)
-        #x = layers.BatchNormalization()(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
-        #x = layers.Dropout(0.5)(x)
+        # x = layers.Dropout(0.5)(x)
         x = layers.Dense(
             opts["num_dense_units"],
             activation=None,
@@ -64,9 +63,9 @@ class CityNetTF2(TF2Model):
             # kernel_regularizer=regularizers.l2(0.001),
         )(x)
         # x = layers.Dropout(self.opts["dropout"])(x)
-        #x = layers.BatchNormalization()(x)
+        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
-        #x = layers.Dropout(0.5)(x)
+        # x = layers.Dropout(0.5)(x)
         outputs = layers.Dense(
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)
@@ -75,7 +74,6 @@ class CityNetTF2(TF2Model):
         print("after model")
         model.summary()
         return model
-
 
     def init_metrics(self):
         """Inits the metrics used during model evaluation. Fills the metrics
@@ -103,7 +101,6 @@ class CityNetTF2(TF2Model):
             tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
         )
 
-
     def init_samplers(self):
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
         validation_sampler = SpectrogramSampler(
@@ -113,7 +110,6 @@ class CityNetTF2(TF2Model):
 
     def init_optimizer(self):
         self.optimizer = tf.keras.optimizers.Adam()
-
 
     def modify_spectrogram(self, spec):
         spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
@@ -126,6 +122,9 @@ class CityNetTF2(TF2Model):
             specs = [self.modify_spectrogram(spec) for spec in specs]
         return specs, tags, infos
 
+    def classify_spectrogram(self, spectrogram):
+        spectrogram = self.modify_spectrogram(spectrogram)
+        return super().classify_spectrogram(spectrogram)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
