@@ -93,7 +93,7 @@ class DLModel:
     def classify_spectrogram(self, spectrogram):
         """Apply the classifier"""
         tic = time()
-        test_sampler = SpectrogramSampler(self.opts)
+        test_sampler = SpectrogramSampler(self.opts, balanced=False)
         labels = np.zeros(spectrogram.shape[1])
         preds = []
         for data, _ in tqdm(test_sampler([spectrogram], [labels])):
