@@ -57,7 +57,7 @@ class DataHandler:
             option = database[name]
         else:
             option = self.opts.get(name, default)
-        if name.endswith("_dir"):
+        if isinstance(name, str) and (name.endswith("_dir") or name.endswith("_path")):
             option = Path(option)
         return option
 
@@ -101,7 +101,11 @@ class DataHandler:
             )
             dest_dir = self.get_full_path(paths["dest"]["default"], db_type_dir)
             paths["dest"][db_type] = dest_dir
-            paths["file_list"][db_type] = dest_dir / (db_type + "_file_list.csv")
+            paths["file_list"][db_type] = self.get_db_option(
+                db_type + "_file_list_path",
+                database,
+                dest_dir / (db_type + "_file_list.csv"),
+            )
             paths["pkl"][db_type] = (
                 dest_dir / class_folder / spec_folder / (db_type + "_data.pkl")
             )
@@ -143,6 +147,7 @@ class DataHandler:
     def check_file_lists(self, database, paths):
         file_lists = {}
         msg = "Checking file lists for database {0}... ".format(database["name"])
+        # TODO: check only for the relevant db_types
         file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
         # * Check if file lists are missing or need to be regenerated
         if not file_lists_exist or self.get_db_option(
