@@ -14,7 +14,7 @@ audio_extensions:
   - ".WAV"
 recursive: True
 
-
+#* Tags files options
 tags_suffix: "-sceneRect.csv"
 tags_columns:
   Label: "tag"
@@ -31,23 +31,24 @@ tags_columns_type:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-  - name: 'citynet'
+  - name: 'citynet_small'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-    #db_types: ["validation", "training"]
+    test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
+    db_types: ["test"]
   - name: 'arctic'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
-    # overwrite: False
-    # generate_file_lists: True
-    #* split: Defines proportion of data to set aside for test and validation datasets.
-    #* If provided, first the test dataset is set aside, then the remaining data is split into
-    #* training and validation datasets.
-    #* Overrides training_dir/validation_dir. Set to false or 0 to avoid using it in a database
-    split:
-      test: 0.2
-      validation: 0.2
-    # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
-    audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
-    tags_with_audio: True
+  #   # overwrite: False
+  #   # generate_file_lists: True
+  #   #* split: Defines proportion of data to set aside for test and validation datasets.
+  #   #* If provided, first the test dataset is set aside, then the remaining data is split into
+  #   #* training and validation datasets.
+  #   #* Overrides training_dir/validation_dir. Set to false or 0 to avoid using it in a database
+  #   split:
+  #     test: 0.2
+  #     validation: 0.2
+  #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
+  #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
+  #   tags_with_audio: True
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
 spectrogram:
