@@ -8,6 +8,7 @@ import plotnine
 from plotnine.labels import ggtitle
 from dlbd import data
 from dlbd.data import tag_manager
+from dlbd.training.spectrogram_sampler import SpectrogramSampler
 
 from ..detectors import DETECTORS
 from ..utils import file as file_utils
@@ -40,8 +41,12 @@ class Evaluator(ModelHandler):
         model = self.get_model(model_opts, version)
         specs, _, infos = self.test_data[database]
         res = []
+
+        test_sampler = SpectrogramSampler(model.opts, balanced=False)
+        test_sampler.opts["do_augmentation"] = False
+        test_sampler.opts["batch_size"] = 256
         for i, spec in enumerate(specs):
-            preds = model.classify_spectrogram(spec)
+            preds = model.classify_spectrogram(spec, test_sampler)
             info = infos[i]
             len_in_s = (
                 preds.shape[0]
@@ -158,18 +163,19 @@ class Evaluator(ModelHandler):
                                 )
                                 plots.append(plt)
         stats_df = pd.DataFrame(stats)
-        if self.opts.get("save_stats", True):
+        if self.opts.get("save_results", True):
             res_dir = Path(self.opts.get("evaluation_dir", "."))
             stats_df.to_csv(
                 str(
                     file_utils.ensure_path_exists(
-                        res_dir / (class_type + "_stats.csv"), is_file=True,
+                        res_dir / (class_type + "_stats_noresampling.csv"),
+                        is_file=True,
                     )
                 ),
             )
             if plots:
                 plotnine.save_as_pdf_pages(
-                    plots, res_dir / (class_type + "_tag_repartition.pdf")
+                    plots, res_dir / (class_type + "_tag_repartition3.pdf")
                 )
         return stats_df
 

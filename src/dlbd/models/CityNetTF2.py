@@ -122,9 +122,9 @@ class CityNetTF2(TF2Model):
             specs = [self.modify_spectrogram(spec) for spec in specs]
         return specs, tags, infos
 
-    def classify_spectrogram(self, spectrogram):
+    def classify_spectrogram(self, spectrogram, spec_sampler):
         spectrogram = self.modify_spectrogram(spectrogram)
-        return super().classify_spectrogram(spectrogram)
+        return super().classify_spectrogram(spectrogram, spec_sampler)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()

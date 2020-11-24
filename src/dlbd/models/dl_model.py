@@ -90,13 +90,12 @@ class DLModel:
             "load_weights function not implemented for this class"
         )
 
-    def classify_spectrogram(self, spectrogram):
+    def classify_spectrogram(self, spectrogram, spec_sampler):
         """Apply the classifier"""
         tic = time()
-        test_sampler = SpectrogramSampler(self.opts, balanced=False)
         labels = np.zeros(spectrogram.shape[1])
         preds = []
-        for data, _ in tqdm(test_sampler([spectrogram], [labels])):
+        for data, _ in tqdm(spec_sampler([spectrogram], [labels])):
             pred = self.predict(data)
             preds.append(pred)
         print("Classified {0} in {1}".format("spectrogram", time() - tic))
