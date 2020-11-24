@@ -189,9 +189,9 @@ class CityNetOriginal(DLModel):
         saver = tf.compat.v1.train.Saver()
         saver.restore(self.session, path)
 
-    def classify_spectrogram(self, spectrogram):
+    def classify_spectrogram(self, spectrogram, spec_sampler):
         spectrogram = self.modify_spectrogram(spectrogram)
-        return super().classify_spectrogram(spectrogram)
+        return super().classify_spectrogram(spectrogram, spec_sampler)
 
     def predict(self, x):
         return self.session.run(
