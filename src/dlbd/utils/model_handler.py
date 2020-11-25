@@ -45,12 +45,15 @@ class ModelHandler:
             dh.opts = self.opts
         self._data_handler = dh
 
-    def create_data_handler(self, split_funcs=None):
+    def create_data_handler(self, dh_class=None, split_funcs=None):
         data_opts_path = self.opts.get("data_config", "")
         if not data_opts_path:
             raise Exception("A path to the data config file must be provided")
         data_opts = file_utils.load_config(data_opts_path)
-        dh = DataHandler(data_opts, split_funcs=split_funcs)
+        if dh_class:
+            dh = dh_class(data_opts, split_funcs=split_funcs)
+        else:
+            dh = DataHandler(data_opts, split_funcs=split_funcs)
         return dh
 
     def get_model_instance(self, model, model_opts, version=None):
