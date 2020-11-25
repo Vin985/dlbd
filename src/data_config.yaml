@@ -8,7 +8,8 @@ test_dir: 'test'
 dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 
-use_spectrogram_subfolder: True
+use_subfolders: ["class", "spectrogram"]
+
 audio_extensions:
   - ".wav"
   - ".WAV"
@@ -26,6 +27,8 @@ tags_columns:
   noise: "noise"
 tags_columns_type:
   overlap: "str"
+
+
 
 
 databases:
