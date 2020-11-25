@@ -43,3 +43,11 @@ def load_config(path):
     stream = open(path, "r")
     config = yaml.load(stream, Loader=yaml.Loader)
     return config
+
+
+def get_full_path(path, root):
+    if path.is_absolute() or not root:
+        return path
+    else:
+        return root / path
+
