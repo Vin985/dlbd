@@ -8,7 +8,8 @@ test_dir: 'test'
 dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 
-use_spectrogram_subfolder: True
+use_subfolders: ["class", "spectrogram"]
+
 audio_extensions:
   - ".wav"
   - ".WAV"
@@ -31,10 +32,10 @@ tags_columns_type:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-  - name: 'citynet_small'
-    root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-    test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
-    db_types: ["test"]
+  # - name: 'citynet_small'
+  #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+  #   #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
+  #   db_types: ["test"]
   - name: 'arctic'
     root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
   #   # overwrite: False
@@ -48,7 +49,7 @@ databases:
   #     validation: 0.2
   #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
   #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
-  #   tags_with_audio: True
+    tags_with_audio: True
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
 spectrogram:
@@ -56,6 +57,7 @@ spectrogram:
   n_mels: 32
   n_fft: 2048
   hop_length: 1024
+  #sample_rate: 22050
 
-class_type: "biotic"
+class_type: "biotic3"
 classes_file: "src/classes.csv"
