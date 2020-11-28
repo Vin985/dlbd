@@ -1,20 +1,15 @@
 import csv
 import pickle
 import traceback
-from pathlib import Path
-import feather
-
-import librosa
-import numpy as np
-import pandas as pd
-from scipy.ndimage.interpolation import zoom
-
-from dlbd import data
-
-from ..utils.file import list_files, ensure_path_exists, get_full_path
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from pathlib import Path
 
+import feather
+import numpy as np
+import pandas as pd
+
+from ..utils.file import ensure_path_exists, get_full_path, list_files
 
 """
 A class that handles all data related business. While this class provides convenience functions,
@@ -33,7 +28,7 @@ class DataHandler(ABC):
         "tags_suffix": "-sceneRect.csv",
     }
 
-    DATA_STRUCTURE = {"data": [], "tags": {}, "infos": []}
+    DATA_STRUCTURE = {"data": [], "tags": []}
 
     def __init__(self, opts, split_funcs=None):
         self.opts = opts
@@ -65,7 +60,7 @@ class DataHandler(ABC):
             option = Path(option)
         return option
 
-    def get_class_folder_path(self, database):
+    def get_class_subfolder_path(self, database):
         """Default implementation for a class subfolder
 
         Args:
@@ -100,7 +95,7 @@ class DataHandler(ABC):
             if isinstance(subfolders, str):
                 subfolders = [subfolders]
             for subfolder_type in subfolders:
-                func_name = "_".join(["get", subfolder_type, "folder_path"])
+                func_name = "_".join(["get", subfolder_type, "subfolder_path"])
                 print(func_name)
                 if hasattr(self, func_name) and callable(getattr(self, func_name)):
                     res /= getattr(self, func_name)(database)
@@ -113,6 +108,23 @@ class DataHandler(ABC):
                         + func_name
                         + "' function in your DataHandler instance."
                     )
+        return res
+
+    def get_save_dest_paths(self, dest_dir, db_type, subfolders):
+        """Create
+
+        Args:
+            dest_dir ([type]): [description]
+            db_type ([type]): [description]
+            subfolders ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        res = {}
+        for key in self.DATA_STRUCTURE:
+            ext = "feather" if key.endswith("_df") else "pkl"
+            res[key] = dest_dir / subfolders / (db_type + "_" + key + "." + ext)
         return res
 
     def get_database_paths(self, database):
@@ -128,8 +140,7 @@ class DataHandler(ABC):
             "default": self.get_db_option("dest_dir", database) / database["name"]
         }
         paths["file_list"] = {}
-        paths["pkl"] = {}
-        paths["tag_df"] = {}
+        paths["save_dests"] = {}
 
         for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
             db_type_dir = get_full_path(
@@ -149,8 +160,11 @@ class DataHandler(ABC):
                 database,
                 dest_dir / (db_type + "_file_list.csv"),
             )
-            paths["pkl"][db_type] = dest_dir / subfolders / (db_type + "_data.pkl")
-            paths["tag_df"][db_type] = dest_dir / (db_type + "_tags.feather")
+            paths["save_dests"][db_type] = self.get_save_dest_paths(
+                dest_dir, db_type, subfolders
+            )
+            # paths["pkl"][db_type] = dest_dir / subfolders / (db_type + "_data.pkl")
+            # paths["tag_df"][db_type] = dest_dir / (db_type + "_tags.feather")
         return paths
 
     @staticmethod
@@ -238,16 +252,28 @@ class DataHandler(ABC):
         return tags_opts
 
     def load_file_data(self, file_path, tags_dir, db_type, tag_opts):
-        data, tags, infos = [], [], []
-        return data, tags, infos
+        data, tags = [], []
+        return data, tags
 
-    def save_data(self, data, paths, db_type):
-        if data:
-            with open(
-                ensure_path_exists(paths["pkl"][db_type], is_file=True), "wb"
-            ) as f:
-                pickle.dump(data, f, -1)
-                print("Saved file: ", paths["pkl"][db_type])
+    def save_dataset(self, paths, db_type):
+        if self.tmp_db_data:
+            for key, value in self.tmp_db_data.items():
+                path = paths["save_dests"][db_type][key]
+                print(path)
+                if path.suffix == ".pkl":
+                    with open(ensure_path_exists(path, is_file=True), "wb") as f:
+                        pickle.dump(value, f, -1)
+                        print("Saved file: ", path)
+                elif path.suffix == ".feather":
+                    value = value.reset_index(drop=True)
+                    feather.write_dataframe(value, path)
+
+    def finalize_dataset(self):
+        """ Callback function called after data generation is finished but before it is saved
+        in case some further action must be done after all files are loaded
+        (e.g. dataframe concatenation)
+        """
+        pass
 
     def generate_dataset(self, database, paths, file_list, db_type, overwrite):
         self.tmp_db_data = deepcopy(self.DATA_STRUCTURE)
@@ -272,26 +298,28 @@ class DataHandler(ABC):
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())
                 self.tmp_db_data = None
+        self.finalize_dataset()
         # Save all data
-        self.save_data(self.tmp_db_data, paths, db_type)
+        self.save_dataset(paths, db_type)
         self.tmp_db_data = None
 
-    def check_dataset(self, database, paths, file_list, db_type, load=False):
+    def check_dataset_exists(self, paths, db_type):
+        for key in self.DATA_STRUCTURE:
+            if not paths["save_dests"][db_type][key].exists():
+                return False
+        return True
+
+    def check_dataset(self, database, paths, file_list, db_type):
         # * Overwrite if generate_file_lists is true as file lists will be recreated
         overwrite = self.get_db_option(
             "overwrite", database, False
         ) or self.get_db_option("generate_file_lists", database, False)
-        res = []
-        if (
-            not paths["pkl"][db_type].exists()
-            or not paths["tag_df"][db_type].exists()
-            or overwrite
-        ):
+        if not self.check_dataset_exists(paths, db_type) or overwrite:
             self.generate_dataset(database, paths, file_list, db_type, overwrite)
-        elif load:
-            with open(paths["pkl"][db_type], "rb") as f:
-                res = pickle.load(f, -1)
-                print("Loaded file: ", paths["pkl"][db_type])
+        # elif load:
+        #     with open(paths["pkl"][db_type], "rb") as f:
+        #         res = pickle.load(f, -1)
+        #         print("Loaded file: ", paths["pkl"][db_type])
 
     def check_datasets(self):
         for database in self.opts["databases"]:
@@ -310,34 +338,32 @@ class DataHandler(ABC):
     def load_file(self, file_name):
         return pickle.load(open(file_name, "rb"))
 
-    def load_data(self, db_type, by_dataset=False):
-        spectrograms = []
-        annotations = []
-        infos = []
+    def merge_datasets(self, datasets):
+        merged = deepcopy(self.DATA_STRUCTURE)
+        for dataset in datasets.values():
+            for key in merged:
+                merged[key] += dataset[key]
+        return merged
+
+    def load_data(self, db_type, by_dataset=False, load_opts=None):
         res = {}
+        # * Iterate over databases
         for database in self.opts["databases"]:
+            # * Only load data if the give db_type is in the database definition
             if db_type in self.get_db_option("db_types", database, self.DB_TYPES):
                 print(
                     "Loading {0} data for database: {1}".format(
                         db_type, database["name"]
                     )
                 )
+                # * Get paths
                 paths = self.get_database_paths(database)
                 if not paths["pkl"][db_type].exists():
                     raise ValueError(
                         "Database file not found. Please run check_datasets() before"
                     )
                 else:
-                    # x : spectrograms, y: tags
-                    specs, annots, info = self.load_file(paths["pkl"][db_type])
-                    if by_dataset:
-                        res[database["name"]] = (specs, annots, info)
-                    else:
-                        spectrograms += specs
-                        annotations += annots
-                        infos += info
-
-                    # height = min(xx.shape[0] for xx in X_tmp)
-                    # X_tmp = [xx[-height:, :] for xx in X_tmp]
-        res = res or (spectrograms, annotations, infos)
+                    res[database["name"]] = self.load_file(paths["pkl"][db_type])
+        if not by_dataset:
+            res = self.merge_datasets(res)
         return res

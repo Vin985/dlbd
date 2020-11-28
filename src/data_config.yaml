@@ -1,6 +1,6 @@
 #* All path can be relative to the root_dir or complete
 # root_dir: other dirs will be relative to this one
-audio_dir: 'wavs'
+data_dir: 'wavs'
 tags_dir: 'annotations'
 training_dir: 'training'
 validation_dir:  'validation'
@@ -49,8 +49,8 @@ databases:
       test: 0.2
       validation: 0.2
     # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
-    audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
-    tags_with_audio: True
+    data_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
+    tags_with_data: True
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
 spectrogram:
