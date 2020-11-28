@@ -1,8 +1,14 @@
-from scipy.ndimage.interpolation import zoom
-from ..lib.data_handler import DataHandler
-from . import spectrogram
-from . import tag_manager
+import pickle
+from copy import deepcopy
+
+import feather
 import librosa
+import pandas as pd
+from scipy.ndimage.interpolation import zoom
+
+from ..lib.data_handler import DataHandler
+from ..utils.file import ensure_path_exists, get_full_path, list_files
+from . import spectrogram, tag_manager
 
 
 class AudioDataHandler(DataHandler):
@@ -15,16 +21,27 @@ class AudioDataHandler(DataHandler):
     }
 
     DATA_STRUCTURE = {
-        "data": [],
-        "tags": {"df": [], "linear_presence": [], "linear_index": []},
+        "spectrograms": [],
+        "tags_df": [],
+        "tags_linear_presence": [],
         "infos": [],
     }
 
     def get_spectrogram_subfolder_path(self, database):
         return spectrogram.get_spec_subfolder(self.opts["spectrogram"])
 
+    def merge_datasets(self, datasets):
+        merged = super().merge_datasets(datasets)
+        merged["tags_df"] = pd.concat(merged["tags_df"])
+        return merged
+
+    def finalize_dataset(self):
+        self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
+
     def load_file_data(self, file_path, tags_dir, tag_opts, db_type):
         # load file and convert to spectrogram
+
+        # TODO: Fit file structure
         wav, sample_rate = librosa.load(
             str(file_path), self.opts["spectrogram"].get("sample_rate", None)
         )
@@ -42,12 +59,12 @@ class AudioDataHandler(DataHandler):
         )
 
         audio_info["spec_opts"] = opts
-        if not db_type == "test":
-            tmp_tags = tag_manager.filter_classes(tag_df, tag_opts["classes"])
-            tag_presence = tag_manager.get_tag_presence(tmp_tags, audio_info, tag_opts)
-            factor = float(spec.shape[1]) / tag_presence.shape[0]
-            train_tags = zoom(tag_presence, factor)
-        else:
-            train_tags = []
+        tmp_tags = tag_manager.filter_classes(tag_df, tag_opts["classes"])
+        tag_presence = tag_manager.get_tag_presence(tmp_tags, audio_info, tag_opts)
+        factor = float(spec.shape[1]) / tag_presence.shape[0]
+        zoomed_presence = zoom(tag_presence, factor)
 
-        return None
+        self.tmp_db_data["spectrograms"].append(spec)
+        self.tmp_db_data["infos"].append(audio_info)
+        self.tmp_db_data["tags_df"].append(tag_df)
+        self.tmp_db_data["tags_linear_presence"].append(zoomed_presence)

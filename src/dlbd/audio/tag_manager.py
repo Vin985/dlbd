@@ -45,6 +45,20 @@ def rename_columns(df, columns):
 
 
 def filter_classes(tag_df, classes):
+    """Filters the provided tag dataframe to select only tags in the classes list.
+    If no match was found in the 'tag' column and a 'related' column is present in the dataframe, 
+    this column will be also checked. If a match is found in the 'related' column,
+    then value of the 'tag' column will be replaced by the match.
+    Matches are decided by the order of the classes list and only the first match will be returned.
+
+    Args:
+        tag_df (pandas.Dataframe): Dataframe containing the tag information. Note that at least a
+        'tag' column with the label value must be present
+        classes (list): list of classes we want to filter the dataframe on
+
+    Returns:
+        pandas.Dataframe: filtered and possibly altered dataframe with 'tag' values only in list
+    """
     if tag_df.empty:
         return tag_df
     if "related" not in tag_df.columns:
@@ -52,13 +66,12 @@ def filter_classes(tag_df, classes):
     tag_df.loc[tag_df.related.isnull(), "related"] = ""
     df2 = tag_df[["tag", "related"]]
     res = [False] * tag_df.shape[0]
-    match = [""] * tag_df.shape[0]
+    match = tag_df.tag.values
     i = 0
     for tag, related in df2.itertuples(name=None, index=False):
         tag = tag.lower()
         if tag in classes:
             res[i] = True
-            match[i] = tag
         else:
             related_tags = related.lower().split(",")
             for c in classes:
@@ -77,7 +90,7 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
     suffix = tag_opts["suffix"]
     audio_file_path = audio_info["file_path"]
 
-    if tag_opts["tags_with_audio"]:
+    if tag_opts.get("tags_with_audio", False):
         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
     else:
         csv_file_path = labels_dir / (audio_file_path.stem + suffix)
