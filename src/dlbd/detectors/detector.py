@@ -1,7 +1,9 @@
 # from pandarallel import pandarallel
 
+from abc import ABC
 
-class Detector:
+
+class Detector(ABC):
 
     EVENTS_COLUMNS = {
         "index": "event_id",
@@ -18,5 +20,8 @@ class Detector:
     DEFAULT_END_THRESHOLD = 0.6
 
     def __init__(self):
+        pass
+
+    def evaluate(self, predictions, tags, options):
         pass
 
