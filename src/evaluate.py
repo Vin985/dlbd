@@ -1,5 +1,6 @@
 import os
 from dlbd.audio.audio_data_handler import AudioDataHandler
+from dlbd.audio.audiodetector_evaluator import AudioDetectorEvaluator
 
 
 from dlbd.evaluation.evaluator import Evaluator
@@ -16,7 +17,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 #     versions = model.get("versions", 1)
 #     print(type(versions))
 
-evaluator = Evaluator(opts_path="src/evaluation_config.yaml", dh_class=AudioDataHandler)
+evaluator = AudioDetectorEvaluator(
+    opts_path="src/evaluation_config.yaml", dh_class=AudioDataHandler
+)
 
 res = evaluator.evaluate()
 
