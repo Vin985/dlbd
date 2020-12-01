@@ -1,13 +1,8 @@
-import pickle
-from copy import deepcopy
-
-import feather
 import librosa
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
 from ..lib.data_handler import DataHandler
-from ..utils.file import ensure_path_exists, get_full_path, list_files
 from . import spectrogram, tag_manager
 
 
@@ -38,7 +33,7 @@ class AudioDataHandler(DataHandler):
     def finalize_dataset(self):
         self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
 
-    def load_file_data(self, file_path, tags_dir, tag_opts, db_type):
+    def load_file_data(self, file_path, tags_dir, tag_opts):
         # load file and convert to spectrogram
 
         # TODO: Fit file structure
@@ -66,5 +61,5 @@ class AudioDataHandler(DataHandler):
 
         self.tmp_db_data["spectrograms"].append(spec)
         self.tmp_db_data["infos"].append(audio_info)
-        self.tmp_db_data["tags_df"].append(tag_df)
+        self.tmp_db_data["tags_df"].append(tmp_tags)
         self.tmp_db_data["tags_linear_presence"].append(zoomed_presence)
