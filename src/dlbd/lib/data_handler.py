@@ -7,6 +7,7 @@ from pathlib import Path
 
 import feather
 import numpy as np
+from numpy.lib.npyio import load
 import pandas as pd
 
 from ..utils.file import ensure_path_exists, get_full_path, list_files
@@ -168,6 +169,19 @@ class DataHandler(ABC):
         return paths
 
     @staticmethod
+    def load_file_lists(paths):
+        res = {}
+        for db_type, path in paths["file_list"].items():
+            file_list = []
+            with open(path, mode="r") as f:
+                reader = csv.reader(f)
+                for name in reader:
+                    file_list.append(Path(name[0]))
+            res[db_type] = file_list
+            print("Loaded file: " + str(path))
+        return res
+
+    @staticmethod
     def save_file_list(db_type, file_list, paths):
         file_list_path = paths["dest"][db_type] / (db_type + "_file_list.csv")
         with open(ensure_path_exists(file_list_path, is_file=True), mode="w") as f:
@@ -186,19 +200,6 @@ class DataHandler(ABC):
                 ),
                 self.get_db_option("recursive", database, False),
             )
-        return res
-
-    @staticmethod
-    def load_file_lists(paths):
-        res = {}
-        for db_type, path in paths["file_list"].items():
-            file_list = []
-            with open(path, mode="r") as f:
-                reader = csv.reader(f)
-                for name in reader:
-                    file_list.append(Path(name[0]))
-            res[db_type] = file_list
-            print("Loaded file: " + str(path))
         return res
 
     def check_file_lists(self, database, paths):
@@ -251,7 +252,8 @@ class DataHandler(ABC):
         }
         return tags_opts
 
-    def load_file_data(self, file_path, tags_dir, db_type, tag_opts):
+    @abstractmethod
+    def load_file_data(self, file_path, tags_dir, tag_opts):
         data, tags = [], []
         return data, tags
 
@@ -284,7 +286,7 @@ class DataHandler(ABC):
         for file_path in file_list:
             try:
                 intermediate = self.load_file_data(
-                    file_path, paths["tags"][db_type], tag_opts, db_type
+                    file_path, paths["tags"][db_type], tag_opts
                 )
 
                 if self.get_db_option("save_intermediates", database, False):
@@ -336,7 +338,10 @@ class DataHandler(ABC):
         return spec
 
     def load_file(self, file_name):
-        return pickle.load(open(file_name, "rb"))
+        if file_name.suffix == ".feather":
+            return feather.read_dataframe(str(file_name))
+        else:
+            return pickle.load(open(file_name, "rb"))
 
     def merge_datasets(self, datasets):
         merged = deepcopy(self.DATA_STRUCTURE)
@@ -345,7 +350,38 @@ class DataHandler(ABC):
                 merged[key] += dataset[key]
         return merged
 
-    def load_data(self, db_type, by_dataset=False, load_opts=None):
+    def get_file_types(self, load_opts):
+        file_types = load_opts.get("file_types", "all")
+        if file_types == "all":
+            file_types = self.DATA_STRUCTURE.keys()
+        else:
+            # * Make sure we only have valid keys
+            file_types = [ft for ft in file_types if ft in self.DATA_STRUCTURE]
+        return file_types
+
+    def load_dataset(self, database, db_type, load_opts=None):
+        load_opts = load_opts or {}
+        file_types = self.get_file_types(load_opts)
+        # * Get paths
+        paths = self.get_database_paths(database)
+        res = deepcopy(self.DATA_STRUCTURE)
+
+        for key in file_types:
+            path = paths["save_dests"][db_type][key]
+            if not path.exists():
+                raise ValueError(
+                    "Database file {} not found. Please run check_datasets() before".format(
+                        str(path)
+                    )
+                )
+            tmp = self.load_file(path)
+            callback = load_opts.get("onload_callbacks", {}).get(key, None)
+            if callback:
+                tmp = callback(tmp)
+            res[key] = tmp
+        return res
+
+    def load_datasets(self, db_type, by_dataset=False, load_opts=None):
         res = {}
         # * Iterate over databases
         for database in self.opts["databases"]:
@@ -356,14 +392,8 @@ class DataHandler(ABC):
                         db_type, database["name"]
                     )
                 )
-                # * Get paths
-                paths = self.get_database_paths(database)
-                if not paths["pkl"][db_type].exists():
-                    raise ValueError(
-                        "Database file not found. Please run check_datasets() before"
-                    )
-                else:
-                    res[database["name"]] = self.load_file(paths["pkl"][db_type])
+                res[database["name"]] = self.load_dataset(database, db_type, load_opts)
+
         if not by_dataset:
             res = self.merge_datasets(res)
         return res
