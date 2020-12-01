@@ -9,6 +9,7 @@ DEFAULT_N_MELS = 32  # 128
 def get_spec_subfolder(spec_opts):
     spec_folder = "_".join(
         [
+            str(spec_opts.get("sample_rate", "original")),
             spec_opts["type"],
             str(spec_opts["n_mels"]),
             str(spec_opts["n_fft"]),
