@@ -29,11 +29,22 @@ class SpectrogramSampler:
         self.opts["batch_size"] = opts["net"]["batch_size"]
 
     def __call__(self, X, y=None):
+        """Call the spectrogram sampler
 
+        Args:
+            X (list of np.array): List of spectrograms
+            y ([type], optional): [description]. Defaults to None.
+
+        Returns:
+            [type]: [description]
+        """
         # must pad X and Y the same amount
         pad_hww = max(self.opts["hww_x"], self.opts["hww_y"])
 
+        # * Create a blank spectrogram with same height as spectrograms and length 2 * padding
         blank_spec = np.zeros((X[0].shape[0], 2 * pad_hww))
+        # * Stack all spectrograms together and pad with two blank spectrograms at the beginning and
+        # * the end
         self.specs = np.hstack([blank_spec] + X + [blank_spec])[None, ...]
         # print(X[0].shape)
         # print(blank_spec.shape)
