@@ -1,24 +1,36 @@
 
 data_config: "src/evaluation_data_config.yaml"
-save_results: False #True
-detectors: 
-  - type: "standard"
-    min_activity: 0.95
-    min_duration: 0.1
-    end_threshold: 0.15
-    dtc_threshold: 0.3
-    gtc_threshold: 0.1
-    isolate_events: True
-  - type: "subsampling"
-    sample_step: 0
-    event_threshold: 0.5
-  - type: "subsampling"
-    sample_step: 1
+save_results: True #True
+
+###########
+## Paths ##
+###########
 predictions_dir: "results/predictions"
 evaluation_dir: "results/evaluation"
 weights_dir: "results/models"
 
 
+###############
+## Detectors ##
+###############
+detectors: 
+  # - type: "standard"
+  #   min_activity: 0.95
+  #   min_duration: 0.3
+  #   end_threshold: 0.15
+  #   dtc_threshold: 0.3
+  #   gtc_threshold: 0.1
+  #   isolate_events: True
+  # - type: "subsampling"
+  #   sample_step: 0
+  #   event_threshold: 0.5
+  - type: "subsampling"
+    sample_step: 1
+    event_threshold: 0.95
+
+############
+## Models ##
+############
 models:
   - name: "CityNetTF2"
     package: "dlbd.models.CityNetTF2"
@@ -26,7 +38,11 @@ models:
   - name: "CityNetOriginal"
     package: "dlbd.models.CityNetOriginal"
     versions: [0]
-  - name: "CityNetTF2Dropout"
-    package: "dlbd.models.CityNetTF2Dropout"
-    versions: [1]
+  # - name: "CityNetTF2Dropout"
+  #   package: "dlbd.models.CityNetTF2Dropout"
+  #   versions: [1]
     #reclassify: True
+
+###############
+## Databases ##
+###############
