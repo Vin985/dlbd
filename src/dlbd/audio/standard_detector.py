@@ -20,18 +20,6 @@ class StandardDetector(Detector):
 
     TAG_TYPE = "linear"
 
-    def get_events(self, predictions, options):
-        predictions = predictions[["activity", "recording_id", "time"]]
-        events = predictions.groupby("recording_id", as_index=False, observed=True)
-        events = events.apply(self.get_recording_events, options)
-        events.reset_index(inplace=True)
-        events.drop(["level_0", "level_1"], axis=1, inplace=True)
-        events["event_duration"] = events["end"] - events["start"]
-        events.reset_index(inplace=True)
-        events = events[self.EVENTS_COLUMNS.keys()]
-        events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
-        return events
-
     def get_recording_events(self, predictions, options=None):
         options = options or {}
         min_activity = options.get("min_activity", self.DEFAULT_MIN_ACTIVITY)
@@ -70,14 +58,26 @@ class StandardDetector(Detector):
         events = pd.DataFrame(events)
         return events
 
-    def associate_recordings(self, events, recordings):
-        events = events.merge(
-            recordings[["id", "name"]], left_on="recording_id", right_on="id"
-        )
+    def get_events(self, predictions, options):
+        predictions = predictions[["activity", "recording_id", "time"]]
+        events = predictions.groupby("recording_id", as_index=False, observed=True)
+        events = events.apply(self.get_recording_events, options)
+        events.reset_index(inplace=True)
+        events.drop(["level_0", "level_1"], axis=1, inplace=True)
+        events["event_duration"] = events["end"] - events["start"]
         events.reset_index(inplace=True)
         events = events[self.EVENTS_COLUMNS.keys()]
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
         return events
+
+    # def associate_recordings(self, events, recordings):
+    #     events = events.merge(
+    #         recordings[["id", "name"]], left_on="recording_id", right_on="id"
+    #     )
+    #     events.reset_index(inplace=True)
+    #     events = events[self.EVENTS_COLUMNS.keys()]
+    #     events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
+    #     return events
 
     def get_matches(self, events, tags):
         tags = tags.rename(columns=self.TAGS_COLUMNS_RENAME)
@@ -96,50 +96,50 @@ class StandardDetector(Detector):
 
         return match_df
 
-    def match_predictions(self, predictions, events, tags):
-        preds = predictions.copy()
-        preds["tag"] = 0
-        preds["event"] = 0
-        preds["event_id"] = -1
-        preds["tag_id"] = -1
-        for _, x in tags.iterrows():
-            preds.loc[
-                preds.time.between(x["tag_start"], x["tag_end"]), ["tag", "tag_id"]
-            ] = [1, x["id"]]
+    # def match_predictions(self, predictions, events, tags):
+    #     preds = predictions.copy()
+    #     preds["tag"] = 0
+    #     preds["event"] = 0
+    #     preds["event_id"] = -1
+    #     preds["tag_id"] = -1
+    #     for _, x in tags.iterrows():
+    #         preds.loc[
+    #             preds.time.between(x["tag_start"], x["tag_end"]), ["tag", "tag_id"]
+    #         ] = [1, x["id"]]
 
-        for _, x in events.iterrows():
-            preds.loc[
-                preds.time.between(x["event_start"], x["event_end"]),
-                ["event", "event_id"],
-            ] = [2, x["event_id"]]
-        return preds
+    #     for _, x in events.iterrows():
+    #         preds.loc[
+    #             preds.time.between(x["event_start"], x["event_end"]),
+    #             ["event", "event_id"],
+    #         ] = [2, x["event_id"]]
+    #     return preds
 
-    def get_stats_old(self, events, matches):
-        # True pos: number of unique events that matched with a tag
-        true_pos_events = len(matches[matches.event_id != -1].event_id.unique())
-        true_pos_tags = len(matches[matches.event_id != -1].tag_id.unique())
-        # False neg: number of tags that did not have a match
-        false_neg = matches[matches.event_id == -1].shape[0]
-        # Number of tags that are matched
-        n_tags_matched = len(matches.loc[matches.event_id != -1].tag_id.unique())
+    # def get_stats_old(self, events, matches):
+    #     # True pos: number of unique events that matched with a tag
+    #     true_pos_events = len(matches[matches.event_id != -1].event_id.unique())
+    #     true_pos_tags = len(matches[matches.event_id != -1].tag_id.unique())
+    #     # False neg: number of tags that did not have a match
+    #     false_neg = matches[matches.event_id == -1].shape[0]
+    #     # Number of tags that are matched
+    #     n_tags_matched = len(matches.loc[matches.event_id != -1].tag_id.unique())
 
-        # Precision: TP / TP + FP
-        precision = true_pos_events / events.shape[0]
-        # Recall: TP / TP + FN
-        recall = true_pos_tags / (true_pos_tags + false_neg)
-        f1_score = 2 * (precision * recall) / (precision + recall)
+    #     # Precision: TP / TP + FP
+    #     precision = true_pos_events / events.shape[0]
+    #     # Recall: TP / TP + FN
+    #     recall = true_pos_tags / (true_pos_tags + false_neg)
+    #     f1_score = 2 * (precision * recall) / (precision + recall)
 
-        return {
-            "n_events": events.shape[0],
-            "n_tags": len(matches.tag_id.unique()),
-            "true_positive_events": true_pos_events,
-            "true_positive_tags": true_pos_tags,
-            "false_negative": false_neg,
-            "n_tags_matched": n_tags_matched,
-            "precision": precision,
-            "recall": recall,
-            "F1_score": f1_score,
-        }
+    #     return {
+    #         "n_events": events.shape[0],
+    #         "n_tags": len(matches.tag_id.unique()),
+    #         "true_positive_events": true_pos_events,
+    #         "true_positive_tags": true_pos_tags,
+    #         "false_negative": false_neg,
+    #         "n_tags_matched": n_tags_matched,
+    #         "precision": precision,
+    #         "recall": recall,
+    #         "F1_score": f1_score,
+    #     }
 
     @staticmethod
     def event_overlap_duration(tags):
@@ -198,26 +198,6 @@ class StandardDetector(Detector):
                 previous_end = end
                 duration += end - start
         return duration
-
-    # @staticmethod
-    # def get_proportion(x, n_total=-1):
-    #     print(x)
-    #     if n_total < 0:
-    #         n_total = x.shape[0]
-    #         # raise ValueError("n_total should be provided and positive")
-    #     return round(len(x) / n_total * 100, 1)
-
-    # def test_func(self, x, n_total):
-    #     total_func = partial(self.get_proportion, n_total=n_total)
-    #     match_func = partial(self.get_proportion, n_total=x.shape[0])
-    #     res = (
-    #         x.groupby(["tag", "background"])
-    #         .agg({"tag": "count", "prop_total": total_func, "prop_match": match_func})
-    #         .rename(columns={"tag": "n_tags"})
-    #         .reset_index()
-    #         .astype({"background": "category", "tag": "category"})
-    #     )
-    #     return res
 
     def get_proportions(self, x, by, col="", total=0):
         if not total:
