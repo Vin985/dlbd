@@ -2,7 +2,7 @@ import librosa
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
 
-from ..lib.data_handler import DataHandler
+from dlbd.lib.data_handler import DataHandler
 from . import spectrogram, tag_manager
 
 
@@ -47,9 +47,8 @@ class AudioDataHandler(DataHandler):
         tag_opts = opts["tags"]
         spec_opts = opts["spectrogram"]
         sr = spec_opts.get("sample_rate", None)
-        if sr and sr.lower() == "original":
+        if sr and sr == "original":
             sr = None
-        print(sr)
         wav, sample_rate = librosa.load(str(file_path), sr=sr)
 
         audio_info = {
@@ -59,7 +58,7 @@ class AudioDataHandler(DataHandler):
         }
         tag_df = tag_manager.get_tag_df(audio_info, tags_dir, tag_opts)
 
-        # * NOTE: sp_opts can be different from spec_opts as it adds default used but not defined
+        # * NOTE: sp_opts can contain options not defined in spec_opts
         spec, sp_opts = spectrogram.generate_spectrogram(wav, sample_rate, spec_opts)
 
         audio_info["spec_opts"] = sp_opts
