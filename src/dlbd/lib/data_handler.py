@@ -335,8 +335,10 @@ class DataHandler(ABC):
         #         res = pickle.load(f, -1)
         #         print("Loaded file: ", paths["pkl"][db_type])
 
-    def check_datasets(self):
-        for database in self.opts["databases"]:
+    def check_datasets(self, databases=None):
+        if not databases:
+            databases = self.opts["databases"]
+        for database in databases:
             print("Checking database:", database["name"])
             paths = self.get_database_paths(database)
             file_lists = self.check_file_lists(database, paths)
@@ -392,6 +394,12 @@ class DataHandler(ABC):
                 tmp = callback(tmp)
             res[key] = tmp
         return res
+
+    def get_database_options(self, name):
+        for db in self.opts["databases"]:
+            if db["name"] == name:
+                return db
+        return None
 
     def load_datasets(self, db_type, by_dataset=False, load_opts=None):
         res = {}
