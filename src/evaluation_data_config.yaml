@@ -16,28 +16,39 @@ audio_extensions:
 recursive: True
 
 #* Tags files options
-tags_suffix: "-sceneRect.csv"
-tags_columns:
-  Label: "tag"
-  Related: "related"
-  LabelStartTime_Seconds: "tag_start"
-  LabelEndTime_Seconds: "tag_end"
-  overlap: "overlap"
-  background: "background"
-  noise: "noise"
-tags_columns_type:
-  overlap: "str"
+tags:
+  suffix: "-sceneRect.csv"
+  columns:
+    Label: "tag"
+    Related: "related"
+    LabelStartTime_Seconds: "tag_start"
+    LabelEndTime_Seconds: "tag_end"
+    overlap: "overlap"
+    background: "background"
+    noise: "noise"
+  columns_type:
+    overlap: "str"
+  with_data: False
 
 
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
+    - name: 'citynet_small'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+      db_types: ["test"]
+      spectrogram:
+        sample_rate: original
+      tags:
+        with_data: True
   # - name: 'citynet_small'
   #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
   #   #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
   #   db_types: ["test"]
-  - name: 'arctic'
-    root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+    # - name: 'arctic'
+    #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+    #   tags:
+    #     with_data: True
   #   # overwrite: False
   #   # generate_file_lists: True
   #   #* split: Defines proportion of data to set aside for test and validation datasets.
@@ -49,7 +60,7 @@ databases:
   #     validation: 0.2
   #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
   #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
-    tags_with_audio: True
+
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
 spectrogram:
@@ -57,7 +68,7 @@ spectrogram:
   n_mels: 32
   n_fft: 2048
   hop_length: 1024
-  #sample_rate: 22050
+  sample_rate: 22050 # For no resampling: remove option or set to Original or original
 
-class_type: "biotic3"
+class_type: "biotic"
 classes_file: "src/classes.csv"
