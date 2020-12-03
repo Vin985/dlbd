@@ -23,7 +23,9 @@ class AudioDataHandler(DataHandler):
     }
 
     def get_spectrogram_subfolder_path(self, database):
-        return spectrogram.get_spec_subfolder(self.opts["spectrogram"])
+        return spectrogram.get_spec_subfolder(
+            self.load_option_group("spectrogram", database)
+        )
 
     def merge_datasets(self, datasets):
         merged = super().merge_datasets(datasets)
@@ -33,13 +35,22 @@ class AudioDataHandler(DataHandler):
     def finalize_dataset(self):
         self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
 
-    def load_file_data(self, file_path, tags_dir, tag_opts):
-        # load file and convert to spectrogram
+    def load_data_options(self, database):
+        opts = {}
+        opts["tags"] = self.load_option_group("tags", database)
+        opts["spectrogram"] = self.load_option_group("spectrogram", database)
+        opts["classes"] = self.load_classes(database)
+        return opts
 
-        # TODO: Fit file structure
-        wav, sample_rate = librosa.load(
-            str(file_path), self.opts["spectrogram"].get("sample_rate", None)
-        )
+    def load_file_data(self, file_path, tags_dir, opts):
+        # load file and convert to spectrogram
+        tag_opts = opts["tags"]
+        spec_opts = opts["spectrogram"]
+        sr = spec_opts.get("sample_rate", None)
+        if sr and sr.lower() == "original":
+            sr = None
+        print(sr)
+        wav, sample_rate = librosa.load(str(file_path), sr=sr)
 
         audio_info = {
             "file_path": file_path,
@@ -48,13 +59,11 @@ class AudioDataHandler(DataHandler):
         }
         tag_df = tag_manager.get_tag_df(audio_info, tags_dir, tag_opts)
 
-        # TODO: allow spectrogram options override
-        spec, opts = spectrogram.generate_spectrogram(
-            wav, sample_rate, self.opts["spectrogram"]
-        )
+        # * NOTE: sp_opts can be different from spec_opts as it adds default used but not defined
+        spec, sp_opts = spectrogram.generate_spectrogram(wav, sample_rate, spec_opts)
 
-        audio_info["spec_opts"] = opts
-        tmp_tags = tag_manager.filter_classes(tag_df, tag_opts["classes"])
+        audio_info["spec_opts"] = sp_opts
+        tmp_tags = tag_manager.filter_classes(tag_df, opts["classes"])
         tag_presence = tag_manager.get_tag_presence(tmp_tags, audio_info, tag_opts)
         factor = float(spec.shape[1]) / tag_presence.shape[0]
         zoomed_presence = zoom(tag_presence, factor)

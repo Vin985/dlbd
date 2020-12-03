@@ -36,7 +36,14 @@ class DataHandler(ABC):
         self.split_funcs = split_funcs
         self.tmp_db_data = None
 
-    def get_db_option(self, name, database=None, default=""):
+    def load_option_group(self, group, database=None):
+        opts = self.opts[group]
+        if database and group in database:
+            db_opts = database[group]
+            opts.update(db_opts)
+        return opts
+
+    def get_db_option(self, name, database=None, default="", group=None):
         """Get an option for the selected database. When the option is not present in the database,
         the default section is checked. If nothing is found, the 'default' argument is used.
 
@@ -53,6 +60,19 @@ class DataHandler(ABC):
             pathlib.Path object is returned.
         """
         option = None
+
+        # db = self.opts
+        # if database:
+        #     if group:
+        #         if group in database:
+        #             db = database[group]
+        #         else:
+        #             db = self.opts[group]
+        #     elif name in database:
+        #         db = database
+        # option = db.get(name, default)
+        # print(name, option)
+
         if database and name in database:
             option = database[name]
         else:
@@ -240,20 +260,8 @@ class DataHandler(ABC):
         )
         return classes
 
-    def load_tags_opts(self, database):
-        tags_opts = {
-            "suffix": self.get_db_option(
-                "tags_suffix", database, self.DEFAULT_OPTIONS["tags_suffix"]
-            ),
-            "tags_with_data": self.get_db_option("tags_with_data", database, False),
-            "classes": self.load_classes(database),
-            "columns": self.get_db_option("tags_columns", database, None),
-            "columns_type": self.get_db_option("tags_columns_type", database, None),
-        }
-        return tags_opts
-
     @abstractmethod
-    def load_file_data(self, file_path, tags_dir, tag_opts):
+    def load_file_data(self, file_path, tags_dir, opts):
         data, tags = [], []
         return data, tags
 
@@ -277,16 +285,20 @@ class DataHandler(ABC):
         """
         pass
 
+    @abstractmethod
+    def load_data_options(self, database):
+        return {}
+
     def generate_dataset(self, database, paths, file_list, db_type, overwrite):
         self.tmp_db_data = deepcopy(self.DATA_STRUCTURE)
         print("Generating dataset: ", database["name"])
 
-        tag_opts = self.load_tags_opts(database)
+        data_opts = self.load_data_options(database)
 
         for file_path in file_list:
             try:
                 intermediate = self.load_file_data(
-                    file_path, paths["tags"][db_type], tag_opts
+                    file_path=file_path, tags_dir=paths["tags"][db_type], opts=data_opts
                 )
 
                 if self.get_db_option("save_intermediates", database, False):
