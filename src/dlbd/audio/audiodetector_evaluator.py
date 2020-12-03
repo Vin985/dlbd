@@ -66,7 +66,7 @@ class AudioDetectorEvaluator(Evaluator):
 
     def get_tags(self):
         load_opts = {
-            "file_types": ["tags_df", "tags_linear"],
+            "file_types": ["tags_df", "tags_linear_presence", "infos"],
             "onload_callbacks": {"tags_df": self.prepare_tags},
         }
         tags = self.data_handler.load_datasets(
