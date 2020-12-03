@@ -1,6 +1,8 @@
 import librosa
 import numpy as np
 
+from PIL import Image
+
 DEFAULT_N_FFT = 2048
 DEFAULT_HOP_LENGTH = 1024  # 512
 DEFAULT_N_MELS = 32  # 128
@@ -32,3 +34,9 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
     else:
         raise AttributeError("No other spectrogram supported yet")
     return spec, opts
+
+
+def resize_spectrogram(spec, size):
+    img = Image.fromarray(spec)
+    img = img.resize(size)
+    return np.array(img)
