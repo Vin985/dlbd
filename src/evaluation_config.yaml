@@ -9,7 +9,6 @@ predictions_dir: "results/predictions"
 evaluation_dir: "results/evaluation"
 weights_dir: "results/models"
 
-
 ###############
 ## Detectors ##
 ###############
@@ -33,11 +32,18 @@ detectors:
 ############
 models:
   - name: "CityNetTF2"
-    package: "dlbd.models.CityNetTF2"
+    package: "dlbd.audio.models.CityNetTF2"
     versions: [1]
   - name: "CityNetOriginal"
-    package: "dlbd.models.CityNetOriginal"
+    package: "dlbd.audio.models.CityNetOriginal"
     versions: [0]
+  - name: "CityNetTF2"
+    id: "resize_spec"
+    package: "dlbd.audio.models.CityNetTF2"
+    versions: [1]
+    options:
+      model:
+        resize_spectrogram: True
   # - name: "CityNetTF2Dropout"
   #   package: "dlbd.models.CityNetTF2Dropout"
   #   versions: [1]
@@ -46,3 +52,10 @@ models:
 ###############
 ## Databases ##
 ###############
+
+databases:
+  - name: citynet_small
+    spectrogram:
+      sample_rate: 22050
+  - name: citynet_small
+  
