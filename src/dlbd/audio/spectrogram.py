@@ -36,7 +36,11 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
     return spec, opts
 
 
-def resize_spectrogram(spec, size):
+def resize_spectrogram(spec, size, resample_method="bicubic"):
     img = Image.fromarray(spec)
-    img = img.resize(size)
+    if hasattr(Image, resample_method.upper()):
+        resample_method = getattr(Image, resample_method.upper())
+    else:
+        resample_method = Image.BICUBIC
+    img = img.resize(size, resample=resample_method)
     return np.array(img)
