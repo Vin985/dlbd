@@ -90,7 +90,7 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
     suffix = tag_opts["suffix"]
     audio_file_path = audio_info["file_path"]
 
-    if tag_opts.get("tags_with_data", False):
+    if tag_opts.get("with_data", False):
         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
     else:
         csv_file_path = labels_dir / (audio_file_path.stem + suffix)
