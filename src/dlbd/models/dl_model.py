@@ -90,6 +90,9 @@ class DLModel:
             "load_weights function not implemented for this class"
         )
 
+    def classify(self, data, sampler):
+        return self.classify_spectrogram(data, sampler)
+
     def classify_spectrogram(self, spectrogram, spec_sampler):
         """Apply the classifier"""
         tic = time()

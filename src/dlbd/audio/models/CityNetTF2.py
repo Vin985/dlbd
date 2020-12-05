@@ -114,6 +114,7 @@ class CityNetTF2(TF2Model):
     def modify_spectrogram(self, spec, infos):
         spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
+        print(spec.shape)
         if self.opts["model"].get("resize_spectrogram", False):
             pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
             spec = resize_spectrogram(
@@ -123,6 +124,7 @@ class CityNetTF2(TF2Model):
                     spec.shape[0],
                 ),
             )
+            print(spec.shape)
         return spec
 
     def prepare_data(self, data):
@@ -133,9 +135,10 @@ class CityNetTF2(TF2Model):
             ]
         return specs, tags, infos
 
-    def classify_spectrogram(self, spectrogram, infos, spec_sampler):
+    def classify(self, data, sampler):
+        spectrogram, infos = data
         spectrogram = self.modify_spectrogram(spectrogram, infos)
-        return super().classify_spectrogram(spectrogram, spec_sampler)
+        return super().classify_spectrogram(spectrogram, sampler)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
