@@ -109,6 +109,7 @@ class Evaluator(ModelHandler, ABC):
                     "class": class_type,
                     "detector_opts": str(detector_opts),
                     "database_opts": database,
+                    "model_opts": model_opts,
                 }
                 print(
                     "\033[92m"
@@ -126,10 +127,7 @@ class Evaluator(ModelHandler, ABC):
                             "Tag repartition for model {}, database {}, class {}\n"
                             + "with detector options {}"
                         ).format(
-                            model_name,
-                            database["name"],
-                            class_type,
-                            model_stats["stats"]["type"],
+                            model_id, database["name"], class_type, detector_opts,
                         )
                     )
                 stats.append(model_stats)
