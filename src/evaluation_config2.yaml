@@ -1,0 +1,92 @@
+
+data_config: "src/evaluation_data_config.yaml"
+save_results: True #True
+
+###########
+## Paths ##
+###########
+predictions_dir: "results/predictions"
+evaluation_dir: "results/evaluation"
+weights_dir: "results/models"
+
+###############
+## Detectors ##
+###############
+detectors: 
+  - type: "standard"
+    min_activity: 0.95
+    min_duration: 0.3
+    end_threshold: 0.15
+    dtc_threshold: 0.3
+    gtc_threshold: 0.1
+    isolate_events: True
+  # - type: "subsampling"
+  #   sample_step: 0
+  #   event_threshold: 0.5
+  - type: "subsampling"
+    sample_step: 1
+    event_threshold: 0.95
+
+############
+## Models ##
+############
+models:
+  - name: "CityNetTF2"
+    package: "dlbd.audio.models.CityNetTF2"
+    versions: [1]
+  - name: "CityNetOriginal"
+    package: "dlbd.audio.models.CityNetOriginal"
+    versions: [0]
+  - name: "CityNetTF2"
+    id: "resize_spec_bicubic"
+    package: "dlbd.audio.models.CityNetTF2"
+    versions: [1]
+    reclassify: False
+    options:
+      model:
+        resize_spectrogram: True
+        pixels_in_sec: 20
+        rezise_method: bicubic
+  - name: "CityNetTF2"
+    id: "resize_spec_bilinear"
+    package: "dlbd.audio.models.CityNetTF2"
+    versions: [1]
+    options:
+      model:
+        resize_spectrogram: True
+        pixels_in_sec: 20
+        rezise_method: bilinear
+  - name: "CityNetTF2"
+    id: "resize_spec_25pis"
+    package: "dlbd.audio.models.CityNetTF2"
+    versions: [1]
+    options:
+      model:
+        resize_spectrogram: True
+        pixels_in_sec: 25
+  # - name: "CityNetTF2Dropout"
+  #   package: "dlbd.models.CityNetTF2Dropout"
+  #   versions: [1]
+    #reclassify: True
+
+###############
+## Databases ##
+###############
+
+databases:
+  # - name: citynet_small
+  #   spectrogram:
+  #     sample_rate: 22050
+  # - name: citynet_small
+  - name: citynet_small
+  - name: arctic
+    options:
+      spectrogram:
+        sample_rate: 22050
+        n_mels: [32, 64]
+        test:
+          start: 1
+          end: 100
+          step: 10
+      tags:
+        with_data: [True, False]
