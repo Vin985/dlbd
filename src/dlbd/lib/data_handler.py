@@ -3,11 +3,11 @@ import pickle
 import traceback
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from itertools import product
 from pathlib import Path
 
 import feather
 import numpy as np
-from numpy.lib.npyio import load
 import pandas as pd
 
 from ..utils.file import ensure_path_exists, get_full_path, list_files
@@ -400,6 +400,26 @@ class DataHandler(ABC):
             if db["name"] == name:
                 return db
         return None
+
+    def expand_options(self, options):
+        res = []
+        tmp = []
+        for val in options.values():
+            if isinstance(val, dict):
+                if "start" in val:
+                    tmp.append(list(range(val["start"], val["end"], val["step"])))
+                else:
+                    tmp.append(self.expand_options(val))
+            else:
+                if not isinstance(val, list):
+                    val = [val]
+                tmp.append(val)
+        for v in product(*tmp):
+            d = dict(zip(options.keys(), v))
+            res.append(d)
+        # if len(res) == 1:
+        #     return res[0]
+        return res
 
     def load_datasets(self, db_type, by_dataset=False, load_opts=None):
         res = {}
