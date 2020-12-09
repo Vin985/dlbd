@@ -1,6 +1,7 @@
 import librosa
 import pandas as pd
 from scipy.ndimage.interpolation import zoom
+from dlbd.audio.audio_database_options import AudioDatabaseOptions
 
 from dlbd.lib.data_handler import DataHandler
 from . import spectrogram, tag_manager
@@ -8,12 +9,7 @@ from . import spectrogram, tag_manager
 
 class AudioDataHandler(DataHandler):
 
-    DEFAULT_OPTIONS = {
-        "class_type": "biotic",
-        "data_extensions": [".wav"],
-        "classes_file": "classes.csv",
-        "tags_suffix": "-sceneRect.csv",
-    }
+    OPTIONS_CLASS = AudioDatabaseOptions
 
     DATA_STRUCTURE = {
         "spectrograms": [],
@@ -23,9 +19,7 @@ class AudioDataHandler(DataHandler):
     }
 
     def get_spectrogram_subfolder_path(self, database):
-        return spectrogram.get_spec_subfolder(
-            self.load_option_group("spectrogram", database)
-        )
+        return spectrogram.get_spec_subfolder(database.spectrogram)
 
     def merge_datasets(self, datasets):
         merged = super().merge_datasets(datasets)
@@ -36,9 +30,12 @@ class AudioDataHandler(DataHandler):
         self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
 
     def load_data_options(self, database):
+        # db_opts = database.get("options", {})
         opts = {}
-        opts["tags"] = self.load_option_group("tags", database)
-        opts["spectrogram"] = self.load_option_group("spectrogram", database)
+        opts["tags"] = database.tags  # self.load_option_group("tags", db_opts)
+        opts[
+            "spectrogram"
+        ] = database.spectrogram  # self.load_option_group("spectrogram", db_opts)
         opts["classes"] = self.load_classes(database)
         return opts
 
