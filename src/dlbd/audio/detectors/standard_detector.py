@@ -18,7 +18,7 @@ from dlbd.lib.detector import Detector
 
 class StandardDetector(Detector):
 
-    TAG_TYPE = "linear"
+    REQUIRES = ["tags_df"]
 
     def get_recording_events(self, predictions, options=None):
         options = options or {}

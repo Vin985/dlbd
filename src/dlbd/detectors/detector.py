@@ -5,6 +5,8 @@ from abc import ABC
 
 class Detector(ABC):
 
+    REQUIRES = []
+
     EVENTS_COLUMNS = {
         "index": "event_id",
         "event_index": "event_index",
@@ -24,4 +26,3 @@ class Detector(ABC):
 
     def evaluate(self, predictions, tags, options):
         pass
-
