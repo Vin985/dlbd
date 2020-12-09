@@ -15,7 +15,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 #     print(type(versions))
 
 evaluator = SongDetectorEvaluator(
-    opts_path="src/evaluation_config.yaml", dh_class=AudioDataHandler
+    opts_path="src/evaluation_config2.yaml", dh_class=AudioDataHandler
 )
 
 res = evaluator.evaluate()

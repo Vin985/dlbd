@@ -1,6 +1,6 @@
 #* All path can be relative to the root_dir or complete
 # root_dir: other dirs will be relative to this one
-audio_dir: 'wavs'
+data_dir: 'wavs'
 tags_dir: 'annotations'
 training_dir: 'training'
 validation_dir:  'validation'
@@ -10,7 +10,7 @@ save_intermediate: False
 
 use_subfolders: ["class", "spectrogram"]
 
-audio_extensions:
+data_extensions:
   - ".wav"
   - ".WAV"
 recursive: True
@@ -38,17 +38,15 @@ databases:
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
       db_types: ["test"]
       spectrogram:
-        sample_rate: original
-      tags:
-        with_data: True
+        sample_rate: 22050
   # - name: 'citynet_small'
   #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
   #   #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
   #   db_types: ["test"]
-    # - name: 'arctic'
-    #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
-    #   tags:
-    #     with_data: True
+    - name: 'arctic'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+      tags:
+        with_data: True
   #   # overwrite: False
   #   # generate_file_lists: True
   #   #* split: Defines proportion of data to set aside for test and validation datasets.
@@ -68,7 +66,7 @@ spectrogram:
   n_mels: 32
   n_fft: 2048
   hop_length: 1024
-  sample_rate: 22050 # For no resampling: remove option or set to Original or original
+  sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
 classes_file: "src/classes.csv"
