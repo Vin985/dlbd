@@ -3,14 +3,15 @@ import pickle
 import traceback
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from itertools import product
 from pathlib import Path
 
 import feather
 import numpy as np
 import pandas as pd
 
+from ..utils import common as common_utils
 from ..utils.file import ensure_path_exists, get_full_path, list_files
+from ..options.database_options import DatabaseOptions
 
 """
 A class that handles all data related business. While this class provides convenience functions,
@@ -29,57 +30,79 @@ class DataHandler(ABC):
         "tags_suffix": "-sceneRect.csv",
     }
 
+    OPTIONS_CLASS = DatabaseOptions
+
     DATA_STRUCTURE = {"data": [], "tags": []}
 
     def __init__(self, opts, split_funcs=None):
         self.opts = opts
         self.split_funcs = split_funcs
         self.tmp_db_data = None
+        self.databases = self.load_databases()
 
-    def load_option_group(self, group, database=None):
-        opts = self.opts[group]
-        if database and group in database:
-            db_opts = database[group]
-            opts.update(db_opts)
-        return opts
+    def load_databases(self):
+        global_opts = dict(self.opts)
+        databases = global_opts.pop("databases")
+        databases = {
+            database["name"]: self.OPTIONS_CLASS(
+                common_utils.deep_dict_update(dict(global_opts), database, copy=True)
+            )
+            for database in databases
+        }
+        return databases
 
-    def get_db_option(self, name, database=None, default="", group=None):
-        """Get an option for the selected database. When the option is not present in the database,
-        the default section is checked. If nothing is found, the 'default' argument is used.
+    def duplicate_database(self, database):
+        return self.OPTIONS_CLASS(
+            common_utils.deep_dict_update(
+                self.databases[database["name"]].opts, database, copy=True
+            ),
+            database,
+        )
 
-        Args:
-            name (str): The name of the option to look for
-            database (dict, optional): An optional dictionary holding the options for the
-            specified database. Defaults to None.
-            default (str, optional): The default value to return in case the option is found
-            neither in the database options nor in the default options. Defaults to "".
+    # def load_option_group(self, group, database=None):
+    #     opts = self.opts["options"][group]
+    #     if database and "options" in database and group in database["options"]:
+    #         db_opts = database["options"][group]
+    #         opts.update(db_opts)
+    #     return opts
 
-        Returns:
-            object or Path: returns the object corresponding to the option as returned from pyyaml.
-            If the option is a path and the 'name' argument ends with '_dir' or '_path', a
-            pathlib.Path object is returned.
-        """
-        option = None
+    # def get_db_option(self, name, database=None, default="", group=None):
+    #     """Get an option for the selected database. When the option is not present in the database,
+    #     the default section is checked. If nothing is found, the 'default' argument is used.
 
-        # db = self.opts
-        # if database:
-        #     if group:
-        #         if group in database:
-        #             db = database[group]
-        #         else:
-        #             db = self.opts[group]
-        #     elif name in database:
-        #         db = database
-        # option = db.get(name, default)
-        # print(name, option)
+    #     Args:
+    #         name (str): The name of the option to look for
+    #         database (dict, optional): An optional dictionary holding the options for the
+    #         specified database. Defaults to None.
+    #         default (str, optional): The default value to return in case the option is found
+    #         neither in the database options nor in the default options. Defaults to "".
 
-        if database and name in database:
-            option = database[name]
-        else:
-            option = self.opts.get(name, default)
-        if isinstance(name, str) and (name.endswith("_dir") or name.endswith("_path")):
-            option = Path(option)
-        return option
+    #     Returns:
+    #         object or Path: returns the object corresponding to the option as returned from pyyaml.
+    #         If the option is a path and the 'name' argument ends with '_dir' or '_path', a
+    #         pathlib.Path object is returned.
+    #     """
+    #     option = None
+
+    #     # db = self.opts
+    #     # if database:
+    #     #     if group:
+    #     #         if group in database:
+    #     #             db = database[group]
+    #     #         else:
+    #     #             db = self.opts[group]
+    #     #     elif name in database:
+    #     #         db = database
+    #     # option = db.get(name, default)
+    #     # print(name, option)
+
+    #     if database and name in database:
+    #         option = database[name]
+    #     else:
+    #         option = self.opts.get(name, default)
+    #     if isinstance(name, str) and (name.endswith("_dir") or name.endswith("_path")):
+    #         option = Path(option)
+    #     return option
 
     def get_class_subfolder_path(self, database):
         """Default implementation for a class subfolder
@@ -90,9 +113,7 @@ class DataHandler(ABC):
         Returns:
             str: The class name
         """
-        return self.get_db_option(
-            "class_type", database, self.DEFAULT_OPTIONS["class_type"]
-        )
+        return database.class_type
 
     def get_subfolders(self, database):
         """Generate subfolders based on a list provided in the 'use_subfolders' option.
@@ -111,13 +132,12 @@ class DataHandler(ABC):
             pathlib.Path: a Path
         """
         res = Path("")
-        subfolders = self.get_db_option("use_subfolders", database, None)
+        subfolders = database.use_subfolders
         if subfolders:
             if isinstance(subfolders, str):
                 subfolders = [subfolders]
             for subfolder_type in subfolders:
                 func_name = "_".join(["get", subfolder_type, "subfolder_path"])
-                print(func_name)
                 if hasattr(self, func_name) and callable(getattr(self, func_name)):
                     res /= getattr(self, func_name)(database)
                 else:
@@ -150,23 +170,19 @@ class DataHandler(ABC):
 
     def get_database_paths(self, database):
         paths = {}
-        root_dir = self.get_db_option("root_dir", database)
+        root_dir = database.root_dir
 
         subfolders = self.get_subfolders(database)
 
         paths["root"] = root_dir
-        paths["data"] = {"default": self.get_db_option("data_dir", database)}
-        paths["tags"] = {"default": self.get_db_option("tags_dir", database)}
-        paths["dest"] = {
-            "default": self.get_db_option("dest_dir", database) / database["name"]
-        }
+        paths["data"] = {"default": database.data_dir}
+        paths["tags"] = {"default": database.tags_dir}
+        paths["dest"] = {"default": database.dest_dir / database["name"]}
         paths["file_list"] = {}
         paths["save_dests"] = {}
 
-        for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
-            db_type_dir = get_full_path(
-                self.get_db_option(db_type + "_dir", database), root_dir
-            )
+        for db_type in database.db_types:
+            db_type_dir = get_full_path(database[db_type + "_dir"], root_dir)
             paths[db_type + "_dir"] = db_type_dir
             paths["data"][db_type] = get_full_path(
                 paths["data"]["default"], db_type_dir
@@ -176,10 +192,8 @@ class DataHandler(ABC):
             )
             dest_dir = get_full_path(paths["dest"]["default"], db_type_dir)
             paths["dest"][db_type] = dest_dir
-            paths["file_list"][db_type] = self.get_db_option(
-                db_type + "_file_list_path",
-                database,
-                dest_dir / (db_type + "_file_list.csv"),
+            paths["file_list"][db_type] = database.get(
+                db_type + "_file_list_path", dest_dir / (db_type + "_file_list.csv")
             )
             paths["save_dests"][db_type] = self.get_save_dest_paths(
                 dest_dir, db_type, subfolders
@@ -212,13 +226,9 @@ class DataHandler(ABC):
 
     def get_data_file_lists(self, paths, database):
         res = {}
-        for db_type in self.get_db_option("db_types", database, self.DB_TYPES):
+        for db_type in database.db_types:
             res[db_type] = list_files(
-                paths["data"][db_type],
-                self.get_db_option(
-                    "data_ext", database, [self.DEFAULT_OPTIONS["data_extensions"]]
-                ),
-                self.get_db_option("recursive", database, False),
+                paths["data"][db_type], database.data_extensions, database.recursive
             )
         return res
 
@@ -227,9 +237,7 @@ class DataHandler(ABC):
         msg = "Checking file lists for database {0}... ".format(database["name"])
         file_lists_exist = all([path.exists() for path in paths["file_list"].values()])
         # * Check if file lists are missing or need to be regenerated
-        if not file_lists_exist or self.get_db_option(
-            "generate_file_lists", database, False
-        ):
+        if not file_lists_exist or database.generate_file_lists:
             print(msg + "Generating file lists...")
             file_lists = {}
             # * Check if we have a dedicated function to split the original data
@@ -247,12 +255,8 @@ class DataHandler(ABC):
         return file_lists
 
     def load_classes(self, database):
-        class_type = self.get_db_option(
-            "class_type", database, self.DEFAULT_OPTIONS["class_type"]
-        )
-        classes_file = self.get_db_option(
-            "classes_file", database, self.DEFAULT_OPTIONS["classes_file"]
-        )
+        class_type = database.class_type
+        classes_file = database.classes_file
 
         classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
         classes = (
@@ -301,7 +305,7 @@ class DataHandler(ABC):
                     file_path=file_path, tags_dir=paths["tags"][db_type], opts=data_opts
                 )
 
-                if self.get_db_option("save_intermediates", database, False):
+                if database.save_intermediates:
                     savename = (
                         paths["dest"][db_type] / "intermediate" / file_path.name
                     ).with_suffix(".pkl")
@@ -323,27 +327,36 @@ class DataHandler(ABC):
                 return False
         return True
 
-    def check_dataset(self, database, paths, file_list, db_type):
-        # * Overwrite if generate_file_lists is true as file lists will be recreated
-        overwrite = self.get_db_option(
-            "overwrite", database, False
-        ) or self.get_db_option("generate_file_lists", database, False)
-        if not self.check_dataset_exists(paths, db_type) or overwrite:
-            self.generate_dataset(database, paths, file_list, db_type, overwrite)
-        # elif load:
-        #     with open(paths["pkl"][db_type], "rb") as f:
-        #         res = pickle.load(f, -1)
-        #         print("Loaded file: ", paths["pkl"][db_type])
+    # def check_dataset2(self, database, db_types):
+    #     paths = self.get_database_paths(database)
+    #     file_lists = self.check_file_lists(database, paths)
+    #     for db_type, file_list in file_lists.items():
+    #         if db_types and db_type in db_types:
+    #             # * Overwrite if generate_file_lists is true as file lists will be recreated
+    #             overwrite = database.overwrite or database.generate_file_lists
+    #             if not self.check_dataset_exists(paths, db_type) or overwrite:
+    #                 self.generate_dataset(
+    #                     database, paths, file_list, db_type, overwrite
+    #                 )
 
-    def check_datasets(self, databases=None):
+    def check_dataset(self, database, db_types):
+        paths = self.get_database_paths(database)
+        file_lists = self.check_file_lists(database, paths)
+        for db_type, file_list in file_lists.items():
+            if db_types and db_type in db_types:
+                # * Overwrite if generate_file_lists is true as file lists will be recreated
+                overwrite = database.overwrite or database.generate_file_lists
+                if not self.check_dataset_exists(paths, db_type) or overwrite:
+                    self.generate_dataset(
+                        database, paths, file_list, db_type, overwrite
+                    )
+
+    def check_datasets(self, databases=None, db_types=None):
         if not databases:
-            databases = self.opts["databases"]
+            databases = self.databases.values()
         for database in databases:
             print("Checking database:", database["name"])
-            paths = self.get_database_paths(database)
-            file_lists = self.check_file_lists(database, paths)
-            for db_type, file_list in file_lists.items():
-                self.check_dataset(database, paths, file_list, db_type)
+            self.check_dataset(database, db_types)
 
     # TODO : add spectrogram modification into the trainer, right before training/classifying
     def modify_spectrogram(self, spec):
@@ -396,37 +409,14 @@ class DataHandler(ABC):
         return res
 
     def get_database_options(self, name):
-        for db in self.opts["databases"]:
-            if db["name"] == name:
-                return db
-        return None
-
-    def expand_options(self, options):
-        res = []
-        tmp = []
-        for val in options.values():
-            if isinstance(val, dict):
-                if "start" in val:
-                    tmp.append(list(range(val["start"], val["end"], val["step"])))
-                else:
-                    tmp.append(self.expand_options(val))
-            else:
-                if not isinstance(val, list):
-                    val = [val]
-                tmp.append(val)
-        for v in product(*tmp):
-            d = dict(zip(options.keys(), v))
-            res.append(d)
-        # if len(res) == 1:
-        #     return res[0]
-        return res
+        return self.databases.get(name, None)
 
     def load_datasets(self, db_type, by_dataset=False, load_opts=None):
         res = {}
         # * Iterate over databases
-        for database in self.opts["databases"]:
+        for database in self.databases.values():
             # * Only load data if the give db_type is in the database definition
-            if db_type in self.get_db_option("db_types", database, self.DB_TYPES):
+            if db_type in database.db_types:
                 print(
                     "Loading {0} data for database: {1}".format(
                         db_type, database["name"]
