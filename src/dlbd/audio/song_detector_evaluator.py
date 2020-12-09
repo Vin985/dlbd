@@ -67,13 +67,23 @@ class SongDetectorEvaluator(Evaluator):
         preds_dir /= self.data_handler.get_spectrogram_subfolder_path(database)
         return preds_dir
 
-    def get_tags(self):
-        load_opts = {
-            "file_types": ["tags_df", "tags_linear_presence", "infos"],
-            "onload_callbacks": {"tags_df": self.prepare_tags},
-        }
-        tags = self.data_handler.load_datasets(
-            "test", load_opts=load_opts, by_dataset=True,
+    def load_tags(self, database, types):
+        return self.data_handler.load_dataset(
+            database,
+            "test",
+            load_opts={
+                "file_types": types,
+                "onload_callbacks": {"tags_df": self.prepare_tags},
+            },
         )
-        return tags
+
+    # def get_tags(self):
+    #     load_opts = {
+    #         "file_types": ["tags_df", "tags_linear_presence", "infos"],
+    #         "onload_callbacks": {"tags_df": self.prepare_tags},
+    #     }
+    #     tags = self.data_handler.load_datasets(
+    #         "test", load_opts=load_opts, by_dataset=True,
+    #     )
+    #     return tags
 
