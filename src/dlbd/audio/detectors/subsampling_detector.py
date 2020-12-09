@@ -26,6 +26,8 @@ from plotnine import (
 
 class SubsamplingDetector(Detector):
 
+    REQUIRES = ["tags_df"]
+
     DEFAULT_ISOLATE_EVENTS = True
     DEFAULT_EVENT_THRESHOLD = 0.5
 
@@ -224,10 +226,10 @@ class SubsamplingDetector(Detector):
 
     def evaluate(self, predictions, tags, options):
         tags_df = tags["tags_df"]
-        tags_presence = {}
-        for idx, i in enumerate(tags["tags_linear_presence"]):
-            fp = str(tags["infos"][idx]["file_path"])
-            tags_presence[fp] = i
+        # tags_presence = {}
+        # for idx, i in enumerate(tags["tags_linear_presence"]):
+        #     fp = str(tags["infos"][idx]["file_path"])
+        #     tags_presence[fp] = i
 
         preds = predictions.copy()
         # preds.loc[:, "tag_index"] = ""
