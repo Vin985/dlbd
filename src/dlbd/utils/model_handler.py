@@ -1,5 +1,7 @@
 from importlib import import_module
 
+from dlbd.options.model_options import ModelOptions
+
 
 from ..data.data_handler import DataHandler
 from ..models.dl_model import DLModel
@@ -57,11 +59,9 @@ class ModelHandler:
         return dh
 
     def get_model_instance(self, model, model_opts, version=None):
-        if isinstance(model, DLModel):
-            return model
-        if not isinstance(model, dict):
+        if not isinstance(model, ModelOptions) and not isinstance(model, dict):
             raise ValueError(
-                "Model should either be an instance of dlbd.models.DLModel or a dict"
+                "Argument 'model' should be an instance of dlbd.options.ModelOptions or a dict"
             )
 
         pkg = import_module(model["package"])
