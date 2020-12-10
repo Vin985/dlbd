@@ -167,7 +167,6 @@ class Evaluator(ModelHandler, ABC):
 
     def save_results(self, stats):
         stats_df, plots = self.consolidate_stats(stats)
-        print(stats_df)
         time = datetime.now()
         res_dir = Path(self.opts.get("evaluation_dir", ".")) / time.strftime("%Y%m%d")
         prefix = time.strftime("%H%M%S")
@@ -236,6 +235,8 @@ class Evaluator(ModelHandler, ABC):
                 "database": database.name,
                 "model": model_opts.model_id,
                 "class": database.class_type,
+            }
+            stats_opts = {
                 "detector_opts": str(detector_opts),
                 "database_opts": str(database.updated_opts),
                 "model_opts": str(model_opts),
@@ -251,7 +252,9 @@ class Evaluator(ModelHandler, ABC):
             if detector:
                 tags = self.load_tags(database, detector.REQUIRES)
                 model_stats = detector.evaluate(preds, tags, detector_opts)
-                model_stats["stats"].update(stats_infos)
+                stats_infos.update(model_stats["stats"])
+                stats_infos.update(stats_opts)
+                model_stats["stats"] = stats_infos
                 plt = model_stats.get("tag_repartition", None)
                 if plt:
                     plt += ggtitle(
@@ -272,7 +275,6 @@ class Evaluator(ModelHandler, ABC):
         # all_tags = self.get_tags()
 
         stats = [self.evaluate_scenario(scenario) for scenario in scenarios]
-        print(stats)
 
         # databases = self.load_databases_options()
         #
