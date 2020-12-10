@@ -343,13 +343,13 @@ class StandardDetector(Detector):
             "n_tags": tags.shape[0],
             "n_true_positives": n_true_positives,
             "n_false_positives": n_false_positives,
-            "n_tags_matched": n_tags_matched,
-            "n_tags_unmatched": n_tags_unmatched,
-            "true_positives_ratio": true_positives_ratio,
-            "false_positive_rate": false_positive_rate,
+            "n_matched_tags": n_tags_matched,
+            "n_unmatched_tags": n_tags_unmatched,
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
+            "true_positives_ratio": true_positives_ratio,
+            "false_positive_rate": false_positive_rate,
         }
 
         tag_repartition = self.get_tag_repartition(tags)
