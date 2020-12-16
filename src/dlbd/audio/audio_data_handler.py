@@ -62,7 +62,7 @@ class AudioDataHandler(DataHandler):
         tmp_tags = tag_manager.filter_classes(tag_df, opts["classes"])
         tag_presence = tag_manager.get_tag_presence(tmp_tags, audio_info, tag_opts)
         factor = float(spec.shape[1]) / tag_presence.shape[0]
-        zoomed_presence = zoom(tag_presence, factor)
+        zoomed_presence = zoom(tag_presence, factor).astype(int)
 
         self.tmp_db_data["spectrograms"].append(spec)
         self.tmp_db_data["infos"].append(audio_info)
