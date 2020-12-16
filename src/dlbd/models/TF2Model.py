@@ -7,7 +7,6 @@ from .dl_model import DLModel
 
 
 class TF2Model(DLModel):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.optimizer = None
@@ -33,14 +32,15 @@ class TF2Model(DLModel):
                 predictions = self.model(data, training=True)
                 loss = self.tf_loss(labels, predictions)
             gradients = tape.gradient(loss, self.model.trainable_variables)
-            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            self.optimizer.apply_gradients(
+                zip(gradients, self.model.trainable_variables)
+            )
         else:
             predictions = self.model(data, training=False)
             loss = self.tf_loss(labels, predictions)
 
         self.metrics[step_type + "_loss"](loss)
         self.metrics[step_type + "_accuracy"](labels, predictions)
-
 
     @staticmethod
     def tf_loss(y_true, y_pred):
@@ -99,9 +99,9 @@ class TF2Model(DLModel):
         # * Create logging writers
         self.create_writers()
 
-        tf.profiler.experimental.start(
-            str(Path(self.opts["logs"]["log_dir"]) / self.model_name)
-        )
+        # tf.profiler.experimental.start(
+        #     str(Path(self.opts["logs"]["log_dir"]) / self.model_name)
+        # )
 
         for epoch in range(from_epoch, self.opts["model"]["max_epochs"]):
             # Reset the metrics at the start of the next epoch
@@ -111,8 +111,10 @@ class TF2Model(DLModel):
             self.run_step("train", training_data, epoch, train_sampler)
             self.run_step("validation", validation_data, epoch, validation_sampler)
 
-            template = "Epoch {}, Loss: {}, Accuracy: {}," \
+            template = (
+                "Epoch {}, Loss: {}, Accuracy: {},"
                 " Validation Loss: {}, Validation Accuracy: {}"
+            )
             print(
                 template.format(
                     epoch + 1,
@@ -127,7 +129,7 @@ class TF2Model(DLModel):
                 self.save_model(
                     str(self.results_dir / self.model_name / ("epoch_" + str(epoch)))
                 )
-        tf.profiler.experimental.stop()
+        # tf.profiler.experimental.stop()
         self.save_model()
 
     def create_writers(self):
@@ -148,16 +150,21 @@ class TF2Model(DLModel):
             self.metrics[x + "_accuracy"].reset_states()
 
     def run_step(self, step_type, data, step, sampler):
-        specs, annots, _ = data
         # i = 0
-        for data, labels in tqdm(sampler(specs, annots)):
+        for data, labels in tqdm(
+            sampler(data["spectrograms"], data["tags_linear_presence"])
+        ):
             # if i == 10:
             #     break
             # i += 1
             getattr(self, step_type + "_step")(data, labels)
         with self.summary_writer[step_type].as_default():
-            tf.summary.scalar("loss", self.metrics[step_type + "_loss"].result(), step=step)
-            tf.summary.scalar("accuracy", self.metrics[step_type + "_accuracy"].result(), step=step)
+            tf.summary.scalar(
+                "loss", self.metrics[step_type + "_loss"].result(), step=step
+            )
+            tf.summary.scalar(
+                "accuracy", self.metrics[step_type + "_accuracy"].result(), step=step
+            )
 
     def save_weights(self, path=None):
         if not path:
