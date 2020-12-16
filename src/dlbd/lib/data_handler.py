@@ -21,7 +21,11 @@ this should be subclassed
 
 class DataHandler(ABC):
 
-    DB_TYPES = ["test", "training", "validation"]
+    DB_TYPE_TRAINING = "training"
+    DB_TYPE_VALIDATION = "validation"
+    DB_TYPE_TEST = "test"
+
+    DB_TYPES = [DB_TYPE_TRAINING, DB_TYPE_VALIDATION, DB_TYPE_TEST]
 
     DEFAULT_OPTIONS = {
         "class_type": "",
@@ -58,51 +62,6 @@ class DataHandler(ABC):
             ),
             database,
         )
-
-    # def load_option_group(self, group, database=None):
-    #     opts = self.opts["options"][group]
-    #     if database and "options" in database and group in database["options"]:
-    #         db_opts = database["options"][group]
-    #         opts.update(db_opts)
-    #     return opts
-
-    # def get_db_option(self, name, database=None, default="", group=None):
-    #     """Get an option for the selected database. When the option is not present in the database,
-    #     the default section is checked. If nothing is found, the 'default' argument is used.
-
-    #     Args:
-    #         name (str): The name of the option to look for
-    #         database (dict, optional): An optional dictionary holding the options for the
-    #         specified database. Defaults to None.
-    #         default (str, optional): The default value to return in case the option is found
-    #         neither in the database options nor in the default options. Defaults to "".
-
-    #     Returns:
-    #         object or Path: returns the object corresponding to the option as returned from pyyaml.
-    #         If the option is a path and the 'name' argument ends with '_dir' or '_path', a
-    #         pathlib.Path object is returned.
-    #     """
-    #     option = None
-
-    #     # db = self.opts
-    #     # if database:
-    #     #     if group:
-    #     #         if group in database:
-    #     #             db = database[group]
-    #     #         else:
-    #     #             db = self.opts[group]
-    #     #     elif name in database:
-    #     #         db = database
-    #     # option = db.get(name, default)
-    #     # print(name, option)
-
-    #     if database and name in database:
-    #         option = database[name]
-    #     else:
-    #         option = self.opts.get(name, default)
-    #     if isinstance(name, str) and (name.endswith("_dir") or name.endswith("_path")):
-    #         option = Path(option)
-    #     return option
 
     def get_class_subfolder_path(self, database):
         """Default implementation for a class subfolder
@@ -198,8 +157,6 @@ class DataHandler(ABC):
             paths["save_dests"][db_type] = self.get_save_dest_paths(
                 dest_dir, db_type, subfolders
             )
-            # paths["pkl"][db_type] = dest_dir / subfolders / (db_type + "_data.pkl")
-            # paths["tag_df"][db_type] = dest_dir / (db_type + "_tags.feather")
         return paths
 
     @staticmethod
@@ -365,6 +322,7 @@ class DataHandler(ABC):
         return spec
 
     def load_file(self, file_name):
+        print("Loading file: ", file_name)
         if file_name.suffix == ".feather":
             return feather.read_dataframe(str(file_name))
         else:
@@ -374,7 +332,10 @@ class DataHandler(ABC):
         merged = deepcopy(self.DATA_STRUCTURE)
         for dataset in datasets.values():
             for key in merged:
-                merged[key] += dataset[key]
+                if isinstance(dataset[key], list):
+                    merged[key] += dataset[key]
+                else:
+                    merged[key].append(dataset[key])
         return merged
 
     def get_file_types(self, load_opts):
