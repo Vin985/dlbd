@@ -1,9 +1,6 @@
-
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Input, Model, layers, regularizers
-from dlbd.models.CityNetTF2 import CityNetTF2
-
+from dlbd.audio.models.CityNetTF2 import CityNetTF2
 
 
 class CityNetTF2Dropout(CityNetTF2):
