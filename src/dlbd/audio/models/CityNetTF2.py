@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from dlbd.models.TF2Model import TF2Model
+from scipy.ndimage.interpolation import zoom
 from tensorflow.keras import Input, Model, layers, regularizers
 
 from ..spectrogram import resize_spectrogram
@@ -102,7 +103,11 @@ class CityNetTF2(TF2Model):
         )
 
     def init_samplers(self):
-        train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
+        train_sampler = SpectrogramSampler(
+            self.opts,
+            randomise=True,
+            balanced=self.opts["model"].get("training_balanced", True),
+        )
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
         )
@@ -111,29 +116,31 @@ class CityNetTF2(TF2Model):
     def init_optimizer(self):
         self.optimizer = tf.keras.optimizers.Adam()
 
-    def modify_spectrogram(self, spec, infos):
+    def modify_spectrogram(self, spec, resize_width):
         spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
-        print(spec.shape)
-        if self.opts["model"].get("resize_spectrogram", False):
-            pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
-            spec = resize_spectrogram(
-                spec,
-                (
-                    int(pix_in_sec * infos["length"] / infos["sample_rate"]),
-                    spec.shape[0],
-                ),
-            )
-            print(spec.shape)
+        if resize_width > 0:
+            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
         return spec
 
     def prepare_data(self, data):
-        specs, tags, infos = data
         if not self.opts["model"]["learn_log"]:
-            specs = [
-                self.modify_spectrogram(spec, infos[i]) for i, spec in enumerate(specs)
-            ]
-        return specs, tags, infos
+            for i, spec in enumerate(data["spectrograms"]):
+                resize_width = -1
+                if self.opts["model"].get("resize_spectrogram", False):
+                    infos = data["infos"][i]
+                    pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+                    resize_width = int(
+                        pix_in_sec * infos["length"] / infos["sample_rate"]
+                    )
+                data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
+                if resize_width > 0:
+                    data["tags_linear_presence"][i] = zoom(
+                        data["tags_linear_presence"][i],
+                        float(resize_width) / spec.shape[1],
+                        order=1,
+                    ).astype(int)
+        return data
 
     def classify(self, data, sampler):
         spectrogram, infos = data
