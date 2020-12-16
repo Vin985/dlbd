@@ -272,17 +272,7 @@ class Evaluator(ModelHandler, ABC):
 
     def evaluate(self):
         scenarios = self.load_scenarios()
-        # all_tags = self.get_tags()
-
         stats = [self.evaluate_scenario(scenario) for scenario in scenarios]
-
-        # databases = self.load_databases_options()
-        #
-
-        # stats = []
-        # for database in databases:
-        #     db_stats = self.evaluate_database(database, all_tags, models)
-        #     stats += db_stats
 
         if self.opts.get("save_results", True):
             self.save_results(stats)
