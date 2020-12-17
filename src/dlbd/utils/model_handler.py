@@ -1,14 +1,13 @@
+from abc import ABC, abstractmethod
 from importlib import import_module
 
 from dlbd.options.model_options import ModelOptions
 
-
 from ..data.data_handler import DataHandler
-from ..models.dl_model import DLModel
 from ..utils import file as file_utils
 
 
-class ModelHandler:
+class ModelHandler(ABC):
     def __init__(self, opts=None, opts_path="", dh=None, model=None, **kwargs):
         if not opts:
             if opts_path:
@@ -26,6 +25,8 @@ class ModelHandler:
         if not dh:
             dh = self.create_data_handler(**kwargs)
         self.data_handler = dh
+
+        self.scenarios = self.load_scenarios()
 
     @property
     def model(self):
@@ -50,7 +51,7 @@ class ModelHandler:
     def create_data_handler(self, dh_class=None, split_funcs=None):
         data_opts_path = self.opts.get("data_config", "")
         if not data_opts_path:
-            raise Exception("A path to the data config file must be provided")
+            raise Exception("A path to the data configuration file must be provided")
         data_opts = file_utils.load_config(data_opts_path)
         if dh_class:
             dh = dh_class(data_opts, split_funcs=split_funcs)
@@ -70,4 +71,8 @@ class ModelHandler:
 
     def get_option(self, name, group, default=""):
         return group.get(name, self.opts.get(name, default))
+
+    @abstractmethod
+    def load_scenarios(self):
+        return []
 
