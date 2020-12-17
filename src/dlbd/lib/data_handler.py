@@ -6,7 +6,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import feather
-import numpy as np
 import pandas as pd
 
 from ..utils import common as common_utils
@@ -284,18 +283,6 @@ class DataHandler(ABC):
                 return False
         return True
 
-    # def check_dataset2(self, database, db_types):
-    #     paths = self.get_database_paths(database)
-    #     file_lists = self.check_file_lists(database, paths)
-    #     for db_type, file_list in file_lists.items():
-    #         if db_types and db_type in db_types:
-    #             # * Overwrite if generate_file_lists is true as file lists will be recreated
-    #             overwrite = database.overwrite or database.generate_file_lists
-    #             if not self.check_dataset_exists(paths, db_type) or overwrite:
-    #                 self.generate_dataset(
-    #                     database, paths, file_list, db_type, overwrite
-    #                 )
-
     def check_dataset(self, database, db_types):
         paths = self.get_database_paths(database)
         file_lists = self.check_file_lists(database, paths)
@@ -309,17 +296,10 @@ class DataHandler(ABC):
                     )
 
     def check_datasets(self, databases=None, db_types=None):
-        if not databases:
-            databases = self.databases.values()
+        databases = databases or self.databases.values()
         for database in databases:
             print("Checking database:", database["name"])
             self.check_dataset(database, db_types)
-
-    # TODO : add spectrogram modification into the trainer, right before training/classifying
-    def modify_spectrogram(self, spec):
-        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        return spec
 
     def load_file(self, file_name):
         print("Loading file: ", file_name)
@@ -372,10 +352,11 @@ class DataHandler(ABC):
     def get_database_options(self, name):
         return self.databases.get(name, None)
 
-    def load_datasets(self, db_type, by_dataset=False, load_opts=None):
+    def load_datasets(self, db_type, databases=None, by_dataset=False, load_opts=None):
         res = {}
+        databases = databases or self.databases.values()
         # * Iterate over databases
-        for database in self.databases.values():
+        for database in databases:
             # * Only load data if the give db_type is in the database definition
             if db_type in database.db_types:
                 print(
