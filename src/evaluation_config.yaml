@@ -20,9 +20,6 @@ detectors:
     dtc_threshold: 0.3
     gtc_threshold: 0.1
     isolate_events: True
-  # - type: "subsampling"
-  #   sample_step: 0
-  #   event_threshold: 0.5
   - type: "subsampling"
     scenarios:
       sample_step: [0, 1]
@@ -34,8 +31,6 @@ detectors:
 models:
   - name: "CityNetTF2"
     package: "dlbd.audio.models.CityNetTF2"
-    # options:
-    #   versions: [1]
   - name: "CityNetOriginal"
     package: "dlbd.audio.models.CityNetOriginal"
     version: 0
