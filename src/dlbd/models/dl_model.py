@@ -69,7 +69,7 @@ class DLModel:
     def opts(self, opts):
         self._opts = opts
         self.model = self.create_net()
-        self.results_dir_root = Path(self.opts["model"]["model_dir"]) / self.NAME
+        self.results_dir_root = Path(self.opts["model_dir"]) / self.NAME
 
     def create_net(self):
         return 0
