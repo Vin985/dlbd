@@ -1,5 +1,5 @@
 #%%
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from datetime import datetime
 from itertools import product
 from pathlib import Path
@@ -8,7 +8,6 @@ import feather
 import pandas as pd
 import plotnine
 from plotnine.labels import ggtitle
-from dlbd.options.database_options import DatabaseOptions
 
 from dlbd.options.model_options import ModelOptions
 
@@ -17,7 +16,7 @@ from ..utils import file as file_utils
 from ..utils.model_handler import ModelHandler
 
 
-class Evaluator(ModelHandler, ABC):
+class Evaluator(ModelHandler):
 
     DETECTORS = {}
 
@@ -66,24 +65,6 @@ class Evaluator(ModelHandler, ABC):
             feather.write_dataframe(predictions, pred_file)
         return predictions
 
-    # def get_tags(self):
-    #     return self.data_handler.load_datasets(
-    #         "test", load_opts={"file_types": ["tags"]}
-    #     )
-
-    # def load_databases_options(self):
-    #     res = []
-    #     for database in self.opts["databases"]:
-    #         original_opts = self.data_handler.get_database_options(database["name"])
-    #         if "test" in self.data_handler.get_db_option(
-    #             "db_types", database, self.data_handler.DB_TYPES
-    #         ):
-    #             new_opts = common_utils.deep_dict_update(
-    #                 original_opts, database, copy=True
-    #             )
-    #             res.append(new_opts)
-    #     return res
-
     def get_detector(self, detector_opts):
         detector = self.DETECTORS.get(detector_opts["type"], None)
         if not detector:
@@ -93,67 +74,6 @@ class Evaluator(ModelHandler, ABC):
             )
             return None
         return detector
-
-    # def run_detector(self, predictions, tags, detector_opts):
-
-    #     tags = self.data_handler.load_dataset(
-    #         database, "test", load_opts={"file_types": detector.TAG_TYPES}
-    #     )
-    #     model_stats = detector.evaluate(predictions, tags, detector_opts)
-    #     return model_stats
-
-    # def evaluate_model(self, model_opts, database, tags, class_type):
-    #     stats = []
-    #     for version in model_opts["versions"]:
-    #         model_name = model_opts["name"] + "_v" + str(version)
-    #         model_id = model_name
-    #         mid = model_opts.get("id", "")
-    #         if mid:
-    #             model_id = model_id + "_" + mid
-    #         model_opts["model_id"] = model_id
-    #         preds = self.get_predictions(model_opts, version, database)
-    #         preds = preds.rename(columns={"recording_path": "recording_id"})
-    #         for detector_opts in self.opts["detectors"]:
-    #             stats_infos = {
-    #                 "database": database["name"],
-    #                 "model": model_id,
-    #                 "class": class_type,
-    #                 "detector_opts": str(detector_opts),
-    #                 "database_opts": str(database.updated_opts),
-    #                 "model_opts": str(model_opts),
-    #             }
-    #             print(
-    #                 "\033[92m"
-    #                 + "Evaluating model {0} on test dataset {1}".format(
-    #                     model_name, database["name"]
-    #                 )
-    #                 + "\033[0m"
-    #             )
-    #             model_stats = self.run_detector(preds, tags, detector_opts)
-    #             model_stats["stats"].update(stats_infos)
-    #             plt = model_stats.get("tag_repartition", None)
-    #             if plt:
-    #                 plt += ggtitle(
-    #                     (
-    #                         "Tag repartition for model {}, database {}, class {}\n"
-    #                         + "with detector options {}"
-    #                     ).format(
-    #                         model_id, database["name"], class_type, detector_opts,
-    #                     )
-    #                 )
-    #             stats.append(model_stats)
-    #     return stats
-
-    # def evaluate_database(self, database, db_tags, models, detectors):
-    #     stats = []
-    #     class_type = self.data_handler.get_db_option("class_type", database)
-    #     tags = db_tags[database["name"]]
-    #     models = models or self.opts["models"]
-
-    #     for model_opts in models:
-    #         m_stats = self.evaluate_model(model_opts, database, tags, class_type)
-    #         stats += m_stats
-    #     return stats
 
     def consolidate_stats(self, stats):
         tmp_stats, plots = [], []
@@ -188,7 +108,7 @@ class Evaluator(ModelHandler, ABC):
 
     def expand_scenarios(self, option_type):
         elements = self.opts[option_type]
-        db_opts = []
+        opts = []
         for element in elements:
             if "scenarios" in element:
                 clean = dict(element)
@@ -196,10 +116,10 @@ class Evaluator(ModelHandler, ABC):
                 for opts in common_utils.expand_options_dict(element["scenarios"]):
                     res = dict(clean)
                     res = common_utils.deep_dict_update(res, opts, copy=True)
-                    db_opts.append(res)
+                    opts.append(res)
             else:
-                db_opts.append(dict(element))
-        return db_opts
+                opts.append(dict(element))
+        return opts
 
     def load_databases_options(self):
         return self.expand_scenarios("databases")
@@ -271,9 +191,7 @@ class Evaluator(ModelHandler, ABC):
         return model_stats
 
     def evaluate(self):
-        scenarios = self.load_scenarios()
-        stats = [self.evaluate_scenario(scenario) for scenario in scenarios]
-
+        stats = [self.evaluate_scenario(scenario) for scenario in self.scenarios]
         if self.opts.get("save_results", True):
             self.save_results(stats)
         return stats
