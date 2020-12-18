@@ -28,7 +28,6 @@ class Trainer(ModelHandler):
             clean = dict(self.opts)
             clean.pop("scenarios")
             for scenario in self.opts["scenarios"]:
-                # TODO: do not expand the dictionaries? Keep the paradigm of 1 scenario, 1 model?
                 for opts in common_utils.expand_options_dict(
                     scenario  # , exclude_expand=["databases_options"]
                 ):
