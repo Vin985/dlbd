@@ -1,4 +1,3 @@
-#%%
 from abc import abstractmethod
 from datetime import datetime
 from itertools import product
