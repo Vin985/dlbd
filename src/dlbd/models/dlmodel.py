@@ -1,21 +1,16 @@
+from abc import ABC, abstractmethod
 from pathlib import Path
-from time import time
 
-import librosa
-import numpy as np
 import yaml
-from librosa.feature import melspectrogram
-from tqdm import tqdm
 
-from ..data import utils
-from ..training.spectrogram_sampler import SpectrogramSampler
+from ..utils import file as file_utils
 
 DEFAULT_N_FFT = 2048
 DEFAULT_HOP_LENGTH = 1024  # 512
 DEFAULT_N_MELS = 32  # 128
 
 
-class DLModel:
+class DLModel(ABC):
     NAME = "DLMODEL"
 
     STEP_TRAINING = "train"
@@ -23,8 +18,6 @@ class DLModel:
 
     def __init__(self, opts=None, version=None):
         """Create the layers of the neural network, with the same options we used in training"""
-        self.wav = None
-        self.sample_rate = None
         self.model = None
         self._results_dir = None
         self._version = None
@@ -71,74 +64,47 @@ class DLModel:
         self.model = self.create_net()
         self.results_dir_root = Path(self.opts["model_dir"]) / self.NAME
 
+    @abstractmethod
     def create_net(self):
         return 0
 
+    @abstractmethod
     def predict(self, x):
         raise NotImplementedError("predict function not implemented for this class")
 
+    @abstractmethod
     def train(self, training_data, validation_data):
         raise NotImplementedError("train function not implemented for this class")
 
+    @abstractmethod
     def save_weights(self, path=None):
         raise NotImplementedError(
             "save_weights function not implemented for this class"
         )
 
+    @abstractmethod
     def load_weights(self, path=None):
         raise NotImplementedError(
             "load_weights function not implemented for this class"
         )
 
+    @abstractmethod
     def classify(self, data, sampler):
-        return self.classify_spectrogram(data, sampler)
+        return None
 
-    def classify_spectrogram(self, spectrogram, spec_sampler):
-        """Apply the classifier"""
-        tic = time()
-        labels = np.zeros(spectrogram.shape[1])
-        preds = []
-        for data, _ in tqdm(spec_sampler([spectrogram], [labels])):
-            pred = self.predict(data)
-            preds.append(pred)
-        print("Classified {0} in {1}".format("spectrogram", time() - tic))
-        return np.vstack(preds)[:, 1]
+    @abstractmethod
+    def get_ground_truth(self, data):
+        return data
+
+    @abstractmethod
+    def get_raw_data(self, data):
+        return data["spectrograms"]
 
     def prepare_data(self, data):
         return data
 
-    def load_wav(self, wavpath, loadmethod="librosa"):
-        # tic = time()
-
-        if loadmethod == "librosa":
-            # a more correct and robust way -
-            # this resamples any audio file to 22050Hz
-            # TODO: downsample if higher than 22050
-            sample_rate = self.opts.get("resample", None)
-            print(sample_rate)
-            return librosa.load(wavpath, sr=sample_rate)
-        else:
-            raise Exception("Unknown load method")
-
-    def compute_spec(self, wav, sample_rate):
-        # tic = time()
-        spec = melspectrogram(
-            wav,
-            sr=sample_rate,
-            n_fft=self.opts.get("n_fft", DEFAULT_N_FFT),
-            hop_length=self.opts.get("hop_length", DEFAULT_HOP_LENGTH),
-            n_mels=self.opts.get("n_mels", DEFAULT_N_MELS),
-        )
-
-        # if self.opts.remove_noise:
-        #     spec = Spectrogram.remove_noise(spec)
-
-        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        return spec.astype(np.float32)
-
     def save_params(self):
-        utils.force_make_dir(self.results_dir)
+        file_utils.ensure_path_exists(self.results_dir)
         with open(self.results_dir / "network_opts.yaml", "w") as f:
             yaml.dump(self.opts, f, default_flow_style=False)
 
