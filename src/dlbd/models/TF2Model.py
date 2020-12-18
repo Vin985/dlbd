@@ -1,9 +1,10 @@
+from abc import abstractmethod
 from pathlib import Path
 
 import tensorflow as tf
 from tqdm import tqdm
 
-from .dl_model import DLModel
+from .dlmodel import DLModel
 
 
 class TF2Model(DLModel):
@@ -43,6 +44,7 @@ class TF2Model(DLModel):
         self.metrics[step_type + "_accuracy"](labels, predictions)
 
     @staticmethod
+    @abstractmethod
     def tf_loss(y_true, y_pred):
         """This is the loss function.
 
@@ -52,6 +54,7 @@ class TF2Model(DLModel):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def init_metrics(self):
         """Inits the metrics used during model evaluation. Fills the metrics
         attribute which is a dict that should contain the following keys:
@@ -63,9 +66,11 @@ class TF2Model(DLModel):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def init_samplers(self):
         raise NotImplementedError()
 
+    @abstractmethod
     def init_optimizer(self):
         raise NotImplementedError()
 
@@ -105,7 +110,6 @@ class TF2Model(DLModel):
 
         for epoch in range(from_epoch, self.opts["model"]["max_epochs"]):
             # Reset the metrics at the start of the next epoch
-            # TODO: save intermediate models?
             self.reset_states()
 
             self.run_step("train", training_data, epoch, train_sampler)
@@ -152,7 +156,7 @@ class TF2Model(DLModel):
     def run_step(self, step_type, data, step, sampler):
         # i = 0
         for data, labels in tqdm(
-            sampler(data["spectrograms"], data["tags_linear_presence"])
+            sampler(self.get_raw_data(data), self.get_ground_truth(data))
         ):
             # if i == 10:
             #     break
@@ -177,6 +181,7 @@ class TF2Model(DLModel):
         print(path)
         self.model.load_weights(path)
 
+    @abstractmethod
     def predict(self, x):
         """This function calls the model to have a predictions
 

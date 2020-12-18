@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from dlbd.audio.models.audio_dlmodel import AudioDLModel
 from dlbd.models.TF2Model import TF2Model
 from scipy.ndimage.interpolation import zoom
 from tensorflow.keras import Input, Model, layers, regularizers
@@ -8,7 +9,7 @@ from ..spectrogram import resize_spectrogram
 from ..training.spectrogram_sampler import SpectrogramSampler
 
 
-class CityNetTF2(TF2Model):
+class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
     def create_net(self):

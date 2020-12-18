@@ -3,14 +3,14 @@ import collections
 import numpy as np
 import tensorflow as tf
 import tf_slim as slim
-from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
+from dlbd.audio.models.audio_dlmodel import AudioDLModel
+
 from ..training.spectrogram_sampler import SpectrogramSampler
-from ...models.dl_model import DLModel
 
 
-class CityNetRegularized(DLModel):
+class CityNetRegularized(AudioDLModel):
     NAME = "CityNet_regularized"
 
     def __init__(self, opts=None):
@@ -177,7 +177,7 @@ class CityNetRegularized(DLModel):
                 )
             )
 
-    def save_weights(self, path):
+    def save_weights(self, path=None):
         saver = tf.compat.v1.train.Saver(max_to_keep=5)
         saver.save(self.sess, path, global_step=1)
 
