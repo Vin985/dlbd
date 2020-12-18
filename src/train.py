@@ -2,22 +2,20 @@ import os
 from dlbd.audio.audio_data_handler import AudioDataHandler
 from dlbd.audio.models.CityNetTF2Dropout import CityNetTF2Dropout
 
-
 from dlbd.training.trainer import Trainer
 from dlbd.utils.split import arctic_split
 
-
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-
 trainer = Trainer(
-    opts_path="src/training_config.yaml",
+    # opts_path="src/training_config.yaml",
+    opts_path="src/CityNetTF2_Dropout_training_config.yaml",
     model=CityNetTF2Dropout(),
-    split_funcs={"arctic": arctic_split},
     dh_class=AudioDataHandler,
+    split_funcs={"arctic": arctic_split},
 )
-trainer.train_model()
-
+# trainer.train_model()
+trainer.train()
 
 # stream = open("src/training_config.yaml", "r")
 # opts = yaml.load(stream, Loader=yaml.Loader)
