@@ -1,0 +1,25 @@
+Core concepts
+=============
+
+Databases
+----------
+
+Models
+------
+
+Scenarios
+---------
+
+Data handlers
+-------------
+
+Model handlers
+--------------
+
+- Trainer
+- Evaluator
+
+Detectors
+---------
+
+
