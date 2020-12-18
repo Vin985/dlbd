@@ -3,13 +3,13 @@ import collections
 import numpy as np
 import tensorflow as tf
 import tf_slim as slim
-from dlbd.models.dl_model import DLModel
+from dlbd.audio.models.audio_dlmodel import AudioDLModel
 from tqdm import tqdm
 
 from ..training.spectrogram_sampler import SpectrogramSampler
 
 
-class CityNetOriginal(DLModel):
+class CityNetOriginal(AudioDLModel):
     NAME = "CityNetOriginal"
 
     def __init__(self, *args, **kwargs):
@@ -97,9 +97,6 @@ class CityNetOriginal(DLModel):
 
     def train(self, training_data, validation_data):
 
-        train_x, train_y = training_data
-        val_x, val_y = validation_data
-
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
@@ -147,7 +144,12 @@ class CityNetOriginal(DLModel):
             trn_losses = []
             trn_accs = []
 
-            for xx, yy in tqdm(train_sampler(train_x, train_y)):
+            for xx, yy in tqdm(
+                train_sampler(
+                    self.get_raw_data(training_data),
+                    self.get_ground_truth(training_data),
+                )
+            ):
                 trn_ls, trn_acc, _ = self.session.run(
                     [_trn_loss, _trn_acc, train_op], feed_dict={x_in: xx, y_in: yy}
                 )
@@ -159,7 +161,12 @@ class CityNetOriginal(DLModel):
             val_losses = []
             val_accs = []
 
-            for xx, yy in tqdm(validation_sampler(val_x, val_y)):
+            for xx, yy in tqdm(
+                validation_sampler(
+                    self.get_raw_data(validation_data),
+                    self.get_ground_truth(validation_data),
+                )
+            ):
                 val_ls, val_acc = self.session.run(
                     [_test_loss, _test_acc], feed_dict={x_in: xx, y_in: yy}
                 )
@@ -178,7 +185,7 @@ class CityNetOriginal(DLModel):
             )
         self.save_model()
 
-    def save_weights(self):
+    def save_weights(self, path=None):
         saver = tf.compat.v1.train.Saver(max_to_keep=5)
         saver.save(self.session, str(self.results_dir / self.model_name), global_step=1)
 
