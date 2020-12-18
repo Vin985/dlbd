@@ -62,6 +62,23 @@ class DataHandler(ABC):
             database,
         )
 
+    def update_database(self, new_opts=None, name="", copy=True):
+        new_opts = new_opts or {}
+        name = name or new_opts.get("name", "")
+        if not name:
+            raise AttributeError(
+                "A valid database name should be provided, either with the name"
+                + "or as a key in the new_opts dict"
+            )
+        if name in self.databases:
+            return self.OPTIONS_CLASS(
+                common_utils.deep_dict_update(
+                    self.databases[name].opts, new_opts, copy=copy
+                ),
+                new_opts,
+            )
+        return None
+
     def get_class_subfolder_path(self, database):
         """Default implementation for a class subfolder
 
