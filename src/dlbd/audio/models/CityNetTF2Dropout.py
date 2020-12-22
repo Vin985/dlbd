@@ -4,7 +4,7 @@ from dlbd.audio.models.CityNetTF2 import CityNetTF2
 
 
 class CityNetTF2Dropout(CityNetTF2):
-    NAME = "CityNetTF2Dropout"
+    NAME = "CityNetTF2_Dropout"
 
     def create_net(self):
         print("init_create_net")
