@@ -77,6 +77,7 @@ class Trainer(ModelHandler):
                 ]
                 print(scenario)
                 self.model.opts = ModelOptions(scenario)
+                self.model.opts.name = self.model.NAME
                 self.model.train(*data)
             except Exception:
                 print(traceback.format_exc())
