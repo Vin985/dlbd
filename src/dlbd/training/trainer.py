@@ -4,6 +4,7 @@ from dlbd.options.model_options import ModelOptions
 
 from ..utils import common as common_utils
 from ..utils.model_handler import ModelHandler
+import tensorflow as tf
 
 
 class Trainer(ModelHandler):
@@ -61,14 +62,15 @@ class Trainer(ModelHandler):
                 "An instance of class DataHandler must be provided in data_handler"
                 + "attribute or at class initialisation"
             )
-        if not self.model:
-            raise AttributeError("No model found")
+        if not self.model_class:
+            raise AttributeError("No model class found")
         db_types = [
             self.data_handler.DB_TYPE_TRAINING,
             self.data_handler.DB_TYPE_VALIDATION,
         ]
         for scenario in self.scenarios:
             try:
+                self.model = self.model_class(ModelOptions(scenario))
                 databases = self.get_scenario_databases_options(scenario)
                 self.data_handler.check_datasets(databases=databases, db_types=db_types)
                 data = [
@@ -76,8 +78,9 @@ class Trainer(ModelHandler):
                     for db_type in db_types
                 ]
                 print(scenario)
-                self.model.opts = ModelOptions(scenario)
-                self.model.opts.name = self.model.NAME
+                # self.model.opts = ModelOptions(scenario)
+                self.model.opts.opts["name"] = self.model.NAME
+                self.model.save_params()
                 self.model.train(*data)
             except Exception:
                 print(traceback.format_exc())
