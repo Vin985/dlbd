@@ -92,12 +92,18 @@ class TF2Model(DLModel):
 
         self.init_training()
 
+        print(self.opts.model_id)
+
         train_sampler, validation_sampler = self.init_samplers()
 
         from_epoch = self.opts["model"].get("from_epoch", 0)
         if from_epoch:
             self.load_weights(
-                str(self.results_dir / self.model_name / ("epoch_" + str(from_epoch)))
+                str(
+                    self.opts.results_dir
+                    / self.opts.name
+                    / ("epoch_" + str(from_epoch))
+                )
             )
         epoch_save_step = self.opts["model"].get("epoch_save_step", None)
 
@@ -131,14 +137,16 @@ class TF2Model(DLModel):
 
             if epoch_save_step is not None and epoch % epoch_save_step == 0:
                 self.save_model(
-                    str(self.results_dir / self.model_name / ("epoch_" + str(epoch)))
+                    str(
+                        self.opts.results_dir / self.opts.name / ("epoch_" + str(epoch))
+                    )
                 )
         # tf.profiler.experimental.stop()
         self.save_model()
 
     def create_writers(self):
         # current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        log_dir = Path(self.opts["logs"]["log_dir"]) / self.model_name
+        log_dir = Path(self.opts.logs["log_dir"]) / self.opts.name
 
         # TODO: externalize logging directory
         train_log_dir = log_dir / "train"
@@ -172,13 +180,12 @@ class TF2Model(DLModel):
 
     def save_weights(self, path=None):
         if not path:
-            path = str(self.results_dir / self.model_name)
+            path = str(self.opts.results_dir / self.opts.model_id)
         self.model.save_weights(path)
 
     def load_weights(self, path=None):
         if not path:
-            path = str(self.results_dir / self.model_name)
-        print(path)
+            path = str(self.opts.results_dir / self.opts.model_id)
         self.model.load_weights(path)
 
     @abstractmethod
