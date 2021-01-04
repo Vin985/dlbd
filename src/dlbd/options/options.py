@@ -12,6 +12,9 @@ class Options:
     def __bool__(self):
         return bool(self.opts)
 
+    def __getstate__(self):
+        return self.opts
+
     def __getattr__(self, name):
         value = self.opts.get(name, self.DEFAULT_VALUES.get(name, None))
         if value is None:
