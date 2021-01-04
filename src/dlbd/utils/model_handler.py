@@ -8,7 +8,9 @@ from ..utils import file as file_utils
 
 
 class ModelHandler(ABC):
-    def __init__(self, opts=None, opts_path="", dh=None, model=None, **kwargs):
+    def __init__(
+        self, opts=None, opts_path="", dh=None, model=None, model_class=None, **kwargs,
+    ):
         if not opts:
             if opts_path:
                 opts = file_utils.load_config(opts_path)
@@ -19,6 +21,7 @@ class ModelHandler(ABC):
                 )
         self.opts = opts
         self._model = None
+        self.model_class = model_class
         self._data_handler = None
         if model:
             self.model = model
