@@ -57,9 +57,9 @@ def expand_options_dict(options):
     return res
 
 
-def get_dict_path(dict_obj, path, default=None):
+def get_dict_path(dict_obj, path, default=None, sep="--"):
     if not isinstance(path, list):
-        path = path.split("--")
+        path = path.split(sep)
     if not dict_obj:
         print("Warning! Empty dict provided. Returning default value")
         return default
