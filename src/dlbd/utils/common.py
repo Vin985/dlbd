@@ -55,3 +55,32 @@ def expand_options_dict(options):
         d = dict(zip(options.keys(), v))
         res.append(d)
     return res
+
+
+def get_dict_path(dict_obj, path, default=None):
+    if not isinstance(path, list):
+        path = path.split("--")
+    if not dict_obj:
+        print("Warning! Empty dict provided. Returning default value")
+        return default
+    if not path:
+        print("Warning! Empty path provided. Returning default value")
+        return default
+
+    key = path.pop(0)
+    value = dict_obj.get(key, default)
+
+    if path:
+        if isinstance(value, dict):
+            return get_dict_path(value, path, default)
+        else:
+            print(
+                (
+                    "Warning! Path does not exists as the value for key '{}' is not a dict."
+                    + " Returning default value."
+                ).format(key)
+            )
+            return default
+
+    return value
+
