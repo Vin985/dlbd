@@ -8,9 +8,9 @@ from dlbd.utils.split import arctic_split
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 trainer = Trainer(
-    # opts_path="src/training_config.yaml",
     opts_path="src/CityNetTF2_Dropout_training_config.yaml",
-    model=CityNetTF2Dropout(),
+    # opts_path="CityNetTF2_Dropout_training_config.yaml",
+    model_class=CityNetTF2Dropout,
     dh_class=AudioDataHandler,
     split_funcs={"arctic": arctic_split},
 )
