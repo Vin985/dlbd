@@ -16,7 +16,7 @@ class DLModel(ABC):
     STEP_TRAINING = "train"
     STEP_VALIDATION = "validation"
 
-    def __init__(self, opts=None, version=None):
+    def __init__(self, opts=None):
         """Create the layers of the neural network, with the same options we used in training"""
         self.model = None
         self._results_dir = None
@@ -104,9 +104,9 @@ class DLModel(ABC):
         return data
 
     def save_params(self):
-        file_utils.ensure_path_exists(self.results_dir)
-        with open(self.results_dir / "network_opts.yaml", "w") as f:
-            yaml.dump(self.opts, f, default_flow_style=False)
+        file_utils.ensure_path_exists(self.opts.results_dir)
+        with open(self.opts.results_dir / "network_opts.yaml", "w") as f:
+            yaml.dump(self.opts.opts, f, default_flow_style=False)
 
     # @staticmethod
     # def get_model_version(path):
