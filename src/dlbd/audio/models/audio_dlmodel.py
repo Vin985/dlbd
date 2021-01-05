@@ -16,8 +16,8 @@ DEFAULT_N_MELS = 32  # 128
 class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
 
-    def __init__(self, opts=None, version=None):
-        super().__init__(opts, version)
+    def __init__(self, opts=None):
+        super().__init__(opts)
         self.wav = None
         self.sample_rate = None
 
