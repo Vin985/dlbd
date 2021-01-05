@@ -6,7 +6,11 @@ from ..utils import common as common_utils
 
 class ModelOptions(Options):
 
-    DEFAULT_VALUES = {"id": "{version}", "id_prefixes": {"version": "_v"}}
+    DEFAULT_VALUES = {
+        "id": "",
+        "id_prefixes": {},
+        "intermediate_save_dir": "intermediate",
+    }
 
     def __init__(self, opts):
         super().__init__(opts)
@@ -20,6 +24,35 @@ class ModelOptions(Options):
     @property
     def results_dir(self):
         return self.results_dir_root / str(self.version)
+
+    def get_intermediate_path(self, epoch, version=None, as_string=True):
+        """Get the path where intermediate results for a specific epoch are saved
+
+        Args:
+            epoch (int): The epoch where the results are saved
+            version (int, optional): An optional version number to provide. If None,
+            use current version number (for saving). If provided and positive, use that
+            version number. If provided and negative, use the previous version number.
+            Defaults to None.
+            as_string (bool, optional): Returns the result as a string instead of a pathlib.Path.
+            Defaults to True.
+
+        Returns:
+            [type]: [description]
+        """
+        # * By default, use the current version results dir
+        res_dir = self.results_dir
+        if version:
+            if version > 0:
+                # * A positive version number is provided, use this number
+                res_dir = self.results_dir_root / str(version)
+            else:
+                # * The version number is negative, use previous version
+                res_dir = self.results_dir_root / str(self.version - 1)
+        path = res_dir / self.intermediate_save_dir / ("epoch_" + str(epoch))
+        if as_string:
+            return str(path)
+        return path
 
     @property
     def model_id(self):
