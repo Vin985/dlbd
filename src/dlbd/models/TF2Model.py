@@ -99,7 +99,7 @@ class TF2Model(DLModel):
         from_epoch = self.opts["model"].get("from_epoch", 0)
         if from_epoch:
             self.load_weights(
-                self.opts.get_epochs_path(
+                self.opts.get_intermediate_path(
                     from_epoch, version=self.opts.get("version", -1)
                 )
             )
@@ -134,7 +134,7 @@ class TF2Model(DLModel):
             )
 
             if epoch_save_step is not None and epoch % epoch_save_step == 0:
-                self.save_model(self.opts.get_epochs_path(epoch))
+                self.save_model(self.opts.get_intermediate_path(epoch))
         # tf.profiler.experimental.stop()
         self.save_model()
 
