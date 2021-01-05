@@ -7,20 +7,12 @@ import numpy as np
 import pandas as pd
 import plotnine
 
-from dlbd.lib.detector import Detector
+from mouffet.evaluation.detector import Detector
 
 from plotnine import (
     aes,
-    element_text,
-    facet_wrap,
-    geom_bar,
-    geom_text,
     ggplot,
     geom_line,
-    theme,
-    theme_classic,
-    xlab,
-    ylab,
 )
 
 

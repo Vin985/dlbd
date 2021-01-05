@@ -1,14 +1,12 @@
-import pandas as pd
-import numpy as np
-
-from dlbd.lib.detector import Detector
 import math
-from time import time
-from sklearn.metrics import precision_recall_curve, f1_score, average_precision_score
+
 import matplotlib
+from mouffet.evaluation.detector import Detector
+from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
+
+import matplotlib.pyplot as plt
 
 matplotlib.use("agg")
-import matplotlib.pyplot as plt
 
 
 class CityNetDetector(Detector):

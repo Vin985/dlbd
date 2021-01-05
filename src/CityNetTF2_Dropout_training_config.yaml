@@ -5,13 +5,20 @@ data_config: "src/training_data_config.yaml"
 model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
 
 name: "CityNetTF2_Dropout"
+# id: "{version}"
+
+# # id_prefixes:
+# #   default: ""
+# #   version: "_v"
 
 databases: ["arctic"]
 
 model: 
   max_epochs: 5
+  from_epoch: 1
+  from_version: 9
   # from_epoch: 0
-  epoch_save_step: 10
+  epoch_save_step: 1
   learn_log: 0
   do_augmentation: 1
   A: 0.001 # biotic 
@@ -41,11 +48,19 @@ logs:
   use_version: True
 
 
-scenarios:
-  - id: "{max_epochs}"
-    databases_options:
-      - name: "arctic"
-        spectrogram:
-          sample_rate: 22050
-    model:
-      max_epochs: [50, 100]
+# scenarios:
+#   - id: "{model--max_epochs}"
+#     id_prefixes:
+#       model--max_epochs: _nepoch-
+#     databases_options:
+#       spectrogram:
+#           sample_rate: [22050, "original"]
+#       # databases:
+#       #   - name: "arctic"
+#       #     spectrogram:
+#       #       sample_rate: [22050, 16000]
+#       #   - name: "ciytnet_small"
+#       #     spectrogram:
+#       #       sample_rate: [22050, 16000]
+#     model:
+#       max_epochs: [1, 5]

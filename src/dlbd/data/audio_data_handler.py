@@ -1,9 +1,9 @@
 import librosa
 import pandas as pd
+from dlbd.options.audio_database_options import AudioDatabaseOptions
+from mouffet.data.data_handler import DataHandler
 from scipy.ndimage.interpolation import zoom
-from dlbd.audio.audio_database_options import AudioDatabaseOptions
 
-from dlbd.lib.data_handler import DataHandler
 from . import spectrogram, tag_manager
 
 

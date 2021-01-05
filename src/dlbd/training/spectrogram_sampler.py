@@ -1,7 +1,6 @@
 import numpy as np
 
-# from tensorflow.contrib import slim
-from . import minibatch_generators as mbg
+from mouffet.training import minibatch_generators as mbg
 
 
 # Which parameters are used in the network generation?

@@ -5,7 +5,7 @@ import numpy as np
 from librosa.feature import melspectrogram
 from tqdm import tqdm
 
-from dlbd.models.dlmodel import DLModel
+from mouffet.models.dlmodel import DLModel
 
 
 DEFAULT_N_FFT = 2048

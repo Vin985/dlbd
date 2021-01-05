@@ -1,12 +1,12 @@
 import numpy as np
 import tensorflow as tf
-from dlbd.audio.models.audio_dlmodel import AudioDLModel
-from dlbd.models.TF2Model import TF2Model
+from mouffet.models.TF2Model import TF2Model
 from scipy.ndimage.interpolation import zoom
 from tensorflow.keras import Input, Model, layers, regularizers
 
-from ..spectrogram import resize_spectrogram
+from ..data.spectrogram import resize_spectrogram
 from ..training.spectrogram_sampler import SpectrogramSampler
+from .audio_dlmodel import AudioDLModel
 
 
 class CityNetTF2(TF2Model, AudioDLModel):
@@ -17,7 +17,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
         opts = self.opts["net"]
         inputs = Input(
             shape=(opts["spec_height"], opts["hww_x"] * 2, opts["channels"],),
-            # batch_size=128,
             dtype=tf.float32,
         )
         # * First block
@@ -27,7 +26,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
             bias_initializer=None,
             padding="valid",
             activation=None,
-            # name="conv1_1",
             kernel_regularizer=regularizers.l2(0.001),
         )(inputs)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
@@ -38,14 +36,11 @@ class CityNetTF2(TF2Model, AudioDLModel):
             bias_initializer=None,
             padding="valid",
             activation=None,
-            # name="conv1_2",
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
-        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
         W = x.shape[2]
         x = layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
-        # x = layers.Dropout(0.5)(x)
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
@@ -54,20 +49,11 @@ class CityNetTF2(TF2Model, AudioDLModel):
             bias_initializer=None,
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
-        # x = layers.Dropout(self.opts["dropout"])(x)
-        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
-        # x = layers.Dropout(0.5)(x)
         x = layers.Dense(
-            opts["num_dense_units"],
-            activation=None,
-            bias_initializer=None,
-            # kernel_regularizer=regularizers.l2(0.001),
+            opts["num_dense_units"], activation=None, bias_initializer=None,
         )(x)
-        # x = layers.Dropout(self.opts["dropout"])(x)
-        # x = layers.BatchNormalization()(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
-        # x = layers.Dropout(0.5)(x)
         outputs = layers.Dense(
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)

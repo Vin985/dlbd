@@ -34,9 +34,9 @@ tags:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-    # - name: 'citynet_small'
+    # - name: 'citynet'
     #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-    #   db_types: ["test"]
+    #   db_types: ["training", "validation"]
     #   # spectrogram:
     #   #   sample_rate: 22050
     # - name: 'citynet'

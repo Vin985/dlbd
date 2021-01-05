@@ -3,30 +3,24 @@ import collections
 import numpy as np
 import tensorflow as tf
 import tf_slim as slim
-from dlbd.audio.models.audio_dlmodel import AudioDLModel
 from tqdm import tqdm
 
 from ..training.spectrogram_sampler import SpectrogramSampler
+from .audio_dlmodel import AudioDLModel
 
 
-class CityNetOriginal(AudioDLModel):
-    NAME = "CityNetOriginal"
+class CityNetRegularized(AudioDLModel):
+    NAME = "CityNet_regularized"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, opts=None):
         tf.compat.v1.disable_eager_execution()
-        self._session = None
-        super().__init__(*args, **kwargs)
-
-    @property
-    def session(self):
-        if not self._session:
-            self._session = tf.compat.v1.Session()
-        return self._session
+        super().__init__(opts)
 
     def create_net(self):
         opts = self.opts["net"]
         channels = opts["channels"]
         net = collections.OrderedDict()
+        regularizer = slim.l2_regularizer(0.0005)
 
         net["input"] = tf.compat.v1.placeholder(
             tf.float32,
@@ -40,6 +34,7 @@ class CityNetOriginal(AudioDLModel):
             padding="valid",
             activation_fn=None,
             biases_initializer=None,
+            weights_regularizer=regularizer,
         )
         net["conv1_1"] = tf.nn.leaky_relu(net["conv1_1"], alpha=1 / 3)
 
@@ -50,6 +45,7 @@ class CityNetOriginal(AudioDLModel):
             padding="valid",
             activation_fn=None,
             biases_initializer=None,
+            weights_regularizer=regularizer,
         )
         net["conv1_2"] = tf.nn.leaky_relu(net["conv1_2"], alpha=1 / 3)
 
@@ -66,6 +62,7 @@ class CityNetOriginal(AudioDLModel):
             opts["num_dense_units"],
             activation_fn=None,
             biases_initializer=None,
+            weights_regularizer=regularizer,
         )
         net["fc6"] = tf.nn.dropout(net["fc6"], 0.5)
         net["fc6"] = tf.nn.leaky_relu(net["fc6"], alpha=1 / 3)
@@ -75,6 +72,7 @@ class CityNetOriginal(AudioDLModel):
             opts["num_dense_units"],
             activation_fn=None,
             biases_initializer=None,
+            weights_regularizer=regularizer,
         )
         net["fc7"] = tf.nn.dropout(net["fc7"], 0.5)
         net["fc7"] = tf.nn.leaky_relu(net["fc7"], alpha=1 / 3)
@@ -96,6 +94,9 @@ class CityNetOriginal(AudioDLModel):
         return specs, tags
 
     def train(self, training_data, validation_data):
+
+        train_x, train_y = training_data
+        val_x, val_y = validation_data
 
         train_sampler = SpectrogramSampler(self.opts, randomise=True, balanced=True)
         validation_sampler = SpectrogramSampler(
@@ -133,7 +134,8 @@ class CityNetOriginal(AudioDLModel):
 
         train_op = slim.learning.create_train_op(_trn_loss, optimizer)
 
-        self.session.run(tf.compat.v1.global_variables_initializer())
+        self.sess = tf.compat.v1.Session()
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         for epoch in range(self.opts["max_epochs"]):
 
@@ -144,13 +146,8 @@ class CityNetOriginal(AudioDLModel):
             trn_losses = []
             trn_accs = []
 
-            for xx, yy in tqdm(
-                train_sampler(
-                    self.get_raw_data(training_data),
-                    self.get_ground_truth(training_data),
-                )
-            ):
-                trn_ls, trn_acc, _ = self.session.run(
+            for xx, yy in tqdm(train_sampler(train_x, train_y)):
+                trn_ls, trn_acc, _ = self.sess.run(
                     [_trn_loss, _trn_acc, train_op], feed_dict={x_in: xx, y_in: yy}
                 )
                 trn_losses.append(trn_ls)
@@ -161,13 +158,8 @@ class CityNetOriginal(AudioDLModel):
             val_losses = []
             val_accs = []
 
-            for xx, yy in tqdm(
-                validation_sampler(
-                    self.get_raw_data(validation_data),
-                    self.get_ground_truth(validation_data),
-                )
-            ):
-                val_ls, val_acc = self.session.run(
+            for xx, yy in tqdm(validation_sampler(val_x, val_y)):
+                val_ls, val_acc = self.sess.run(
                     [_test_loss, _test_acc], feed_dict={x_in: xx, y_in: yy}
                 )
                 val_losses.append(val_ls)
@@ -183,28 +175,8 @@ class CityNetOriginal(AudioDLModel):
                     np.mean(val_accs),
                 )
             )
-        self.save_model()
 
     def save_weights(self, path=None):
         saver = tf.compat.v1.train.Saver(max_to_keep=5)
-        saver.save(
-            self.session, str(self.opts.results_dir / self.opts.name), global_step=1
-        )
-
-    def load_weights(self, path=None):
-        if not path:
-            path = str(self.opts.results_dir / self.opts.name)
-        print(path)
-        saver = tf.compat.v1.train.Saver()
-        saver.restore(self.session, path)
-
-    def classify(self, data, sampler):
-        spectrogram, _ = data
-        spectrogram = self.modify_spectrogram(spectrogram)
-        return super().classify_spectrogram(spectrogram, sampler)
-
-    def predict(self, x):
-        return self.session.run(
-            self.model["output"], feed_dict={self.model["input"]: x}
-        )
+        saver.save(self.sess, path, global_step=1)
 

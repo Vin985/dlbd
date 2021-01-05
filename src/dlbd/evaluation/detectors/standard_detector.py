@@ -1,4 +1,5 @@
 import pandas as pd
+from mouffet.evaluation.detector import Detector
 from plotnine import (
     aes,
     element_text,
@@ -12,8 +13,6 @@ from plotnine import (
     ylab,
 )
 from plotnine.positions.position_dodge import position_dodge
-
-from dlbd.lib.detector import Detector
 
 
 class StandardDetector(Detector):

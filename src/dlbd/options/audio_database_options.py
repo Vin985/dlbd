@@ -1,4 +1,4 @@
-from ..options.database_options import DatabaseOptions
+from mouffet.options.database_options import DatabaseOptions
 
 
 class AudioDatabaseOptions(DatabaseOptions):

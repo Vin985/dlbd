@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
-from dlbd.lib.evaluator import Evaluator
+from mouffet.evaluation.evaluator import Evaluator
 
-# from .citynet_detector import CityNetDetector
+from ..training.spectrogram_sampler import SpectrogramSampler
 from .detectors.standard_detector import StandardDetector
 from .detectors.subsampling_detector import SubsamplingDetector
-from .training.spectrogram_sampler import SpectrogramSampler
 
 
 class SongDetectorEvaluator(Evaluator):
@@ -13,7 +12,6 @@ class SongDetectorEvaluator(Evaluator):
     DETECTORS = {
         "standard": StandardDetector(),
         "subsampling": SubsamplingDetector(),
-        # "citynet": CityNetDetector(),
     }
 
     def classify_test_data(self, model, database):
@@ -76,14 +74,3 @@ class SongDetectorEvaluator(Evaluator):
                 "onload_callbacks": {"tags_df": self.prepare_tags},
             },
         )
-
-    # def get_tags(self):
-    #     load_opts = {
-    #         "file_types": ["tags_df", "tags_linear_presence", "infos"],
-    #         "onload_callbacks": {"tags_df": self.prepare_tags},
-    #     }
-    #     tags = self.data_handler.load_datasets(
-    #         "test", load_opts=load_opts, by_dataset=True,
-    #     )
-    #     return tags
-
