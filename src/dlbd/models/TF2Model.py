@@ -99,10 +99,8 @@ class TF2Model(DLModel):
         from_epoch = self.opts["model"].get("from_epoch", 0)
         if from_epoch:
             self.load_weights(
-                str(
-                    self.opts.results_dir
-                    / self.opts.name
-                    / ("epoch_" + str(from_epoch))
+                self.opts.get_epochs_path(
+                    from_epoch, version=self.opts.get("version", -1)
                 )
             )
         epoch_save_step = self.opts["model"].get("epoch_save_step", None)
@@ -114,7 +112,7 @@ class TF2Model(DLModel):
         #     str(Path(self.opts["logs"]["log_dir"]) / self.model_name)
         # )
 
-        for epoch in range(from_epoch, self.opts["model"]["max_epochs"]):
+        for epoch in range(from_epoch + 1, self.opts["model"]["max_epochs"] + 1):
             # Reset the metrics at the start of the next epoch
             self.reset_states()
 
@@ -136,11 +134,7 @@ class TF2Model(DLModel):
             )
 
             if epoch_save_step is not None and epoch % epoch_save_step == 0:
-                self.save_model(
-                    str(
-                        self.opts.results_dir / self.opts.name / ("epoch_" + str(epoch))
-                    )
-                )
+                self.save_model(self.opts.get_epochs_path(epoch))
         # tf.profiler.experimental.stop()
         self.save_model()
 
