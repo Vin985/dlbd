@@ -1,6 +1,6 @@
 import os
-from dlbd.audio.audio_data_handler import AudioDataHandler
-from dlbd.audio.song_detector_evaluator import SongDetectorEvaluator
+from dlbd.data.audio_data_handler import AudioDataHandler
+from dlbd.evaluation.song_detector_evaluator import SongDetectorEvaluator
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

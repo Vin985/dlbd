@@ -1,8 +1,9 @@
 import os
-from dlbd.audio.audio_data_handler import AudioDataHandler
-from dlbd.audio.models.CityNetTF2Dropout import CityNetTF2Dropout
 
-from dlbd.training.trainer import Trainer
+from mouffet.training.trainer import Trainer
+
+from dlbd.data.audio_data_handler import AudioDataHandler
+from dlbd.models.CityNetTF2Dropout import CityNetTF2Dropout
 from dlbd.utils.split import arctic_split
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -43,4 +44,3 @@ trainer.train()
 # paths = dh.get_database_paths(database)
 # print(paths)
 # arctic_split(paths, 0.2)
-
