@@ -188,12 +188,14 @@ class CityNetOriginal(AudioDLModel):
     def save_weights(self, path=None):
         saver = tf.compat.v1.train.Saver(max_to_keep=5)
         saver.save(
-            self.session, str(self.opts.results_dir / self.opts.name), global_step=1
+            self.session,
+            str(self.opts.results_save_dir / self.opts.name),
+            global_step=1,
         )
 
     def load_weights(self, path=None):
         if not path:
-            path = str(self.opts.results_dir / self.opts.name)
+            path = str(self.opts.results_load_dir / self.opts.name)
         print(path)
         saver = tf.compat.v1.train.Saver()
         saver.restore(self.session, path)
