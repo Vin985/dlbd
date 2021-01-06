@@ -113,13 +113,13 @@ class CityNetTF2(TF2Model, AudioDLModel):
     def prepare_data(self, data):
         if not self.opts["model"]["learn_log"]:
             for i, spec in enumerate(data["spectrograms"]):
-                resize_width = -1
-                if self.opts["model"].get("resize_spectrogram", False):
-                    infos = data["infos"][i]
-                    pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
-                    resize_width = int(
-                        pix_in_sec * infos["length"] / infos["sample_rate"]
-                    )
+                resize_width = self.get_resize_width(data["infos"][i])
+                # if self.opts["model"].get("resize_spectrogram", False):
+                #     infos = data["infos"][i]
+                #     pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+                #     resize_width = int(
+                #         pix_in_sec * infos["length"] / infos["sample_rate"]
+                #     )
                 data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
                 if resize_width > 0:
                     data["tags_linear_presence"][i] = zoom(
@@ -129,9 +129,16 @@ class CityNetTF2(TF2Model, AudioDLModel):
                     ).astype(int)
         return data
 
+    def get_resize_width(self, infos):
+        resize_width = -1
+        if self.opts["model"].get("resize_spectrogram", False):
+            pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+            resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
+        return resize_width
+
     def classify(self, data, sampler):
         spectrogram, infos = data
-        spectrogram = self.modify_spectrogram(spectrogram, infos)
+        spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
         return super().classify_spectrogram(spectrogram, sampler)
 
     def predict(self, x):
