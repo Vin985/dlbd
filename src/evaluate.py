@@ -11,4 +11,3 @@ evaluator = SongDetectorEvaluator(
 )
 
 res = evaluator.evaluate()
-
