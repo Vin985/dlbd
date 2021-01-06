@@ -7,7 +7,6 @@ save_results: True #True
 ###########
 predictions_dir: "results/predictions"
 evaluation_dir: "results/evaluation"
-weights_dir: "results/models"
 
 ###############
 ## Detectors ##
@@ -28,11 +27,16 @@ detectors:
 ############
 ## Models ##
 ############
+models_options:
+  model_dir: "results/models"
+
 models:
-  - name: "CityNetTF2"
-    package: "dlbd.audio.models.CityNetTF2"
+  - name: "CityNetTF2_Dropout"
+    package: "dlbd.models.CityNetTF2Dropout"
+    class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
   - name: "CityNetOriginal"
-    package: "dlbd.audio.models.CityNetOriginal"
+    package: "dlbd.models.CityNetOriginal"
+    class: "dlbd.models.CityNetOriginal.CityNetOriginal"
     version: 0
   # - name: "CityNetTF2"
   #   id: "resize_spec_bicubic"
