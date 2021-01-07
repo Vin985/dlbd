@@ -5,3 +5,4 @@ tqdm
 feather-format
 tensorflow
 pyyaml
+pip install -U git+https://github.com/vin985/mouffet.git
