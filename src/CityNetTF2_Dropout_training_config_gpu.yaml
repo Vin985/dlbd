@@ -30,7 +30,7 @@ model:
   resize_spectrogram: True
 
 net:
-  batch_size: 128
+  batch_size: 256
   do_batch_norm: 1
   hww_x: 10
   hww_y: 10
