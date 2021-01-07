@@ -1,24 +1,24 @@
 
 
-data_config: "src/training_data_config.yaml"
+data_config: "src/training_data_config_gpu.yaml"
 
-model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
+model_dir: '/home/sylvain/data/results/models/'
 
 name: "CityNetTF2_Dropout"
-# id: "{version}"
+id: "resized"
 
-# # id_prefixes:
-# #   default: ""
-# #   version: "_v"
+id_prefixes:
+  default: "_"
+  version: "_v"
 
-databases: ["arctic"]
+databases: ["arctic", "citynet"]
 
 model: 
-  max_epochs: 5
-  from_epoch: 1
-  from_version: 9
+  max_epochs: 50
+  # from_epoch: 25
+  # from_version: 3
   # from_epoch: 0
-  epoch_save_step: 1
+  epoch_save_step: 5
   learn_log: 0
   do_augmentation: 1
   A: 0.001 # biotic 
@@ -44,7 +44,7 @@ net:
   dropout: 0.5
 
 logs:
-  log_dir: "logs/gradient_tape/"
+  log_dir: "/home/sylvain/logs/gradient_tape/"
   use_version: True
 
 
