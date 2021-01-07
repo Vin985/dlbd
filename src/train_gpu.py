@@ -13,7 +13,7 @@ tf.config.experimental.set_memory_growth(gpus[0], True)
 
 trainer = Trainer(
     # opts_path="src/CityNetTF2_Dropout_training_config.yaml",
-    opts_path="CityNetTF2_Dropout_training_config_gpu.yaml",
+    opts_path="src/CityNetTF2_Dropout_training_config_gpu.yaml",
     model_class=CityNetTF2Dropout,
     dh_class=AudioDataHandler,
     split_funcs={"arctic": arctic_split},
