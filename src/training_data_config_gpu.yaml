@@ -5,7 +5,7 @@ tags_dir: 'annotations'
 training_dir: 'training'
 validation_dir:  'validation'
 test_dir: 'test'
-dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
+dest_dir: '/home/sylvain/data/datasets'
 save_intermediate: False
 
 use_subfolders: ["class", "spectrogram"]
@@ -34,11 +34,11 @@ tags:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-    # - name: 'citynet'
-    #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-    #   db_types: ["training", "validation"]
-    #   # spectrogram:
-    #   #   sample_rate: 22050
+    - name: 'citynet'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
+      db_types: ["training", "validation"]
+      # spectrogram:
+      #   sample_rate: 22050
     # - name: 'citynet'
     #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
     #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"

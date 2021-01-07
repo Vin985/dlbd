@@ -15,7 +15,7 @@ databases: ["arctic"]
 
 model: 
   max_epochs: 5
-  from_epoch: 1
+  from_epoch: 2
   from_version: 9
   # from_epoch: 0
   epoch_save_step: 1
