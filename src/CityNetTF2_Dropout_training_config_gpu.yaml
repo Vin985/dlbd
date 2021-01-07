@@ -14,8 +14,8 @@ id_prefixes:
 databases: ["arctic", "citynet"]
 
 model: 
-  max_epochs: 50
-  # from_epoch: 25
+  max_epochs: 100
+  from_epoch: 50
   # from_version: 3
   # from_epoch: 0
   epoch_save_step: 5
