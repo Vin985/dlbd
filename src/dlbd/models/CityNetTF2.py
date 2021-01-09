@@ -9,6 +9,63 @@ from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
 
 
+class NormalizeSpectrograms(tf.keras.layers.Layer):
+    """Compute log-magnitude mel-scaled spectrograms."""
+
+    def __init__(self, learn_log, do_augmentation, **kwargs):
+        super().__init__(**kwargs)
+        self.learn_log = learn_log
+        self.do_augmentation = do_augmentation
+
+    def build(self, input_shape):
+        # self.non_trainable_weights.append(self.mel_filterbank)
+        super().build(input_shape)
+
+    @tf.function
+    def normalize(self, x):
+        one = x
+        if self.learn_log:
+            spec = tf.stack([one, one, one, one])
+        else:
+            row_mean = tf.expand_dims(tf.math.reduce_mean(x, axis=1), 1)
+            row_std = tf.expand_dims(tf.add(tf.math.reduce_std(x, axis=1), 0.001), 1)
+            two = (one - row_mean) / row_std
+
+            three = tf.math.divide(
+                tf.math.subtract(x, tf.math.reduce_mean(x)), tf.math.reduce_std(x),
+            )
+            four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
+            spec = tf.stack([one, two, three, four])
+        if self.do_augmentation:
+            if self.learn_log:
+                mult = 1.0 + np.random.randn(1, 1, 1) * 0.1
+                mult = np.clip(mult, 0.1, 200)
+                spec *= mult
+            else:
+                spec = tf.math.multiply(spec, 1.0 + np.random.randn(1, 1, 1) * 0.1)
+                spec = tf.add(spec, np.random.randn(1, 1, 1) * 0.1)
+                # if np.random.rand() > 0.9:
+                #     print("in random")
+                #     spec = tf.add(
+                #         spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
+                #     )
+        spec = tf.transpose(spec, perm=[1, 2, 0])
+        return spec
+
+    def call(self, spec):
+        res = tf.vectorized_map(self.normalize, spec)
+        return res
+
+    def get_config(self):
+        config = {
+            "do_augmentation": self.do_augmentation,
+            "learn_log": self.learn_log,
+        }
+        config.update(super().get_config())
+
+        return config
+
+
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
@@ -19,6 +76,10 @@ class CityNetTF2(TF2Model, AudioDLModel):
             shape=(opts["spec_height"], opts["hww_x"] * 2, opts["channels"],),
             dtype=tf.float32,
         )
+        x = NormalizeSpectrograms(
+            learn_log=self.opts["model"].get("learn_log", False),
+            do_augmentation=self.opts["model"].get("do_augmentation", False),
+        )(inputs)
         # * First block
         x = layers.Conv2D(
             opts.get("num_filters", 128),
@@ -27,7 +88,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
             padding="valid",
             activation=None,
             kernel_regularizer=regularizers.l2(0.001),
-        )(inputs)
+        )(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         # * Second block
         x = layers.Conv2D(
