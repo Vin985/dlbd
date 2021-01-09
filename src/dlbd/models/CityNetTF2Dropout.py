@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import Input, Model, layers, regularizers
 
-from .CityNetTF2 import CityNetTF2
+from .CityNetTF2 import CityNetTF2, NormalizeSpectrograms
 
 
 class CityNetTF2Dropout(CityNetTF2):
@@ -11,10 +11,14 @@ class CityNetTF2Dropout(CityNetTF2):
         print("init_create_net")
         opts = self.opts["net"]
         inputs = Input(
-            shape=(opts["spec_height"], opts["hww_x"] * 2, opts["channels"],),
+            shape=(opts["spec_height"], opts["hww_x"] * 2),
             # batch_size=128,
             dtype=tf.float32,
         )
+        x = NormalizeSpectrograms(
+            learn_log=self.opts["model"].get("learn_log", False),
+            do_augmentation=self.opts["model"].get("do_augmentation", False),
+        )(inputs)
         # * First block
         x = layers.Conv2D(
             opts.get("num_filters", 128),
@@ -24,7 +28,7 @@ class CityNetTF2Dropout(CityNetTF2):
             activation=None,
             # name="conv1_1",
             kernel_regularizer=regularizers.l2(0.001),
-        )(inputs)
+        )(x)
         # x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         # * Second block
         x = layers.Conv2D(
