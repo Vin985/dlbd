@@ -21,41 +21,40 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
         # self.non_trainable_weights.append(self.mel_filterbank)
         super().build(input_shape)
 
-    def call(self, spec):
-        @tf.function
-        def normalize(x):
-            one = x
+    @tf.function(input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32),))
+    def normalize(self, x):
+        print(x.shape)
+        one = x
+        if self.learn_log:
+            spec = tf.stack([one, one, one, one])
+        else:
+            row_mean = tf.expand_dims(tf.math.reduce_mean(x, axis=1), 1)
+            row_std = tf.expand_dims(tf.add(tf.math.reduce_std(x, axis=1), 0.001), 1)
+            two = (one - row_mean) / row_std
+
+            three = tf.math.divide(
+                tf.math.subtract(x, tf.math.reduce_mean(x)), tf.math.reduce_std(x),
+            )
+            four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
+            spec = tf.stack([one, two, three, four])
+        if self.do_augmentation:
             if self.learn_log:
-                spec = tf.stack([one, one, one, one])
+                mult = 1.0 + np.random.randn(1, 1, 1) * 0.1
+                mult = np.clip(mult, 0.1, 200)
+                spec *= mult
             else:
-                row_mean = tf.expand_dims(tf.math.reduce_mean(x, axis=1), 1)
-                row_std = tf.expand_dims(
-                    tf.add(tf.math.reduce_std(x, axis=1), 0.001), 1
-                )
-                two = (one - row_mean) / row_std
+                spec = tf.math.multiply(spec, 1.0 + np.random.randn(1, 1, 1) * 0.1)
+                spec = tf.add(spec, np.random.randn(1, 1, 1) * 0.1)
+                # if np.random.rand() > 0.9:
+                #     print("in random")
+                #     spec = tf.add(
+                #         spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
+                #     )
+        spec = tf.transpose(spec, perm=[1, 2, 0])
+        return spec
 
-                three = tf.math.divide(
-                    tf.math.subtract(x, tf.math.reduce_mean(x)), tf.math.reduce_std(x),
-                )
-                four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
-                spec = tf.stack([one, two, three, four])
-            if self.do_augmentation:
-                if self.learn_log:
-                    mult = 1.0 + np.random.randn(1, 1, 1) * 0.1
-                    mult = np.clip(mult, 0.1, 200)
-                    spec *= mult
-                else:
-                    spec = tf.math.multiply(spec, 1.0 + np.random.randn(1, 1, 1) * 0.1)
-                    spec = tf.add(spec, np.random.randn(1, 1, 1) * 0.1)
-                    # if np.random.rand() > 0.9:
-                    #     print("in random")
-                    #     spec = tf.add(
-                    #         spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
-                    #     )
-            spec = tf.transpose(spec, perm=[1, 2, 0])
-            return spec
-
-        res = tf.vectorized_map(normalize, spec)
+    def call(self, spec):
+        res = tf.vectorized_map(self.normalize, spec)
         return res
 
     def get_config(self):
