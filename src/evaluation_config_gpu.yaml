@@ -40,6 +40,9 @@ models:
   #   version: 0
   - name: "CityNetTF2_Dropout_resized"
     class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+    id: "{from_epoch}"
+    id_prefixes:
+      from_epoch: "_fe-"
     version: 1
     scenarios:
       from_epoch: [30, 100]
