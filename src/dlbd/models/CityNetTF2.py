@@ -23,7 +23,7 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
 
     @tf.function(input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32),))
     def normalize(self, x):
-        print(x.shape)
+        print("Tracing with:", x.shape)
         one = x
         if self.learn_log:
             spec = tf.stack([one, one, one, one])
