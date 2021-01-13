@@ -335,7 +335,10 @@ class StandardDetector(Detector):
         events.loc[:, "matched"] = 0
         events.loc[events.event_id.isin(true_positives), "matched"] = 1
 
-        f1_score = round(2 * precision * recall / (precision + recall), 3)
+        if precision + recall:
+            f1_score = round(2 * precision * recall / (precision + recall), 3)
+        else:
+            f1_score = 0
 
         stats = {
             "n_events": events.shape[0],
