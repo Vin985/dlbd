@@ -31,13 +31,22 @@ models_options:
   model_dir: "results/models"
 
 models:
-  - name: "CityNetTF2_Dropout"
-    package: "dlbd.models.CityNetTF2Dropout"
-    class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+  # - name: "CityNetTF2_Dropout"
+  #   package: "dlbd.models.CityNetTF2Dropout"
+  #   class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
   - name: "CityNetOriginal"
     package: "dlbd.models.CityNetOriginal"
     class: "dlbd.models.CityNetOriginal.CityNetOriginal"
     version: 0
+  - name: "CityNetTF2_Dropout_resized"
+    class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+    version: 1
+    scenarios:
+      id: "{model--from_epoch}"
+      id_prefixes:
+        model--from_epoch: "_fe-"
+      model:
+        from_epoch: [30, 100]
   # - name: "CityNetTF2"
   #   id: "resize_spec_bicubic"
   #   package: "dlbd.audio.models.CityNetTF2"
@@ -72,6 +81,11 @@ models:
 ###############
 ## Databases ##
 ###############
+
+databases_options:
+  scenarios:
+    spectrogram:
+      sample_rate: ["original", 22050]
 
 databases:
   - name: citynet_small
