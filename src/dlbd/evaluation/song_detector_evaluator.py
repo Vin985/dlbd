@@ -5,14 +5,39 @@ from mouffet.evaluation.evaluator import Evaluator
 from ..training.spectrogram_sampler import SpectrogramSampler
 from .detectors.standard_detector import StandardDetector
 from .detectors.subsampling_detector import SubsamplingDetector
+from ..data.audio_data_handler import AudioDataHandler
 
 
 class SongDetectorEvaluator(Evaluator):
+
+    DATA_HANDLER_CLASS = AudioDataHandler
 
     DETECTORS = {
         "standard": StandardDetector(),
         "subsampling": SubsamplingDetector(),
     }
+
+    @staticmethod
+    def classify_element(model, spectrogram, info, sampler):
+        preds = model.classify((spectrogram, info), sampler)
+        if model.opts["model"].get("resize_spectrogram", False):
+            pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
+            len_in_s = preds.shape[0] / pix_in_sec
+        else:
+            len_in_s = (
+                preds.shape[0]
+                * info["spec_opts"]["hop_length"]
+                / info["spec_opts"]["sr"]
+            )
+        timeseq = np.linspace(0, len_in_s, preds.shape[0])
+        res_df = pd.DataFrame(
+            {
+                "recording_path": str(info["file_path"]),
+                "time": timeseq,
+                "activity": preds,
+            }
+        )
+        return res_df
 
     def classify_test_data(self, model, database):
         test_data = self.data_handler.load_dataset(
@@ -24,25 +49,28 @@ class SongDetectorEvaluator(Evaluator):
         test_sampler.opts["do_augmentation"] = False
         # test_sampler.opts["batch_size"] = 256
         for i, spec in enumerate(test_data["spectrograms"]):
-            info = test_data["infos"][i]
-            preds = model.classify((spec, info), test_sampler)
-            if model.opts["model"].get("resize_spectrogram", False):
-                pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
-                len_in_s = preds.shape[0] / pix_in_sec
-            else:
-                len_in_s = (
-                    preds.shape[0]
-                    * info["spec_opts"]["hop_length"]
-                    / info["spec_opts"]["sr"]
-                )
-            timeseq = np.linspace(0, len_in_s, preds.shape[0])
-            res_df = pd.DataFrame(
-                {
-                    "recording_path": str(info["file_path"]),
-                    "time": timeseq,
-                    "activity": preds,
-                }
+            res_df = self.classify_element(
+                model, spec, test_data["infos"][i], test_sampler
             )
+            # info = test_data["infos"][i]
+            # preds = model.classify((spec, info), test_sampler)
+            # if model.opts["model"].get("resize_spectrogram", False):
+            #     pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
+            #     len_in_s = preds.shape[0] / pix_in_sec
+            # else:
+            #     len_in_s = (
+            #         preds.shape[0]
+            #         * info["spec_opts"]["hop_length"]
+            #         / info["spec_opts"]["sr"]
+            #     )
+            # timeseq = np.linspace(0, len_in_s, preds.shape[0])
+            # res_df = pd.DataFrame(
+            #     {
+            #         "recording_path": str(info["file_path"]),
+            #         "time": timeseq,
+            #         "activity": preds,
+            #     }
+            # )
             res.append(res_df)
         predictions = pd.concat(res)
         predictions = predictions.astype({"recording_path": "category"})
