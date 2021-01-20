@@ -32,16 +32,13 @@ class AudioDataHandler(DataHandler):
     def load_data_options(self, database):
         # db_opts = database.get("options", {})
         opts = {}
-        opts["tags"] = database.tags  # self.load_option_group("tags", db_opts)
-        opts[
-            "spectrogram"
-        ] = database.spectrogram  # self.load_option_group("spectrogram", db_opts)
+        opts["tags"] = database.tags
+        opts["spectrogram"] = database.spectrogram
         opts["classes"] = self.load_classes(database)
         return opts
 
     @staticmethod
-    def load_raw_data(file_path, opts, *args, **kwargs):
-        spec_opts = opts["spectrogram"]
+    def load_raw_data(file_path, spec_opts, *args, **kwargs):
         sr = spec_opts.get("sample_rate", "original")
         if sr and sr == "original":
             sr = None
@@ -49,7 +46,13 @@ class AudioDataHandler(DataHandler):
         wav, sample_rate = librosa.load(str(file_path), sr=sr)
         # * NOTE: sp_opts can contain options not defined in spec_opts
         spec, sp_opts = spectrogram.generate_spectrogram(wav, sample_rate, spec_opts)
-        return spec, sp_opts, sample_rate, len(wav)
+        audio_info = {
+            "file_path": file_path,
+            "sample_rate": sample_rate,
+            "length": len(wav),
+            "spec_opts": sp_opts,
+        }
+        return spec, audio_info
 
     @staticmethod
     def load_tags(tags_dir, opts, audio_info, spec_len, *args, **kwargs):
@@ -66,14 +69,8 @@ class AudioDataHandler(DataHandler):
         return tmp_tags, zoomed_presence
 
     def load_file_data(self, file_path, tags_dir, opts):
-        spec, spec_opts, sr, nframes = self.load_raw_data(file_path, opts)
 
-        audio_info = {
-            "file_path": file_path,
-            "sample_rate": sr,
-            "length": nframes,
-            "spec_opts": spec_opts,
-        }
+        spec, audio_info = self.load_raw_data(file_path, opts["spectrogram"])
         tags_df, tags_linear = self.load_tags(tags_dir, opts, audio_info, spec.shape[1])
 
         self.tmp_db_data["spectrograms"].append(spec)
