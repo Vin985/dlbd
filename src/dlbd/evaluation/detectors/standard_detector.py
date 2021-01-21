@@ -57,7 +57,7 @@ class StandardDetector(Detector):
         events = pd.DataFrame(events)
         return events
 
-    def get_events(self, predictions, options):
+    def get_events(self, predictions, options, *args, **kwargs):
         predictions = predictions[["activity", "recording_id", "time"]]
         events = predictions.groupby("recording_id", as_index=False, observed=True)
         events = events.apply(self.get_recording_events, options)
