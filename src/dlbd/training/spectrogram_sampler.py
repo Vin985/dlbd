@@ -1,7 +1,7 @@
+from random import randint
+
 import numpy as np
-
 from mouffet.training import minibatch_generators as mbg
-
 
 # Which parameters are used in the network generation?
 
@@ -164,6 +164,8 @@ class SpectrogramSampler:
         self.labels = None
         self.which_spec = None
         self.medians = None
+        self.idxs = []
+        self.dims = (0, 0)
 
     def load_options(self, opts):
         self.opts = {}
@@ -172,6 +174,8 @@ class SpectrogramSampler:
         self.opts["hww_x"] = opts["net"]["hww_x"]
         self.opts["hww_y"] = opts["net"]["hww_y"]
         self.opts["batch_size"] = opts["net"]["batch_size"]
+        self.opts["overlap"] = opts["model"].get("spectrogram_overlap", 0.75)
+        self.opts["random_start"] = opts["model"].get("random_start", False)
 
     def __call__(self, X, y=None):
         """Call the spectrogram sampler
@@ -209,21 +213,24 @@ class SpectrogramSampler:
         for idx, spec in enumerate(X):
             self.medians[idx] = np.median(spec, axis=1)
 
+        self.dims = (self.specs.shape[0], self.opts["hww_x"] * 2)
+        # step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
+        self.idxs = np.where(self.labels >= 0)[0]
+
         assert self.labels.shape[0] == self.specs.shape[1]
         return self
 
     def __iter__(self):  # , num_per_class, seed=None
         # num_samples = num_per_class * 2
 
-        channels = self.specs.shape[0]
-        if not self.opts["learn_log"]:
-            channels += 3
-        height = self.specs.shape[0]
-
         if self.opts["seed"] is not None:
             np.random.seed(self.opts["seed"])
 
-        idxs = np.where(self.labels >= 0)[0]
+        step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
+        start = randint(0, step) if self.opts["random_start"] else 0
+        idxs = self.idxs[start::step]
+        print(idxs)
+
         for sampled_locs, y in mbg.minibatch_iterator(
             idxs,
             self.labels[idxs],
@@ -236,10 +243,10 @@ class SpectrogramSampler:
             # extract the specs
             # avoid using self.batch_size as last batch may be smaller
             bs = y.shape[0]
-            X = np.zeros((bs, height, self.opts["hww_x"] * 2), np.float32)
+            X = np.zeros((bs, self.dims[0], self.dims[1]), np.float32)
             y = np.zeros(bs) * np.nan
             if self.opts["learn_log"]:
-                X_medians = np.zeros((bs, height), np.float32)
+                X_medians = np.zeros((bs, self.dims[0]), np.float32)
 
             for count, loc in enumerate(sampled_locs):
                 which = self.which_spec[loc]
