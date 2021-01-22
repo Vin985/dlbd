@@ -229,7 +229,8 @@ class SpectrogramSampler:
         step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
         start = randint(0, step) if self.opts["random_start"] else 0
         idxs = self.idxs[start::step]
-        print(idxs)
+
+        print(len(idxs))
 
         for sampled_locs, y in mbg.minibatch_iterator(
             idxs,
