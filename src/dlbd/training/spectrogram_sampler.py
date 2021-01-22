@@ -230,8 +230,6 @@ class SpectrogramSampler:
         start = randint(0, step) if self.opts["random_start"] else 0
         idxs = self.idxs[start::step]
 
-        print(len(idxs))
-
         for sampled_locs, y in mbg.minibatch_iterator(
             idxs,
             self.labels[idxs],
