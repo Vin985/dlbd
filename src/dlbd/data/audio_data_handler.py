@@ -1,10 +1,12 @@
 import librosa
 import pandas as pd
-from dlbd.options.audio_database_options import AudioDatabaseOptions
 from mouffet.data.data_handler import DataHandler
 from mouffet.data.data_structure import DataStructure
+from mouffet.utils.split import split_folder
 from scipy.ndimage.interpolation import zoom
 
+from ..options.audio_database_options import AudioDatabaseOptions
+from ..utils.split import citynet_split
 from . import spectrogram, tag_manager
 
 
@@ -22,6 +24,8 @@ class AudioDataHandler(DataHandler):
     OPTIONS_CLASS = AudioDatabaseOptions
 
     DATA_STRUCTURE = AudioDataStructure()
+
+    SPLIT_FUNCS = {"arctic": split_folder, "citynet": citynet_split}
 
     def get_spectrogram_subfolder_path(self, database):
         return self.get_spec_subfolder(database.spectrogram)
