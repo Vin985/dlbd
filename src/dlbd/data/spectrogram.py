@@ -1,38 +1,53 @@
 import librosa
 import numpy as np
 
+import mouffet.utils.common as common_utils
+
 from PIL import Image
+from numpy.lib.function_base import copy
 
-DEFAULT_N_FFT = 2048
-DEFAULT_HOP_LENGTH = 1024  # 512
-DEFAULT_N_MELS = 32  # 128
-
-
-def get_spec_subfolder(spec_opts):
-    spec_folder = "_".join(
-        [
-            str(spec_opts.get("sample_rate", "original")),
-            spec_opts["type"],
-            str(spec_opts["n_mels"]),
-            str(spec_opts["n_fft"]),
-            str(spec_opts["hop_length"]),
-        ]
-    )
-    return spec_folder
+DEFAULT_OPTS = {
+    "n_fft": 2048,
+    "hop_length": None,
+    "n_mels": 32,
+    "window": "hann",
+    "pcen": {
+        "gain": 0.8,
+        "bias": 10,
+        "power": 0.25,
+        "time_constant": 0.06,
+        "eps": 1e-06,
+    },
+    "type": "mel",
+}
 
 
 def generate_spectrogram(wav, sample_rate, spec_opts):
     opts = {
-        "sr": sample_rate,
-        "n_fft": spec_opts.get("n_fft", DEFAULT_N_FFT),
-        "hop_length": spec_opts.get("hop_length", DEFAULT_HOP_LENGTH),
+        "n_fft": spec_opts.get("n_fft", DEFAULT_OPTS["n_fft"]),
+        "hop_length": spec_opts.get("hop_length", DEFAULT_OPTS["hop_length"]),
+        "window": spec_opts.get("window", DEFAULT_OPTS["window"]),
     }
+
+    spec = librosa.stft(wav, **opts)
+
     if spec_opts["type"] == "mel":
-        opts["n_mels"] = spec_opts.get("n_mels", DEFAULT_N_MELS)
-        spec = librosa.feature.melspectrogram(wav, **opts)
-        spec = spec.astype(np.float32)
-    else:
-        raise AttributeError("No other spectrogram supported yet")
+        opts.update(
+            {
+                "n_mels": spec_opts.get("n_mels", DEFAULT_OPTS["n_mels"]),
+                "sr": sample_rate,
+            }
+        )
+        spec = librosa.feature.melspectrogram(S=spec, **opts)
+
+    spec = spec.astype(np.float32)
+
+    pcen = spec_opts.get("pcen", {})
+    if pcen:
+        pcen_opts = common_utils.deep_dict_update(DEFAULT_OPTS["pcen"], pcen, copy=True)
+        opts["pcen"] = pcen_opts
+        spec = librosa.pcen(spec * (2 ** 31), **pcen_opts)
+
     return spec, opts
 
 
