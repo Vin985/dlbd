@@ -2,24 +2,41 @@ import librosa
 import pandas as pd
 from dlbd.options.audio_database_options import AudioDatabaseOptions
 from mouffet.data.data_handler import DataHandler
+from mouffet.data.data_structure import DataStructure
 from scipy.ndimage.interpolation import zoom
 
 from . import spectrogram, tag_manager
+
+
+class AudioDataStructure(DataStructure):
+    STRUCTURE = {
+        "spectrograms": {"type": "data", "data_type": []},
+        "tags_df": {"type": "tags"},
+        "tags_linear_presence": {"type": "tags"},
+        "infos": {"type": "data"},
+    }
 
 
 class AudioDataHandler(DataHandler):
 
     OPTIONS_CLASS = AudioDatabaseOptions
 
-    DATA_STRUCTURE = {
-        "spectrograms": [],
-        "tags_df": [],
-        "tags_linear_presence": [],
-        "infos": [],
-    }
+    DATA_STRUCTURE = AudioDataStructure()
 
     def get_spectrogram_subfolder_path(self, database):
-        return spectrogram.get_spec_subfolder(database.spectrogram)
+        return self.get_spec_subfolder(database.spectrogram)
+
+    def get_spec_subfolder(self, spec_opts):
+        spec_folder = "_".join(
+            [
+                str(spec_opts.get("sample_rate", "original")),
+                spec_opts["type"],
+                str(spec_opts["n_mels"]),
+                str(spec_opts["n_fft"]),
+                str(spec_opts["hop_length"]),
+            ]
+        )
+        return spec_folder
 
     def merge_datasets(self, datasets):
         merged = super().merge_datasets(datasets)
