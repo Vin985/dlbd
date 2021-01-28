@@ -16,4 +16,4 @@ def citynet_split(path, split_props, extensions):
         tmp_df = tmp_df[~tmp_df.isin(split_df)].dropna()
         i += 1
     splits[i] = tmp_df.paths.to_list()
-    return None
+    return splits
