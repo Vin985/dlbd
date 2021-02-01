@@ -180,12 +180,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
         if not self.opts["model"]["learn_log"]:
             for i, spec in enumerate(data["spectrograms"]):
                 resize_width = self.get_resize_width(data["infos"][i])
-                # if self.opts["model"].get("resize_spectrogram", False):
-                #     infos = data["infos"][i]
-                #     pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
-                #     resize_width = int(
-                #         pix_in_sec * infos["length"] / infos["sample_rate"]
-                #     )
                 data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
                 if resize_width > 0:
                     data["tags_linear_presence"][i] = zoom(
