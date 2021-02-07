@@ -210,9 +210,13 @@ class SubsamplingDetector(Detector):
 
         tagged_samples = len(df.tag[df.tag == 2])
 
-        matched_tags = set(
-            df.tag_index.loc[(df.tag_index.str.len() > 0) & (df.event > 0)].sum()
-        )
+        matched_tags = df.tag_index.loc[
+            (df.tag_index.str.len() > 0) & (df.event > 0)
+        ].sum()
+        if not isinstance(matched_tags, list):
+            matched_tags = [matched_tags]
+
+        matched_tags = set(matched_tags)
 
         n_matched_tags = len(matched_tags)
 
