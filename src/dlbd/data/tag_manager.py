@@ -17,16 +17,22 @@ from plotnine import (
 )
 from plotnine.positions.position_dodge import position_dodge
 
-DEFAULT_TAGS_COLUMNS = {
-    "Label": "tag",
-    "Related": "related",
-    "LabelStartTime_Seconds": "tag_start",
-    "LabelEndTime_Seconds": "tag_end",
-    "overlap": "overlap",
-    "background": "background",
-    "noise": "noise",
+DEFAULT_OPTIONS = {
+    "audiotagger": {
+        "columns_name": {
+            "Label": "tag",
+            "Related": "related",
+            "LabelStartTime_Seconds": "tag_start",
+            "LabelEndTime_Seconds": "tag_end",
+            "overlap": "overlap",
+            "background": "background",
+            "noise": "noise",
+        },
+        "columns_type": {"overlap": "str"},
+        "suffix": {"-sceneRect.csv"},
+    },
+    "nisp4b": {"columns_name": {}, "columns_type": {}},
 }
-DEFAULT_TAGS_COLUMNS_TYPE = {"overlap": "str"}
 
 
 def rename_columns(df, columns):
@@ -84,10 +90,12 @@ def filter_classes(tag_df, classes):
     return tag_df[res]
 
 
-def get_tag_df(audio_info, labels_dir, tag_opts):
-    columns = tag_opts["columns"] or DEFAULT_TAGS_COLUMNS
-    columns_type = tag_opts["columns_type"] or DEFAULT_TAGS_COLUMNS_TYPE
-    suffix = tag_opts["suffix"]
+def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
+    defaults = DEFAULT_OPTIONS["audiotagger"]
+    columns = tag_opts["columns"] or defaults["columns_name"]
+    columns_type = tag_opts["columns_type"] or defaults["columns_type"]
+    suffix = tag_opts.get("suffix", defaults["suffix"])
+
     audio_file_path = audio_info["file_path"]
 
     if tag_opts.get("with_data", False):
@@ -99,75 +107,53 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
         pd_annots = pd.read_csv(
             csv_file_path, skip_blank_lines=True, dtype=columns_type
         )
-        # loop over each annotation...
+        # * loop over each annotation...
         tag_df = pd_annots.loc[~pd_annots.Filename.isna()].copy()
         tag_df = rename_columns(tag_df, columns)
-        # tmp.loc[:, "recording_id"] = audio_info["recording_id"]
-        if not tag_df.empty:
-            tag_df.loc[:, "recording_path"] = str(audio_info["file_path"])
         return tag_df
     else:
         print("Warning - no annotations found for %s" % str(audio_file_path))
         return pd.DataFrame()
 
 
+def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
+    audio_file_path = audio_info["file_path"]
+    file_id = audio_file_path.stem[-3:]
+    tag_path = labels_dir / ("annotation_train" + file_id + ".csv")
+    if tag_path.exists():
+        print("Loading tag file: " + str(tag_path))
+        tag_df = pd.read_csv(tag_path, names=["tag_start", "tag_duration", "tag"])
+        tag_df["tag_end"] = tag_df["tag_start"] + tag_df["tag_duration"]
+        return tag_df
+    else:
+        print("Warning - no annotations found for %s" % str(audio_file_path))
+        return pd.DataFrame()
+
+
+def get_tag_df(audio_info, labels_dir, tag_opts):
+    tag_type = tag_opts.get("type", "audiotagger")
+
+    tag_func_name = "get_" + tag_type + "_tag_df"
+
+    possibles = globals().copy()
+    possibles.update(locals())
+    func = possibles.get(tag_func_name)
+
+    tag_df = func(audio_info, labels_dir, tag_opts)
+    if not tag_df.empty:
+        tag_df.loc[:, "recording_path"] = str(audio_info["file_path"])
+    return tag_df
+
+
 def get_tag_presence(tag_df, audio_info, tag_opts):
     tag_presence = np.zeros(audio_info["length"])
     for _, annot in tag_df.iterrows():
-        # fill in the label vector
+        # * fill in the label vector
         start_point = int(float(annot["tag_start"]) * audio_info["sample_rate"])
         end_point = int(float(annot["tag_end"]) * audio_info["sample_rate"])
 
-        # label = annot["tag"].lower()
-        # if label in tag_opts["classes"]:
         tag_presence[start_point:end_point] = 1
     return tag_presence
-
-
-# def load_tags(audio_info, labels_dir, tag_opts):
-
-#     tag_df = get_tag_df(audio_info, labels_dir, tag_opts)
-#     tag_presence = get_tag_presence(tag_df, audio_info, tag_opts)
-
-#     columns = tag_opts["columns"] or DEFAULT_TAGS_COLUMNS
-#     columns_type = tag_opts["columns_type"] or DEFAULT_TAGS_COLUMNS_TYPE
-#     suffix = tag_opts["suffix"]
-#     audio_file_path = audio_info["file_path"]
-
-#     if tag_opts["tags_with_audio"]:
-#         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
-#     else:
-#         csv_file_path = labels_dir / (audio_file_path.stem + suffix)
-
-#     print("Loading tags for file: " + str(audio_file_path))
-#     if os.path.exists(csv_file_path):
-#         pd_annots = pd.read_csv(
-#             csv_file_path, skip_blank_lines=True, dtype=columns_type
-#         )
-#         # loop over each annotation...
-#         tag_df = pd_annots.loc[~pd_annots.Filename.isna()]
-#         tag_df = rename_columns(tag_df, columns)
-#         # tmp.loc[:, "recording_id"] = audio_info["recording_id"]
-#         if not tag_df.empty:
-#             tag_df.loc[:, "recording_path"] = str(audio_info["file_path"])
-
-#         # create label vector...
-#         for _, annot in tag_df.iterrows():
-#             # fill in the label vector
-#             start_point = int(
-#                 float(annot["LabelStartTime_Seconds"]) * audio_info["sample_rate"]
-#             )
-#             end_point = int(
-#                 float(annot["LabelEndTime_Seconds"]) * audio_info["sample_rate"]
-#             )
-
-#             label = annot["Label"].lower()
-#             if label in tag_opts["classes"]:
-#                 tags[start_point:end_point] = 1
-#     else:
-#         print("Warning - no annotations found for %s" % str(audio_file_path))
-
-#     return tags
 
 
 def summary(tags, opts=None):
