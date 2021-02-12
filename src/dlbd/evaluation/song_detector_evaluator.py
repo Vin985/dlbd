@@ -52,25 +52,6 @@ class SongDetectorEvaluator(Evaluator):
             res_df = self.classify_element(
                 model, spec, test_data["infos"][i], test_sampler
             )
-            # info = test_data["infos"][i]
-            # preds = model.classify((spec, info), test_sampler)
-            # if model.opts["model"].get("resize_spectrogram", False):
-            #     pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
-            #     len_in_s = preds.shape[0] / pix_in_sec
-            # else:
-            #     len_in_s = (
-            #         preds.shape[0]
-            #         * info["spec_opts"]["hop_length"]
-            #         / info["spec_opts"]["sr"]
-            #     )
-            # timeseq = np.linspace(0, len_in_s, preds.shape[0])
-            # res_df = pd.DataFrame(
-            #     {
-            #         "recording_path": str(info["file_path"]),
-            #         "time": timeseq,
-            #         "activity": preds,
-            #     }
-            # )
             res.append(res_df)
         predictions = pd.concat(res)
         predictions = predictions.astype({"recording_path": "category"})
