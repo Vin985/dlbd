@@ -1,19 +1,14 @@
 import datetime
 import functools
 import math
+from copy import deepcopy
 from functools import partial
 
 import numpy as np
 import pandas as pd
 import plotnine
-
 from mouffet.evaluation.detector import Detector
-
-from plotnine import (
-    aes,
-    ggplot,
-    geom_line,
-)
+from plotnine import aes, geom_line, ggplot
 
 
 class SubsamplingDetector(Detector):
@@ -23,9 +18,18 @@ class SubsamplingDetector(Detector):
     DEFAULT_ISOLATE_EVENTS = True
     DEFAULT_EVENT_THRESHOLD = 0.5
 
-    def resample_max(self, x, threshold=0.98):
-        if max(x) >= threshold:
-            return 1
+    def has_event(self, x, options):
+        method = options.get("event_method", "presence")
+        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
+        if method == "presence":
+            if max(x) >= threshold:
+                return 1
+        elif method == "average":
+            if x.mean() >= threshold:
+                return 1
+        elif method == "min_proportion":
+            if len(x[x > threshold]) / len(x) >= options.get("gtc", 0.1):
+                return 1
         return 0
 
     def has_tag(self, x):
@@ -33,10 +37,19 @@ class SubsamplingDetector(Detector):
             return 2
         return 0
 
-    def get_tag_index(self, x, step, tags):
+    def get_tag_index(self, x, step, tags, options):
         start = x.index.values[0].item() / 10 ** 9
-        end = start + step / 1000
-        tmp = np.unique(tags["id"][(tags["start"] < end) & (tags["end"] >= start)])
+        end = start + step
+        method = options.get("tag_method", "presence")
+        tmp = None
+        if method == "presence":
+            tmp = np.unique(tags["id"][(tags["start"] < end) & (tags["end"] >= start)])
+        elif method == "proportion":
+            overlap = (
+                np.minimum(tags["end"], end) - np.maximum(tags["start"], start)
+            ) / step
+            inside = (tags["start"] >= start) & (tags["end"] <= end)
+            tmp = np.unique(tags["id"][inside | (overlap >= options.get("gtc", 0.3))])
         return tmp.tolist()
 
     def isolate_events(self, predictions, step):
@@ -101,10 +114,9 @@ class SubsamplingDetector(Detector):
 
     def match_events_apply(self, predictions, options, tags=None):
         recording_id = predictions.name
-        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
-        step = options.get("sample_step", self.DEFAULT_MIN_DURATION) * 1000
-        resampler = predictions.resample(str(step) + "ms") if step else predictions
-        resample_func = functools.partial(self.resample_max, threshold=threshold)
+        step = options.get("sample_step", self.DEFAULT_MIN_DURATION)
+        resampler = predictions.resample(str(step) + "s") if step else predictions
+        resample_func = functools.partial(self.has_event, options=options)
         agg_funcs = {
             "activity": resample_func,
         }
@@ -115,7 +127,9 @@ class SubsamplingDetector(Detector):
                 "start": current_tags.tag_start.to_numpy(),
                 "end": current_tags.tag_end.to_numpy(),
             }
-            tag_func = functools.partial(self.get_tag_index, step=step, tags=tmp_tags)
+            tag_func = functools.partial(
+                self.get_tag_index, step=step, tags=tmp_tags, options=options
+            )
             agg_funcs["tag_index"] = tag_func
         res = (
             resampler.agg(agg_funcs)
