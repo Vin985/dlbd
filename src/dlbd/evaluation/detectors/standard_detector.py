@@ -29,6 +29,7 @@ class StandardDetector(Detector):
         events = []
         start = 0
         end = 0
+
         for activity, recording_id, pred_time in predictions.itertuples(index=False):
             # * Check if prediction is above a defined threshold
             if activity > min_activity:
@@ -54,6 +55,17 @@ class StandardDetector(Detector):
                             "end": end,
                         }
                     )
+        if ongoing:
+            end = pred_time
+            if end - start > min_duration:
+                events.append(
+                    {
+                        "event_index": event_index,
+                        "recording_id": recording_id,
+                        "start": start,
+                        "end": end,
+                    }
+                )
         events = pd.DataFrame(events)
         return events
 
@@ -68,15 +80,6 @@ class StandardDetector(Detector):
         events = events[self.EVENTS_COLUMNS.keys()]
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
         return events
-
-    # def associate_recordings(self, events, recordings):
-    #     events = events.merge(
-    #         recordings[["id", "name"]], left_on="recording_id", right_on="id"
-    #     )
-    #     events.reset_index(inplace=True)
-    #     events = events[self.EVENTS_COLUMNS.keys()]
-    #     events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
-    #     return events
 
     def get_matches(self, events, tags):
         tags = tags.rename(columns=self.TAGS_COLUMNS_RENAME)
@@ -94,51 +97,6 @@ class StandardDetector(Detector):
         match_df.reset_index(inplace=True)
 
         return match_df
-
-    # def match_predictions(self, predictions, events, tags):
-    #     preds = predictions.copy()
-    #     preds["tag"] = 0
-    #     preds["event"] = 0
-    #     preds["event_id"] = -1
-    #     preds["tag_id"] = -1
-    #     for _, x in tags.iterrows():
-    #         preds.loc[
-    #             preds.time.between(x["tag_start"], x["tag_end"]), ["tag", "tag_id"]
-    #         ] = [1, x["id"]]
-
-    #     for _, x in events.iterrows():
-    #         preds.loc[
-    #             preds.time.between(x["event_start"], x["event_end"]),
-    #             ["event", "event_id"],
-    #         ] = [2, x["event_id"]]
-    #     return preds
-
-    # def get_stats_old(self, events, matches):
-    #     # True pos: number of unique events that matched with a tag
-    #     true_pos_events = len(matches[matches.event_id != -1].event_id.unique())
-    #     true_pos_tags = len(matches[matches.event_id != -1].tag_id.unique())
-    #     # False neg: number of tags that did not have a match
-    #     false_neg = matches[matches.event_id == -1].shape[0]
-    #     # Number of tags that are matched
-    #     n_tags_matched = len(matches.loc[matches.event_id != -1].tag_id.unique())
-
-    #     # Precision: TP / TP + FP
-    #     precision = true_pos_events / events.shape[0]
-    #     # Recall: TP / TP + FN
-    #     recall = true_pos_tags / (true_pos_tags + false_neg)
-    #     f1_score = 2 * (precision * recall) / (precision + recall)
-
-    #     return {
-    #         "n_events": events.shape[0],
-    #         "n_tags": len(matches.tag_id.unique()),
-    #         "true_positive_events": true_pos_events,
-    #         "true_positive_tags": true_pos_tags,
-    #         "false_negative": false_neg,
-    #         "n_tags_matched": n_tags_matched,
-    #         "precision": precision,
-    #         "recall": recall,
-    #         "F1_score": f1_score,
-    #     }
 
     @staticmethod
     def event_overlap_duration(tags):
@@ -243,6 +201,7 @@ class StandardDetector(Detector):
             .reset_index(drop=True)
         )
         tags_summary = tags_summary.sort_values(["tag", "matched", "background"])
+        print(tags_summary)
 
         plt = ggplot(
             data=tags_summary,
@@ -253,7 +212,7 @@ class StandardDetector(Detector):
                 ymax=max(tags_summary.n_tags) + 35,  # "factor(species, ordered=False)",
             ),
         )
-
+        plot_width = 10 + len(tags_summary.tag.unique()) * 0.75
         plt = (
             plt
             + geom_bar(stat="identity", show_legend=True, position=position_dodge())
@@ -267,9 +226,7 @@ class StandardDetector(Detector):
             + xlab("Species")
             + ylab("Number of annotations")
             + geom_text(
-                mapping=aes(label="lbl_background"),
-                # nudge_y=10,
-                position=position_dodge(width=0.9),
+                mapping=aes(label="lbl_background"), position=position_dodge(width=0.9),
             )
             + geom_text(
                 mapping=aes(y=max(tags_summary.n_tags) + 30, label="lbl_matched",)
@@ -280,7 +237,7 @@ class StandardDetector(Detector):
                 plot_title=element_text(
                     weight="bold", size=14, margin={"t": 10, "b": 10}
                 ),
-                figure_size=(20, 10),
+                figure_size=(plot_width, 10),
                 text=element_text(size=12, weight="bold"),
             )
         )
