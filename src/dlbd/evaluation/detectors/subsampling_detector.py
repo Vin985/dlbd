@@ -18,9 +18,14 @@ class SubsamplingDetector(Detector):
     DEFAULT_ISOLATE_EVENTS = True
     DEFAULT_EVENT_THRESHOLD = 0.5
 
+    DEFAULT_PR_CURVE_OPTIONS = {
+        "variable": "activity_threshold",
+        "values": {"end": 1, "start": 0, "step": 0.05},
+    }
+
     def has_event(self, x, options):
         method = options.get("event_method", "presence")
-        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
+        threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
         if method == "presence":
             if max(x) >= threshold:
                 return 1
@@ -99,7 +104,7 @@ class SubsamplingDetector(Detector):
         return events
 
     def get_recording_events(self, predictions, options, tags=None):
-        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
+        threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
         predictions.loc[predictions.activity > threshold, "event"] = 1
         if not predictions.empty and tags is not None:
             tags = tags[tags.recording_id == predictions.name]
@@ -259,12 +264,17 @@ class SubsamplingDetector(Detector):
             "f1_score": f1_score,
         }
 
-    def evaluate(self, predictions, tags, options):
-        tags_df = tags["tags_df"]
-
-        events = self.get_events(predictions, options, tags_df)
-
-        stats = self.get_stats(events, tags_df)
+    def evaluate_scenario(self, predictions, tags, options):
+        tags = tags["tags_df"]
+        events = self.get_events(predictions, options, tags)
+        stats = self.get_stats(events, tags)
         print("Stats for options {0}: {1}".format(options, stats))
-        # self.get_recording_plots(events, options, tags_presence, step)
         return {"options": options, "stats": stats, "matches": events}
+
+    def plot_PR_curve(self, stats):
+        PR_df = pd.concat([stats["stats"], stats["options"]], axis=1)
+        plt = PR_df.plot(
+            "recall_sample", "precision", figsize=(20, 16), fontsize=26
+        ).get_figure()
+        plt.savefig("test.pdf")
+
