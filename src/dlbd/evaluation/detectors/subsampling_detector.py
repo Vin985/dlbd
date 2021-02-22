@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import plotnine
 from mouffet.evaluation.detector import Detector
-from plotnine import aes, geom_line, ggplot
+from plotnine import aes, element_text, geom_line, ggplot, ggtitle, theme, theme_classic
 
 
 class SubsamplingDetector(Detector):
@@ -271,10 +271,43 @@ class SubsamplingDetector(Detector):
         print("Stats for options {0}: {1}".format(options, stats))
         return {"options": options, "stats": stats, "matches": events}
 
-    def plot_PR_curve(self, stats):
-        PR_df = pd.concat([stats["stats"], stats["options"]], axis=1)
-        plt = PR_df.plot(
-            "recall_sample", "precision", figsize=(20, 16), fontsize=26
-        ).get_figure()
-        plt.savefig("test.pdf")
+    def plot_PR_curve(self, stats, options):
+        PR_df = stats["PR_curve"]
+
+        plt = (
+            ggplot(
+                data=PR_df,
+                mapping=aes(
+                    x="recall_sample",
+                    y="precision",  # "factor(species, ordered=False)",
+                ),
+            )
+            + geom_line()
+            + theme_classic()
+            + theme(
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                figure_size=(20, 10),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                (
+                    "Precision/Recall curve for model {}, database {}, class {}\n"
+                    + "with detector options {}"
+                ).format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["scenario_info"]["class"],
+                    options,
+                )
+            )
+        )
+
+        # plt = PR_df.plot(
+        #     "recall_sample", "precision", figsize=(20, 16), fontsize=26
+        # ).get_figure()
+        # plt.savefig("test_arctic.pdf")
+        stats["plots"] = {"PR_curve": plt}
+        return stats
 
