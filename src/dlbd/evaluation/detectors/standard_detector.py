@@ -7,6 +7,7 @@ from plotnine import (
     geom_bar,
     geom_text,
     ggplot,
+    ggtitle,
     theme,
     theme_classic,
     xlab,
@@ -182,7 +183,7 @@ class StandardDetector(Detector):
         )
         return label
 
-    def get_tag_repartition(self, tag_df):
+    def get_tag_repartition(self, tag_df, options):
         if not "background" in tag_df.columns:
             tag_df["background"] = False
         test = tag_df[["tag", "matched", "background", "id"]].copy()
@@ -239,6 +240,17 @@ class StandardDetector(Detector):
                 ),
                 figure_size=(plot_width, 10),
                 text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                (
+                    "Tag repartition for model {}, database {}, class {}\n"
+                    + "with detector options {}"
+                ).format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["scenario_info"]["class"],
+                    options,
+                )
             )
         )
 
@@ -315,18 +327,25 @@ class StandardDetector(Detector):
             "false_positive_rate": false_positive_rate,
         }
 
-        tag_repartition = self.get_tag_repartition(tags)
-        return stats, tag_repartition
+        return stats, tags
 
-    def evaluate(self, predictions, tags, options):
+    def draw_plots(self, tags, options):
+        tag_repartition = self.get_tag_repartition(tags, options)
+        return {"tag_repartition": tag_repartition}
+
+    def evaluate_scenario(self, predictions, tags, options):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options)
         matches = self.get_matches(events, tags)
-        stats, tag_repartition = self.get_stats(events, tags, matches, options)
-        print("Stats for options {0}: {1}".format(options, stats))
-        return {
+        stats, tags = self.get_stats(events, tags, matches, options)
+
+        res = {
             "options": options,
             "stats": stats,
             "matches": matches,
-            "tag_repartition": tag_repartition,
         }
+        if options.get("draw_plots", True):
+            res["plots"] = self.draw_plots(tags=tags, options=options)
+        print("Stats for options {0}: {1}".format(options, stats))
+        return res
+
