@@ -351,7 +351,7 @@ class StandardDetector(Detector):
         stats, tags = self.get_stats(events, tags, matches, options)
 
         res = {
-            "options": options,
+            "options": pd.DataFrame([options]),
             "stats": stats,
             "matches": matches,
         }

@@ -272,7 +272,7 @@ class SubsamplingDetector(Detector):
         events = self.get_events(predictions, options, tags)
         stats = self.get_stats(events, tags)
         print("Stats for options {0}: {1}".format(options, stats))
-        return {"options": options, "stats": stats, "matches": events}
+        return {"options": pd.DataFrame([options]), "stats": stats, "matches": events}
 
     def plot_PR_curve(self, stats, options):
         if not options.get("PR_curve_x", ""):
