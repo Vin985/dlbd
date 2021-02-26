@@ -20,9 +20,14 @@ class StandardDetector(Detector):
 
     REQUIRES = ["tags_df"]
 
+    DEFAULT_MIN_DURATION = 0.1
+    DEFAULT_END_THRESHOLD = 0.6
+
     def get_recording_events(self, predictions, options=None):
         options = options or {}
-        min_activity = options.get("min_activity", self.DEFAULT_MIN_ACTIVITY)
+        min_activity = options.get(
+            "activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD
+        )
         end_threshold = options.get("end_threshold", self.DEFAULT_END_THRESHOLD)
         min_duration = options.get("min_duration", self.DEFAULT_MIN_DURATION)
         event_index = 0
@@ -202,7 +207,6 @@ class StandardDetector(Detector):
             .reset_index(drop=True)
         )
         tags_summary = tags_summary.sort_values(["tag", "matched", "background"])
-        print(tags_summary)
 
         plt = ggplot(
             data=tags_summary,
@@ -313,25 +317,32 @@ class StandardDetector(Detector):
         else:
             f1_score = 0
 
-        stats = {
-            "n_events": events.shape[0],
-            "n_tags": tags.shape[0],
-            "n_true_positives": n_true_positives,
-            "n_false_positives": n_false_positives,
-            "n_matched_tags": n_tags_matched,
-            "n_unmatched_tags": n_tags_unmatched,
-            "precision": precision,
-            "recall": recall,
-            "f1_score": f1_score,
-            "true_positives_ratio": true_positives_ratio,
-            "false_positive_rate": false_positive_rate,
-        }
+        stats = pd.DataFrame(
+            [
+                {
+                    "n_events": events.shape[0],
+                    "n_tags": tags.shape[0],
+                    "n_true_positives": n_true_positives,
+                    "n_false_positives": n_false_positives,
+                    "n_matched_tags": n_tags_matched,
+                    "n_unmatched_tags": n_tags_unmatched,
+                    "precision": precision,
+                    "recall": recall,
+                    "f1_score": f1_score,
+                    "true_positives_ratio": true_positives_ratio,
+                    "false_positive_rate": false_positive_rate,
+                }
+            ]
+        )
 
         return stats, tags
 
     def draw_plots(self, tags, options):
-        tag_repartition = self.get_tag_repartition(tags, options)
-        return {"tag_repartition": tag_repartition}
+        res = {}
+        if options.get("plot_tag_repartition", True):
+            tag_repartition = self.get_tag_repartition(tags, options)
+            res["tag_repartition"] = tag_repartition
+        return res
 
     def evaluate_scenario(self, predictions, tags, options):
         tags = tags["tags_df"]
@@ -346,6 +357,8 @@ class StandardDetector(Detector):
         }
         if options.get("draw_plots", True):
             res["plots"] = self.draw_plots(tags=tags, options=options)
-        print("Stats for options {0}: {1}".format(options, stats))
+        print("Stats for options {0}:\n {1}".format(options, stats))
         return res
 
+    # def plot_PR_curve(self, stats, options):
+    #     return stats
