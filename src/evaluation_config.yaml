@@ -13,7 +13,7 @@ evaluation_dir: "results/evaluation"
 ###############
 
 detectors_options:
-  do_PR_curve: False
+  do_PR_curve: True
 
 detectors: 
     - type: "standard"
@@ -23,18 +23,25 @@ detectors:
       dtc_threshold: 0.3
       gtc_threshold: 0.1
       isolate_events: True
-    - type: subsampling
-      sample_step: 1
-      activity_threshold: 0.6
+      plot_tag_repartition: False
       PR_curve:
         variable: activity_threshold
         values:
           start: 0
           end: 0.98
           step: 0.02
-      # event_method: "average"
-      # tag_method: "proportion"
-      gtc: 0.3
+    # - type: subsampling
+    #   sample_step: 1
+    #   activity_threshold: 0.6
+    #   PR_curve:
+    #     variable: activity_threshold
+    #     values:
+    #       start: 0
+    #       end: 0.98
+    #       step: 0.02
+    #   # event_method: "average"
+    #   # tag_method: "proportion"
+    #   gtc: 0.3
   # - type: "subsampling"
   #   scenarios:
   #     sample_step: [0.5, 1]
