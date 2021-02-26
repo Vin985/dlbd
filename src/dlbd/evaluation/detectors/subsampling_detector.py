@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import plotnine
 from mouffet.evaluation.detector import Detector
-from plotnine import aes, element_text, geom_line, ggplot, ggtitle, theme, theme_classic
 
 
 class SubsamplingDetector(Detector):
@@ -250,19 +249,23 @@ class SubsamplingDetector(Detector):
         f1_score = round(
             2 * precision * recall_samples / (precision + recall_samples), 3
         )
-        return {
-            "n_events": int(df.event.sum()),
-            "n_tags": n_tags,
-            "n_true_positives": n_true_positives,
-            "n_false_positives": n_false_positives,
-            "n_matched_tags": n_matched_tags,
-            "n_unmatched_tags": n_unmatched_tags,
-            "n_tagged_samples": tagged_samples,
-            "precision": precision,
-            "recall_sample": recall_samples,
-            "recall_tags": recall_tags,
-            "f1_score": f1_score,
-        }
+        return pd.DataFrame(
+            [
+                {
+                    "n_events": int(df.event.sum()),
+                    "n_tags": n_tags,
+                    "n_true_positives": n_true_positives,
+                    "n_false_positives": n_false_positives,
+                    "n_matched_tags": n_matched_tags,
+                    "n_unmatched_tags": n_unmatched_tags,
+                    "n_tagged_samples": tagged_samples,
+                    "precision": precision,
+                    "recall_sample": recall_samples,
+                    "recall_tags": recall_tags,
+                    "f1_score": f1_score,
+                }
+            ]
+        )
 
     def evaluate_scenario(self, predictions, tags, options):
         tags = tags["tags_df"]
@@ -272,42 +275,7 @@ class SubsamplingDetector(Detector):
         return {"options": options, "stats": stats, "matches": events}
 
     def plot_PR_curve(self, stats, options):
-        PR_df = stats["PR_curve"]
-
-        plt = (
-            ggplot(
-                data=PR_df,
-                mapping=aes(
-                    x="recall_sample",
-                    y="precision",  # "factor(species, ordered=False)",
-                ),
-            )
-            + geom_line()
-            + theme_classic()
-            + theme(
-                plot_title=element_text(
-                    weight="bold", size=14, margin={"t": 10, "b": 10}
-                ),
-                figure_size=(20, 10),
-                text=element_text(size=12, weight="bold"),
-            )
-            + ggtitle(
-                (
-                    "Precision/Recall curve for model {}, database {}, class {}\n"
-                    + "with detector options {}"
-                ).format(
-                    options["scenario_info"]["model"],
-                    options["scenario_info"]["database"],
-                    options["scenario_info"]["class"],
-                    options,
-                )
-            )
-        )
-
-        # plt = PR_df.plot(
-        #     "recall_sample", "precision", figsize=(20, 16), fontsize=26
-        # ).get_figure()
-        # plt.savefig("test_arctic.pdf")
-        stats["plots"] = {"PR_curve": plt}
-        return stats
+        if not options.get("PR_curve_x", ""):
+            options["PR_curve_x"] = "recall_sample"
+        return super().plot_PR_curve(stats, options)
 
