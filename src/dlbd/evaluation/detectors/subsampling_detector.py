@@ -15,6 +15,7 @@ class SubsamplingDetector(Detector):
 
     DEFAULT_ISOLATE_EVENTS = True
     DEFAULT_EVENT_THRESHOLD = 0.5
+    DEFAULT_SAMPLE_STEP = 1
 
     DEFAULT_PR_CURVE_OPTIONS = {
         "variable": "activity_threshold",
@@ -117,7 +118,7 @@ class SubsamplingDetector(Detector):
 
     def match_events_apply(self, predictions, options, tags=None):
         recording_id = predictions.name
-        step = options.get("sample_step", self.DEFAULT_MIN_DURATION)
+        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP)
         resampler = predictions.resample(str(step) + "s") if step else predictions
         resample_func = functools.partial(self.has_event, options=options)
         agg_funcs = {
@@ -151,7 +152,7 @@ class SubsamplingDetector(Detector):
         if tags is not None:
             preds.loc[:, "tag_index"] = pd.Series([[] for i in range(preds.shape[0])])
 
-        step = options.get("sample_step", self.DEFAULT_MIN_DURATION) * 1000
+        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP) * 1000
 
         if step:
             preds.loc[:, "datetime"] = pd.to_datetime(preds.time * 10 ** 9)
