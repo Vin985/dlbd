@@ -1,7 +1,6 @@
 import datetime
 import functools
 import math
-from copy import deepcopy
 from functools import partial
 
 import numpy as np
@@ -267,12 +266,12 @@ class SubsamplingDetector(Detector):
             ]
         )
 
-    def evaluate_scenario(self, predictions, tags, options):
+    def evaluate(self, predictions, tags, options):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options, tags)
         stats = self.get_stats(events, tags)
         print("Stats for options {0}: {1}".format(options, stats))
-        return {"options": pd.DataFrame([options]), "stats": stats, "matches": events}
+        return {"stats": stats, "matches": events}
 
     def plot_PR_curve(self, stats, options):
         if not options.get("PR_curve_x", ""):

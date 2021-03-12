@@ -344,14 +344,13 @@ class StandardDetector(Detector):
             res["tag_repartition"] = tag_repartition
         return res
 
-    def evaluate_scenario(self, predictions, tags, options):
+    def evaluate(self, predictions, tags, options):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options)
         matches = self.get_matches(events, tags)
         stats, tags = self.get_stats(events, tags, matches, options)
 
         res = {
-            "options": pd.DataFrame([options]),
             "stats": stats,
             "matches": matches,
         }
