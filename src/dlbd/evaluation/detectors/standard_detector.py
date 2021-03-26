@@ -87,7 +87,7 @@ class StandardDetector(Detector):
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
         return events
 
-    def get_matches(self, events, tags):
+    def get_matches(self, events, tags, options):
         tags = tags.rename(columns=self.TAGS_COLUMNS_RENAME)
         tmp = tags.merge(events, on="recording_id", how="outer")
         # * Select tags associated with an event
@@ -101,8 +101,27 @@ class StandardDetector(Detector):
         match_df.loc[match_df.event_id.isna(), "event_id"] = -1
         match_df.event_id = match_df.event_id.astype("int")
         match_df.reset_index(inplace=True)
+        match_df = self.get_overlap_duration(match_df, "event")
+        match_df = self.get_overlap_duration(match_df, "tag")
 
-        return match_df
+        events.loc[:, "matched"] = 0
+        tags.loc[:, "matched"] = 0
+
+        if not match_df.empty:
+            dtc_threshold = options.get("dtc_threshold", 0.3)
+            gtc_threshold = options.get("gtc_threshold", 0.1)
+            res = match_df.loc[
+                (match_df.event_overlap >= dtc_threshold)
+                & (match_df.tag_overlap >= gtc_threshold)
+            ]
+
+            true_positives_id = res.event_id.unique()
+            matched_tags_id = res.tag_id.unique()
+
+            events.loc[events.event_id.isin(true_positives_id), "matched"] = 1
+            tags.loc[tags.tag_id.isin(matched_tags_id), "matched"] = 1
+
+        return events, tags, match_df
 
     @staticmethod
     def event_overlap_duration(tags):
@@ -260,62 +279,31 @@ class StandardDetector(Detector):
 
         return plt
 
-    def get_stats(self, events, tags, matches, options):
+    def get_stats(self, events, tags, options):
 
-        matched = matches.loc[
-            matches.event_id != -1,
-            [
-                "event_id",
-                "tag_id",
-                "tag_start",
-                "tag_end",
-                "tag_duration",
-                "event_start",
-                "event_end",
-                "event_duration",
-            ],
-        ].copy()
+        n_events = events.shape[0]
+        n_tags = tags.shape[0]
 
-        if matched.empty:
-            res = matched
-        else:
-            matched = self.get_overlap_duration(matched, "event")
-            matched = self.get_overlap_duration(matched, "tag")
+        n_true_positives = events.matched.sum()
+        n_false_positives = n_events - n_true_positives
 
-            dtc_threshold = options.get("dtc_threshold", 0.3)
-            gtc_threshold = options.get("gtc_threshold", 0.1)
-            res = matched.loc[
-                (matched.event_overlap >= dtc_threshold)
-                & (matched.tag_overlap >= gtc_threshold)
-            ]
+        n_tags_matched = tags.matched.sum()
+        n_tags_unmatched = n_tags - n_tags_matched
 
-        true_positives = res.event_id.unique()
-        n_true_positives = len(true_positives)
-        n_false_positives = events.shape[0] - n_true_positives
-        true_positives_ratio = (
-            round(n_true_positives / tags.shape[0], 3) if tags.shape[0] else 0
-        )
-        false_positive_rate = (
-            round(n_false_positives / self.tags_active_duration(tags), 3)
-            if self.tags_active_duration(tags)
-            else 0
-        )
-        precision = round(n_true_positives / events.shape[0], 3)
-
-        matched_tags_id = res.tag_id.unique()
-        tags.loc[:, "matched"] = 0
-        tags.loc[tags.id.isin(matched_tags_id), "matched"] = 1
-        n_tags_matched = len(matched_tags_id)
-        n_tags_unmatched = tags.shape[0] - n_tags_matched
-        recall = round(n_tags_matched / tags.shape[0], 3) if tags.shape[0] else 0
-
-        events.loc[:, "matched"] = 0
-        events.loc[events.event_id.isin(true_positives), "matched"] = 1
+        precision = round(n_true_positives / n_events, 3)
+        recall = round(n_tags_matched / n_tags, 3) if n_tags else 0
 
         if precision + recall:
             f1_score = round(2 * precision * recall / (precision + recall), 3)
         else:
             f1_score = 0
+
+        true_positives_ratio = round(n_true_positives / n_tags, 3) if n_tags else 0
+
+        tags_active_dur = self.tags_active_duration(tags)
+        false_positive_rate = (
+            round(n_false_positives / tags_active_dur, 3) if tags_active_dur else 0
+        )
 
         stats = pd.DataFrame(
             [
@@ -335,7 +323,7 @@ class StandardDetector(Detector):
             ]
         )
 
-        return stats, tags
+        return stats
 
     def draw_plots(self, tags, options):
         res = {}
@@ -347,8 +335,8 @@ class StandardDetector(Detector):
     def evaluate(self, predictions, tags, options):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options)
-        matches = self.get_matches(events, tags)
-        stats, tags = self.get_stats(events, tags, matches, options)
+        events, tags, matches = self.get_matches(events, tags, options)
+        stats = self.get_stats(events, tags, options)
 
         res = {
             "stats": stats,
