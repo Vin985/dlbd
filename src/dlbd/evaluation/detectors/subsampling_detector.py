@@ -118,8 +118,8 @@ class SubsamplingDetector(Detector):
 
     def match_events_apply(self, predictions, options, tags=None):
         recording_id = predictions.name
-        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP)
-        resampler = predictions.resample(str(step) + "s") if step else predictions
+        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP) * 1000
+        resampler = predictions.resample(str(step) + "ms") if step else predictions
         resample_func = functools.partial(self.has_event, options=options)
         agg_funcs = {
             "activity": resample_func,
@@ -152,7 +152,7 @@ class SubsamplingDetector(Detector):
         if tags is not None:
             preds.loc[:, "tag_index"] = pd.Series([[] for i in range(preds.shape[0])])
 
-        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP) * 1000
+        step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP)
 
         if step:
             preds.loc[:, "datetime"] = pd.to_datetime(preds.time * 10 ** 9)
