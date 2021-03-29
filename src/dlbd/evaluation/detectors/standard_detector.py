@@ -5,6 +5,7 @@ from plotnine import (
     element_text,
     facet_wrap,
     geom_bar,
+    geom_point,
     geom_text,
     ggplot,
     ggtitle,
@@ -14,6 +15,7 @@ from plotnine import (
     ylab,
 )
 from plotnine.positions.position_dodge import position_dodge
+import numpy as np
 
 
 class StandardDetector(Detector):
@@ -22,6 +24,8 @@ class StandardDetector(Detector):
 
     DEFAULT_MIN_DURATION = 0.1
     DEFAULT_END_THRESHOLD = 0.6
+
+    DEFAULT_PLOTS = ["detected_tags", "overlap_duration"]
 
     def get_recording_events(self, predictions, options=None):
         options = options or {}
@@ -87,6 +91,47 @@ class StandardDetector(Detector):
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
         return events
 
+    @staticmethod
+    def event_overlap_duration(tags):
+        tmp = tags.sort_values("tag_start")
+        previous_end = tmp.iloc[0].event_start
+        overlap_duration = 0
+        for tag in tmp.itertuples():
+            if tag.tag_end > previous_end:
+                end = min(tag.tag_end, tag.event_end)
+                start = max(tag.tag_start, previous_end)
+                overlap_duration += end - start
+                if end == tag.event_end:
+                    break
+                previous_end = end
+        return overlap_duration
+
+    @staticmethod
+    def tag_overlap_duration(events):
+        overlap_duration = 0
+        for event in events.itertuples():
+            overlap_duration += min(event.tag_end, event.event_end) - max(
+                event.tag_start, event.event_start
+            )
+        return overlap_duration
+
+    def get_overlap_duration(self, match_df, overlap_type):
+        overlap_func = getattr(self, overlap_type + "_overlap_duration")
+        if not match_df.empty:
+            overlap_duration = (
+                match_df.groupby(overlap_type + "_id")
+                .apply(overlap_func)
+                .rename(overlap_type + "_overlap_duration")
+                .reset_index()
+            )
+            tmp = match_df.merge(overlap_duration)
+            tmp[overlap_type + "_overlap"] = (
+                tmp[overlap_type + "_overlap_duration"]
+                / tmp[overlap_type + "_duration"]
+            )
+            return tmp
+        return pd.DataFrame()
+
     def get_matches(self, events, tags, options):
         tags = tags.rename(columns=self.TAGS_COLUMNS_RENAME)
         tmp = tags.merge(events, on="recording_id", how="outer")
@@ -124,47 +169,6 @@ class StandardDetector(Detector):
         return events, tags, match_df
 
     @staticmethod
-    def event_overlap_duration(tags):
-        tags.sort_values("tag_start")
-        previous_end = tags.iloc[0].event_start
-        overlap_duration = 0
-        for tag in tags.itertuples():
-            if tag.tag_end > previous_end:
-                end = min(tag.tag_end, tag.event_end)
-                start = max(tag.tag_start, previous_end)
-                overlap_duration += end - start
-                if end == tag.event_end:
-                    break
-                previous_end = end
-        return overlap_duration
-
-    @staticmethod
-    def tag_overlap_duration(events):
-        overlap_duration = 0
-        for event in events.itertuples():
-            overlap_duration += min(event.tag_end, event.event_end) - max(
-                event.tag_start, event.event_start
-            )
-        return overlap_duration
-
-    def get_overlap_duration(self, match_df, overlap_type):
-        overlap_func = getattr(self, overlap_type + "_overlap_duration")
-        if not match_df.empty:
-            overlap_duration = (
-                match_df.groupby(overlap_type + "_id")
-                .apply(overlap_func)
-                .rename(overlap_type + "_overlap_duration")
-                .reset_index()
-            )
-            tmp = match_df.merge(overlap_duration)
-            tmp[overlap_type + "_overlap"] = (
-                tmp[overlap_type + "_overlap_duration"]
-                / tmp[overlap_type + "_duration"]
-            )
-            return tmp
-        return pd.DataFrame()
-
-    @staticmethod
     def tags_active_duration(tags):
         duration = 0
         previous_start, previous_end = 0, 0
@@ -181,7 +185,7 @@ class StandardDetector(Detector):
                 duration += end - start
         return duration
 
-    def get_proportions(self, x, by, col="", total=0):
+    def get_proportions2(self, x, by, col="", total=0):
         if not total:
             total = x.shape[0]
         if by:
@@ -198,6 +202,24 @@ class StandardDetector(Detector):
             )
         return res
 
+    def get_proportions(self, x, by, col="", total=0):
+        if not total:
+            total = x.shape[0]
+        if by:
+            by = by.copy()
+            ncol = by.pop(0)
+            res = x.groupby(ncol).apply(self.get_proportions, by, ncol, x.shape[0])
+        else:
+            res = x.iloc[0]
+            res["n_tags"] = x.shape[0]
+        if col:
+            res["prop_" + col] = x.shape[0] / total * 100
+            res["lbl_" + col] = "n = {}\n".format(total)
+            # res["lbl_" + col] = "n = {}\n({}%)\n\n".format(
+            #     x.shape[0], round(x.shape[0] / total * 100, 2)
+            # )
+        return res
+
     @staticmethod
     def get_matched_label(x, n_total, n_matched):
         x = int(x)
@@ -207,7 +229,8 @@ class StandardDetector(Detector):
         )
         return label
 
-    def get_tag_repartition(self, tag_df, options):
+    def plot_tag_repartition(self, data, options):
+        tag_df = data["tags"]
         if not "background" in tag_df.columns:
             tag_df["background"] = False
         test = tag_df[["tag", "matched", "background", "id"]].copy()
@@ -279,6 +302,165 @@ class StandardDetector(Detector):
 
         return plt
 
+    def plot_detected_tags(self, data, options):
+        tmp = data["tags"][["tag", "matched", "tag_id"]].copy()
+        tmp.loc[:, "prop_matched"] = -1
+        tmp.loc[:, "n_tags"] = -1
+
+        # Get all proportions bu tags
+        tags_summary = (
+            tmp.groupby("tag")
+            .apply(self.get_proportions, by=["matched"])
+            .reset_index(drop=True)
+        )
+        # convert tags to category
+        tags_summary.tag = tags_summary.tag.astype("category")
+        # Get list of all tags
+        all_tags = tags_summary.tag.unique()
+        matched = tags_summary.loc[tags_summary.matched == 1]
+        # Get list of all matched tags
+        matched_tags = matched.tag.unique()
+        unmatched = []
+        # Add a row for all unmatched tags
+        for tag in all_tags:
+            if tag not in matched_tags:
+                row = tags_summary.loc[
+                    (tags_summary.matched == 0) & (tags_summary.tag == tag)
+                ]
+                row.prop_matched = 0
+                unmatched.append(row)
+        unmatched.append(matched)
+        # Create final object with unmatched and matched tags
+        m_df = pd.concat(unmatched)
+
+        # Sort values
+        m_df = m_df.sort_values(["prop_matched", "tag"])
+        m_df.tag = m_df.tag.cat.reorder_categories(m_df.tag.to_list())
+
+        plt = ggplot(
+            data=m_df,
+            mapping=aes(
+                x="tag",
+                y="prop_matched",
+                fill="tag",  # "factor(species, ordered=False)",
+            ),
+        )
+        plot_width = 10 + len(m_df.tag.unique()) * 0.75
+        plt = (
+            plt
+            + geom_bar(stat="identity", show_legend=True, position=position_dodge())
+            + xlab("Species")
+            + ylab("Proportion of annotation matched")
+            + geom_text(
+                mapping=aes(label="lbl_matched"), position=position_dodge(width=0.9),
+            )
+            + theme_classic()
+            + theme(
+                axis_text_x=element_text(angle=90, vjust=1, hjust=1, margin={"r": -30}),
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                figure_size=(plot_width, 10),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                (
+                    "Proportion of tags detected for model {}, database {}, class {}\n"
+                    + "with detector options {}"
+                ).format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["scenario_info"]["class"],
+                    options,
+                )
+            )
+        )
+
+        return plt
+
+    def plot_overlap_duration(self, data, options):
+        matches = data["matches"]
+        matches = matches.loc[matches.tag_overlap > 0]
+        # matches.loc[:, "log_dur"] = log()
+
+        plt = ggplot(data=matches, mapping=aes(x="tag_duration", y="tag_overlap",),)
+        plt = (
+            plt
+            + geom_point()
+            + xlab("Tag duration")
+            + ylab("Proportion tag overlapping with matching event")
+            + theme_classic()
+            + theme(
+                axis_text_x=element_text(angle=90, vjust=1, hjust=1, margin={"r": -30}),
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                figure_size=(10, 10),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                (
+                    "Proportion of tag overlapping with matching event depending on duration "
+                    + "size for model {}, database {}, class {}\n"
+                    + "with detector options {}"
+                ).format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["scenario_info"]["class"],
+                    options,
+                )
+            )
+        )
+
+        return plt
+
+    def plot_overlap_duration_bar(self, data, options):
+        matches = data["matches"]
+        matches = matches.loc[matches.tag_overlap > 0]
+        matches.loc[:, "tag_overlap_bin"] = pd.cut(
+            matches.tag_overlap, [0, 0.25, 0.5, 0.75, 1]
+        )
+        matches.loc[:, "tag_duration_bin"] = pd.cut(
+            matches.tag_duration, [0, 0.25, 0.5, 0.75, 1, 1.5, 2, float("inf")]
+        )
+
+        matches.loc[matches.tag_overlap < 0.3].to_csv("small_overlap.csv")
+
+        # matches.loc[:, "log_dur"] = log()
+
+        plt = ggplot(
+            data=matches, mapping=aes(x="tag_duration_bin", fill="tag_overlap_bin",),
+        )
+        plt = (
+            plt
+            + geom_bar()
+            + xlab("Tag duration")
+            + ylab("Proportion tag overlapping with matching event")
+            + theme_classic()
+            + theme(
+                axis_text_x=element_text(angle=90, vjust=1, hjust=1, margin={"r": -30}),
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                figure_size=(10, 10),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                (
+                    "Proportion of tag overlapping with matching event depending on duration "
+                    + "size for model {}, database {}, class {}\n"
+                    + "with detector options {}"
+                ).format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["scenario_info"]["class"],
+                    options,
+                )
+            )
+        )
+
+        return plt
+
     def get_stats(self, events, tags, options):
 
         n_events = events.shape[0]
@@ -325,11 +507,14 @@ class StandardDetector(Detector):
 
         return stats
 
-    def draw_plots(self, tags, options):
+    def draw_plots(self, data, options):
         res = {}
-        if options.get("plot_tag_repartition", True):
-            tag_repartition = self.get_tag_repartition(tags, options)
-            res["tag_repartition"] = tag_repartition
+        plots = options.get("plots", self.DEFAULT_PLOTS)
+        for to_plot in plots:
+            func_name = "plot_" + to_plot
+            if hasattr(self, func_name) and callable(getattr(self, func_name)):
+                tmp = getattr(self, func_name)(data, options)
+                res[to_plot] = tmp
         return res
 
     def evaluate(self, predictions, tags, options):
@@ -343,7 +528,10 @@ class StandardDetector(Detector):
             "matches": matches,
         }
         if options.get("draw_plots", True):
-            res["plots"] = self.draw_plots(tags=tags, options=options)
+            res["plots"] = self.draw_plots(
+                data={"events": events, "tags": tags, "matches": matches},
+                options=options,
+            )
         print("Stats for options {0}:\n {1}".format(options, stats))
         return res
 
