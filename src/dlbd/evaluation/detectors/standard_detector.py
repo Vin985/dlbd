@@ -39,6 +39,8 @@ class StandardDetector(Detector):
         events = []
         start = 0
         end = 0
+        buffer = options.get("buffer", 0)
+        last_time = predictions.iloc[predictions.shape[0] - 1].time
 
         for activity, recording_id, pred_time in predictions.itertuples(index=False):
             # * Check if prediction is above a defined threshold
@@ -61,8 +63,8 @@ class StandardDetector(Detector):
                         {
                             "event_index": event_index,
                             "recording_id": recording_id,
-                            "start": start,
-                            "end": end,
+                            "start": max(start - buffer, 0),
+                            "end": min(end + buffer, last_time),
                         }
                     )
         if ongoing:
@@ -72,7 +74,7 @@ class StandardDetector(Detector):
                     {
                         "event_index": event_index,
                         "recording_id": recording_id,
-                        "start": start,
+                        "start": max(start - buffer, 0),
                         "end": end,
                     }
                 )
@@ -113,6 +115,8 @@ class StandardDetector(Detector):
             overlap_duration += min(event.tag_end, event.event_end) - max(
                 event.tag_start, event.event_start
             )
+        if overlap_duration > event.tag_duration:
+            overlap_duration = event.tag_duration
         return overlap_duration
 
     def get_overlap_duration(self, match_df, overlap_type):
@@ -461,7 +465,7 @@ class StandardDetector(Detector):
 
         return plt
 
-    def get_stats(self, events, tags, options):
+    def get_stats(self, events, tags, matches, options):
 
         n_events = events.shape[0]
         n_tags = tags.shape[0]
@@ -501,6 +505,9 @@ class StandardDetector(Detector):
                     "f1_score": f1_score,
                     "true_positives_ratio": true_positives_ratio,
                     "false_positive_rate": false_positive_rate,
+                    "prop_tag_overlap_75": (
+                        sum(matches.tag_overlap > 0.75) / matches.shape[0] * 100
+                    ),
                 }
             ]
         )
@@ -521,7 +528,7 @@ class StandardDetector(Detector):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options)
         events, tags, matches = self.get_matches(events, tags, options)
-        stats = self.get_stats(events, tags, options)
+        stats = self.get_stats(events, tags, matches, options)
 
         res = {
             "stats": stats,
