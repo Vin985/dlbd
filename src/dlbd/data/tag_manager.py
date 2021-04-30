@@ -27,6 +27,7 @@ DEFAULT_OPTIONS = {
             "overlap": "overlap",
             "background": "background",
             "noise": "noise",
+            "Filename": "file_name",
         },
         "columns_type": {"overlap": "str"},
         "suffix": {"-sceneRect.csv"},
@@ -108,7 +109,11 @@ def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
             csv_file_path, skip_blank_lines=True, dtype=columns_type
         )
         # * loop over each annotation...
-        tag_df = pd_annots.loc[~pd_annots.Filename.isna()].copy()
+        # TODO: Add Filename to list of columns!
+        # if "Filename" not in pd_annots:
+        #     pd_annots["Filename"] = str(audio_file_path.stem) + ".wav"
+        # tag_df = pd_annots.loc[~pd_annots.Filename.isna()].copy()
+        tag_df = pd_annots.copy()
         tag_df = rename_columns(tag_df, columns)
         return tag_df
     else:
