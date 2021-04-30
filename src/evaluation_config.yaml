@@ -13,23 +13,29 @@ evaluation_dir: "results/evaluation"
 ###############
 
 detectors_options:
-  do_PR_curve: True
+  do_PR_curve: False
+  plots: "overlap_duration_bar; detected_tags"
 
 detectors: 
     - type: "standard"
-      activity_threshold: 0.95
-      min_duration: 0.06
+      activity_threshold: 0.92
+      min_duration: 0.4
       end_threshold: 0.15
-      dtc_threshold: 0.3
-      gtc_threshold: 0.1
-      isolate_events: True
-      plot_tag_repartition: False
+      dtc_threshold: 0
+      gtc_threshold: 0
+      # scenarios:
+      #   buffer:
+      #     start: 0
+      #     end: 2
+      #     step: 0.2
+    #   isolate_events: True
+      # plot_tag_repartition: False
       PR_curve:
         variable: activity_threshold
         values:
-          start: 0
-          end: 0.98
-          step: 0.02
+          start: 0.02
+          end: 0.10
+          step: 0.05
     # - type: subsampling
     #   sample_step: 1
     #   activity_threshold: 0.6
@@ -43,9 +49,11 @@ detectors:
     #   # tag_method: "proportion"
     #   gtc: 0.3
   # - type: "subsampling"
+  #   gtc: 0.3
   #   scenarios:
   #     sample_step: [0.5, 1]
   #     event_threshold: [0.5, 0.95]
+  #     event_method: ["average", "presence"]
 
 ############
 ## Models ##
@@ -119,7 +127,8 @@ databases:
     # scenarios:
     #     spectrogram:
     #       sample_rate: ["original", 22050]
-  - name: arctic
+  # - name: arctic
+  - name: NABS
 #  - name: citynet
   # - name: nips4b
     # scenarios:

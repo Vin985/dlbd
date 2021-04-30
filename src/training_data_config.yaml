@@ -26,6 +26,7 @@ tags:
     overlap: "overlap"
     background: "background"
     noise: "noise"
+    Filename: "file_name"
   columns_type:
     overlap: "str"
   with_data: False
@@ -61,6 +62,16 @@ databases:
         test: 0.2
       tags:
         type: nips4b
+    - name: 'NABS'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/NABS'
+      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS'
+      tags:
+        with_data: True
+        suffix: "_tags.csv"
+        columns:
+          tag: "tag"
+          start: "tag_start"
+          end: "tag_end"
       
 
     
