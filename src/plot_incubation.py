@@ -29,7 +29,7 @@ from examples.cjcc.events_plot import EventsPlot
 src_dir = Path("/mnt/win/UMoncton/Doctorat/dev/dlbd/results/predictions/CJCC/")
 dest_dir = Path("/mnt/win/UMoncton/Doctorat/dev/dlbd/results/plots/CJCC/")
 
-std_preds = pd.read_feather(src_dir / "std_events_95_15_300_aggregate.feather")
+std_preds = pd.read_feather(src_dir / "std_events_92_15_400_nogtc_aggregate.feather")
 
 sub_agg = pd.read_feather(src_dir / "sub_events_1_95_aggregate.feather").rename(
     columns={"n_seconds_active": "n_events"}
@@ -293,14 +293,14 @@ plt_old.plot()
 
 #%%
 
-# (barw_se, barw_inc) = incubation_plot(
-#     plt.plot_data,
-#     "Barrow",
-#     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Nest Monitoring/2018/BARW/BARW_nest_2018.xlsx",
-#     # save=False,
-#     prefix="cjcc2021",
-#     dest_dir=dest_dir,
-# )
+(barw_se, barw_inc) = incubation_plot(
+    plt.plot_data,
+    "Barrow",
+    "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Nest Monitoring/2018/BARW/BARW_nest_2018.xlsx",
+    # save=False,
+    prefix="cjcc2021_new_15",
+    dest_dir=dest_dir,
+)
 
 (barw_se, barw_inc) = incubation_plot(
     plt_sub.plot_data,

@@ -72,9 +72,15 @@ preds = pd.read_feather(file_path)
 
 
 std_detector = StandardDetector()
-std_opts = {"min_activity": 0.95, "min_duration": 0.3, "end_threshold": 0.15}
+std_opts = {
+    "min_activity": 0.92,
+    "min_duration": 0.4,
+    "end_threshold": 0.15,
+    "gtc": 0,
+    "dtc": 0,
+}
 
-std_path = src_root / "std_events_95_15_300.feather"
+std_path = src_root / "std_events_92_15_400_nogtc.feather"
 
 if not std_path.exists():
     se_df = std_detector.get_events(preds, std_opts)
@@ -112,21 +118,21 @@ std_df["date"] = dates
 
 print(std_df)
 
-std_df.to_feather(src_root / "std_events_95_15_300_aggregate.feather")
-
-#%%
-
-
-#%%
+std_df.to_feather(src_root / "std_events_92_15_400_nogtc_aggregate.feather")
 
 
 #%%
 sub_detector = SubsamplingDetector()
 
-sub_path = src_root / "sub_events_1_95.feather"
+sub_path = src_root / "sub_events_500_50_avg03.feather"
 
 if not sub_path.exists():
-    sub_opts = {"sample_step": 1, "event_threshold": 0.95}
+    sub_opts = {
+        "sample_step": 0.5,
+        "event_threshold": 0.5,
+        "method": "average",
+        "gtc": 0.3,
+    }
     ss_df = sub_detector.get_events(preds, options=sub_opts)
     ss_df = ss_df.drop(columns=["level_1"])
     ss_df.to_feather(sub_path)
@@ -158,7 +164,7 @@ for name in sub_df.name:
 sub_df["date"] = dates
 
 print(sub_df)
-sub_df.to_feather(src_root / "sub_events_1_95_aggregate.feather")
+sub_df.to_feather(src_root / "sub_events_500_50_avg03_aggregate.feather")
 
 #%%
 
