@@ -2,12 +2,12 @@ import librosa
 import pandas as pd
 from mouffet.data.data_handler import DataHandler
 from mouffet.data.data_structure import DataStructure
-from mouffet.utils.split import split_folder
+from mouffet.data.split import split_folder
 from scipy.ndimage.interpolation import zoom
 
 from ..options.audio_database_options import AudioDatabaseOptions
-from ..utils.split import citynet_split
 from . import spectrogram, tag_manager
+from .split import citynet_split
 
 
 class AudioDataStructure(DataStructure):
