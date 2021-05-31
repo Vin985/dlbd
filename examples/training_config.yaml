@@ -1,0 +1,36 @@
+
+
+data_config: "src/training_data_config.yaml"
+
+model:
+  model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
+  max_epochs: 5
+  # from_epoch: 0
+  epoch_save_step: 10
+  learn_log: 0
+  do_augmentation: 1
+  A: 0.001 # biotic 
+  B: 10.0 #biotic
+  # # A: 0.025 # anthropic
+  # # B: 2.0 # anthropic
+  ensemble_members: 1
+  training_balanced: True
+  resize_spectrogram: True
+
+net:
+  batch_size: 128
+  do_batch_norm: 1
+  hww_x: 10
+  hww_y: 10
+  spec_height: 32
+  channels: 4
+  num_filters: 128
+  num_dense_units: 512
+  conv_filter_width: 4
+  wiggle_room: 5
+  learning_rate: 0.001
+  dropout: 0.5
+
+logs:
+  log_dir: "logs/gradient_tape/"
+  use_version: True
