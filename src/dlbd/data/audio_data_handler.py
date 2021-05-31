@@ -3,6 +3,7 @@ import pandas as pd
 from mouffet.data.data_handler import DataHandler
 from mouffet.data.data_structure import DataStructure
 from mouffet.data.split import split_folder
+from mouffet.utils.common import join_tuple
 from scipy.ndimage.interpolation import zoom
 
 from ..options.audio_database_options import AudioDatabaseOptions
@@ -98,3 +99,20 @@ class AudioDataHandler(DataHandler):
         self.tmp_db_data["infos"].append(audio_info)
         self.tmp_db_data["tags_df"].append(tags_df)
         self.tmp_db_data["tags_linear_presence"].append(tags_linear)
+
+    def get_summary(self, dataset):
+        df = dataset["tags_df"]
+        df["duration"] = df["tag_end"] - df["tag_start"]
+
+        # TODO: FINISH IT!
+        summary = df.groupby("tag").agg(
+            {"duration": ["sum", "mean", "std", "min", "max"], "tag": "size"}
+        )
+        summary.columns = pd.Index(join_tuple(i, "_") for i in summary.columns)
+        summary = summary.reset_index()
+        tmp_res = {
+            "n_files": len(dataset["spectrograms"]),
+            "n_classes": len(df.tag.unique()),
+            "classes": summary,
+        }
+        return tmp_res
