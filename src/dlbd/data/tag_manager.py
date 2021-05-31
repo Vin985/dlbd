@@ -109,7 +109,6 @@ def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
             csv_file_path, skip_blank_lines=True, dtype=columns_type
         )
         # * loop over each annotation...
-        # TODO: Add Filename to list of columns!
         # tag_df = pd_annots.loc[~pd_annots.Filename.isna()]..copy()
         tag_df = rename_columns(pd_annots, columns)
         if "file_name" not in tag_df:
