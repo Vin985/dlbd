@@ -110,11 +110,12 @@ def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
         )
         # * loop over each annotation...
         # TODO: Add Filename to list of columns!
-        # if "Filename" not in pd_annots:
-        #     pd_annots["Filename"] = str(audio_file_path.stem) + ".wav"
-        # tag_df = pd_annots.loc[~pd_annots.Filename.isna()].copy()
-        tag_df = pd_annots.copy()
-        tag_df = rename_columns(tag_df, columns)
+        # tag_df = pd_annots.loc[~pd_annots.Filename.isna()]..copy()
+        tag_df = rename_columns(pd_annots, columns)
+        if "file_name" not in tag_df:
+            tag_df["file_name"] = str(audio_file_path.stem) + ".wav"
+        tag_df = tag_df.loc[~tag_df.file_name.isna()]
+
         return tag_df
     else:
         print("Warning - no annotations found for %s" % str(audio_file_path))
