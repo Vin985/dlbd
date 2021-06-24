@@ -1,0 +1,66 @@
+
+data_config: "src/evaluation_data_config_gpu.yaml"
+save_results: True #True
+
+###########
+## Paths ##
+###########
+predictions_dir: "/home/sylvain/data/results/predictions"
+evaluation_dir: "/home/sylvain/data/results/evaluation"
+
+###############
+## Detectors ##
+###############
+detectors: 
+  - type: "standard"
+    min_activity: 0.95
+    min_duration: 0.3
+    end_threshold: 0.15
+    dtc_threshold: 0.3
+    gtc_threshold: 0.1
+    isolate_events: True
+  - type: "subsampling"
+    scenarios:
+      sample_step: [0, 1]
+      event_threshold: [0.5, 0.95]
+
+############
+## Models ##
+############
+models_options:
+  model_dir: "/home/sylvain/data/results/models"
+
+models:
+  # - name: "CityNetTF2_Dropout"
+  #   package: "dlbd.models.CityNetTF2Dropout"
+  #   class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+  # - name: "CityNetOriginal"
+  #   package: "dlbd.models.CityNetOriginal"
+  #   class: "dlbd.models.CityNetOriginal.CityNetOriginal"
+  #   version: 0
+  - name: "CityNetTF2_Dropout_resized"
+    class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+    id: "{from_epoch}"
+    id_prefixes:
+      from_epoch: "_fe-"
+    version: 1
+    scenarios:
+      from_epoch: [30, 100]
+  # - name: "CityNetTF2_Dropout_resized_lr_filt"
+  #   class: "dlbd.models.CityNetTF2Dropout.CityNetTF2Dropout"
+  #   from_epoch: 30
+  
+
+###############
+## Databases ##
+###############
+
+databases:
+  - name: citynet_small
+    # scenarios:
+    #     spectrogram:
+    #       sample_rate: ["original", 22050]
+  - name: arctic
+    # scenarios:
+    #     spectrogram:
+    #       sample_rate: ["original", 22050]
