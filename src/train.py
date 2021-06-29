@@ -5,6 +5,7 @@ from mouffet.training.trainer import Trainer
 
 from dlbd.data.audio_data_handler import AudioDataHandler
 from dlbd.models.CityNetTF2Dropout import CityNetTF2Dropout
+from dlbd.models.dlbd import DLBDLite
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 # gpus = tf.config.experimental.list_physical_devices("GPU")
@@ -13,7 +14,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 trainer = Trainer(
     opts_path="src/CityNetTF2_Dropout_training_config.yaml",
     # opts_path="CityNetTF2_Dropout_training_config.yaml",
-    model_class=CityNetTF2Dropout,
+    # model_class=DLBDLite,
     dh_class=AudioDataHandler,
 )
 # trainer.train_model()

@@ -8,7 +8,7 @@ test_dir: 'test'
 dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 
-use_subfolders: ["class", "spectrogram"]
+use_subfolders: ["spectrogram"]
 
 data_extensions:
   - ".wav"
@@ -34,17 +34,19 @@ tags:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-    - name: 'citynet_small'
-      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-      db_types: ["test"]
+    - name: 'citynet'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/CityNet'
       spectrogram:
         sample_rate: 22050
+      split:
+        validation: 0.2
   # - name: 'citynet_small'
   #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
   #   #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
   #   db_types: ["test"]
     - name: 'arctic'
-      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/Arctic'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
+      data_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
       tags:
         with_data: True
   #   # overwrite: False
@@ -53,11 +55,21 @@ databases:
   #   #* If provided, first the test dataset is set aside, then the remaining data is split into
   #   #* training and validation datasets.
   #   #* Overrides training_dir/validation_dir. Set to false or 0 to avoid using it in a database
-  #   split:
-  #     test: 0.2
-  #     validation: 0.2
+      split:
+        test: 0.2
+        validation: 0.2
+    - name: 'NABS'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/NABS'
+      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS'
+      tags:
+        with_data: True
+        suffix: "-tags.csv"
+        columns:
+          tag: "tag"
+          start: "tag_start"
+          end: "tag_end"
   #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
-  #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
+      
 
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
