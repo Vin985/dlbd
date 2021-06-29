@@ -518,7 +518,7 @@ class StandardDetector(Detector):
         res = {}
         plots = options.get("plots", self.DEFAULT_PLOTS).split(";")
         for to_plot in plots:
-            func_name = "plot_" + to_plot.rstrip()
+            func_name = "plot_" + to_plot.strip()
             if hasattr(self, func_name) and callable(getattr(self, func_name)):
                 tmp = getattr(self, func_name)(data, options)
                 res[to_plot] = tmp
