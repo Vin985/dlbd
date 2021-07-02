@@ -68,6 +68,7 @@ def filter_classes(tag_df, classes):
     """
     if tag_df.empty:
         return tag_df
+    tag_df = tag_df.dropna(subset=["tag"])
     if "related" not in tag_df.columns:
         tag_df["related"] = ""
     tag_df.loc[tag_df.related.isnull(), "related"] = ""
