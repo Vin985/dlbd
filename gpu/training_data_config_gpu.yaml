@@ -8,7 +8,7 @@ test_dir: 'test'
 dest_dir: '/home/sylvain/data/datasets'
 save_intermediate: False
 
-use_subfolders: ["spectrogram"]
+use_subfolders: [ "spectrogram"]
 
 data_extensions:
   - ".wav"
@@ -26,6 +26,7 @@ tags:
     overlap: "overlap"
     background: "background"
     noise: "noise"
+    Filename: "file_name"
   columns_type:
     overlap: "str"
   with_data: False
@@ -36,21 +37,13 @@ databases:
   #* from data will be used
     - name: 'citynet'
       root_dir: '/home/sylvain/data/raw/CityNet'
-      spectrogram:
-        sample_rate: 22050
       split:
         validation: 0.2
-  # - name: 'citynet_small'
-  #   root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/citynet/CityNet'
-  #   #test_file_list_path: "/mnt/win/UMoncton/Doctorat/data/dl_training/datasets/citynet/test_file_list_small.csv"
-  #   db_types: ["test"]
     - name: 'arctic'
       root_dir: '/home/sylvain/data/raw/Arctic'
-      #data_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
+      data_dir: '/home/sylvain/data/raw/Arctic'
       tags:
         with_data: True
-  #   # overwrite: False
-  #   # generate_file_lists: True
   #   #* split: Defines proportion of data to set aside for test and validation datasets.
   #   #* If provided, first the test dataset is set aside, then the remaining data is split into
   #   #* training and validation datasets.
@@ -59,7 +52,7 @@ databases:
         test: 0.2
         validation: 0.2
   #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
-      
+  #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
 
     # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
     
@@ -68,7 +61,7 @@ spectrogram:
   n_mels: 32
   n_fft: 2048
   hop_length: 1024
-  #sample_rate: 22050 # For no resampling: remove option or set to original
+  # sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
 classes_file: "src/classes.csv"
