@@ -139,3 +139,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+src/training_config_test.yaml
+src/training_data_config_test.yaml
+src/training_config_gpu.yaml
+src/training_data_config_gpu.yaml
