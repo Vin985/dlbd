@@ -84,16 +84,29 @@ class CityNetOriginal(AudioDLModel):
         net["output"] = tf.nn.softmax(net["fc8"])
         return net
 
-    def modify_spectrogram(self, spec):
-        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        return spec
+    # def modify_spectrogram(self, spec):
+    #     spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
+    #     spec = spec - np.median(spec, axis=1, keepdims=True)
+    #     return spec
 
-    def prepare_data(self, data):
-        specs, tags = data
-        if not self.opts["model"]["learn_log"]:
-            specs = [self.modify_spectrogram(spec) for spec in specs]
-        return specs, tags
+    # def prepare_data(self, data):
+    #     if not self.opts["model"]["learn_log"]:
+    #         for i, spec in enumerate(data["spectrograms"]):
+    #             resize_width = self.get_resize_width(data["infos"][i])
+    #             data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
+    #             if resize_width > 0:
+    #                 data["tags_linear_presence"][i] = zoom(
+    #                     data["tags_linear_presence"][i],
+    #                     float(resize_width) / spec.shape[1],
+    #                     order=1,
+    #                 ).astype(int)
+    #     return data
+
+    # def prepare_data(self, data):
+    #     specs, tags = data["spectrograms"], data["tags_linear_presence"]
+    #     if not self.opts["model"]["learn_log"]:
+    #         specs = [self.modify_spectrogram(spec) for spec in specs]
+    #     return specs, tags
 
     def train(self, training_data, validation_data):
 
@@ -128,14 +141,14 @@ class CityNetOriginal(AudioDLModel):
         _test_acc = tf.reduce_mean(tf.cast(tf.equal(y_in, pred), tf.float32))
 
         optimizer = tf.compat.v1.train.AdamOptimizer(
-            learning_rate=self.opts["learning_rate"], beta1=0.5, beta2=0.9
+            learning_rate=self.opts["model"]["learning_rate"], beta1=0.5, beta2=0.9
         )
 
         train_op = slim.learning.create_train_op(_trn_loss, optimizer)
 
         self.session.run(tf.compat.v1.global_variables_initializer())
 
-        for epoch in range(self.opts["max_epochs"]):
+        for epoch in range(self.opts["model"]["max_epochs"]):
 
             print("training epoch #", epoch)
 
@@ -200,10 +213,10 @@ class CityNetOriginal(AudioDLModel):
         saver = tf.compat.v1.train.Saver()
         saver.restore(self.session, path)
 
-    def classify(self, data, sampler):
-        spectrogram, _ = data
-        spectrogram = self.modify_spectrogram(spectrogram)
-        return super().classify_spectrogram(spectrogram, sampler)
+    # def classify(self, data, sampler):
+    #     spectrogram, _ = data
+    #     spectrogram = self.modify_spectrogram(spectrogram)
+    #     return super().classify_spectrogram(spectrogram, sampler)
 
     def predict(self, x):
         return self.session.run(

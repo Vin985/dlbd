@@ -2,11 +2,13 @@ from time import time
 
 import librosa
 import numpy as np
-from librosa.feature import melspectrogram
+
+# from librosa.feature import melspectrogram
+from mouffet.models.dlmodel import DLModel
+from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
-from mouffet.models.dlmodel import DLModel
-
+from ..data.spectrogram import resize_spectrogram
 
 DEFAULT_N_FFT = 2048
 DEFAULT_HOP_LENGTH = 1024  # 512
@@ -21,20 +23,6 @@ class AudioDLModel(DLModel):
         self.wav = None
         self.sample_rate = None
 
-    def classify(self, data, sampler):
-        return self.classify_spectrogram(data, sampler)
-
-    def classify_spectrogram(self, spectrogram, spec_sampler):
-        """Apply the classifier"""
-        tic = time()
-        labels = np.zeros(spectrogram.shape[1])
-        preds = []
-        for data, _ in tqdm(spec_sampler([spectrogram], [labels])):
-            pred = self.predict(data)
-            preds.append(pred)
-        print("Classified {0} in {1}".format("spectrogram", time() - tic))
-        return np.vstack(preds)[:, 1]
-
     def load_wav(self, wavpath, loadmethod="librosa"):
         # tic = time()
 
@@ -48,25 +36,69 @@ class AudioDLModel(DLModel):
         else:
             raise Exception("Unknown load method")
 
-    def compute_spec(self, wav, sample_rate):
-        # tic = time()
-        spec = melspectrogram(
-            wav,
-            sr=sample_rate,
-            n_fft=self.opts.get("n_fft", DEFAULT_N_FFT),
-            hop_length=self.opts.get("hop_length", DEFAULT_HOP_LENGTH),
-            n_mels=self.opts.get("n_mels", DEFAULT_N_MELS),
-        )
+    # def compute_spec(self, wav, sample_rate):
+    #     # tic = time()
+    #     spec = melspectrogram(
+    #         wav,
+    #         sr=sample_rate,
+    #         n_fft=self.opts.get("n_fft", DEFAULT_N_FFT),
+    #         hop_length=self.opts.get("hop_length", DEFAULT_HOP_LENGTH),
+    #         n_mels=self.opts.get("n_mels", DEFAULT_N_MELS),
+    #     )
 
-        # if self.opts.remove_noise:
-        #     spec = Spectrogram.remove_noise(spec)
+    #     # if self.opts.remove_noise:
+    #     #     spec = Spectrogram.remove_noise(spec)
 
-        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        return spec.astype(np.float32)
+    #     spec = np.log(self.opts["A"] + self.opts["B"] * spec)
+    #     spec = spec - np.median(spec, axis=1, keepdims=True)
+    #     return spec.astype(np.float32)
 
     def get_ground_truth(self, data):
         return data["tags_linear_presence"]
 
     def get_raw_data(self, data):
         return data["spectrograms"]
+
+    def modify_spectrogram(self, spec, resize_width):
+        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
+        spec = spec - np.median(spec, axis=1, keepdims=True)
+        if resize_width > 0:
+            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
+        return spec
+
+    def prepare_data(self, data):
+        if not self.opts["model"]["learn_log"]:
+            for i, spec in enumerate(data["spectrograms"]):
+                resize_width = self.get_resize_width(data["infos"][i])
+                data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
+                if resize_width > 0:
+                    data["tags_linear_presence"][i] = zoom(
+                        data["tags_linear_presence"][i],
+                        float(resize_width) / spec.shape[1],
+                        order=1,
+                    ).astype(int)
+        return data
+
+    def get_resize_width(self, infos):
+        resize_width = -1
+        if self.opts["model"].get("resize_spectrogram", False):
+            pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+            resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
+        return resize_width
+
+    def classify_spectrogram(self, spectrogram, spec_sampler):
+        """Apply the classifier"""
+        tic = time()
+        labels = np.zeros(spectrogram.shape[1])
+        preds = []
+        for data, _ in tqdm(spec_sampler([spectrogram], [labels])):
+            pred = self.predict(data)
+            preds.append(pred)
+        print("Classified {0} in {1}".format("spectrogram", time() - tic))
+        return np.vstack(preds)[:, 1]
+
+    def classify(self, data, sampler):
+        spectrogram, infos = data
+        spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
+        return self.classify_spectrogram(spectrogram, sampler)
+

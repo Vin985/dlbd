@@ -1,10 +1,8 @@
 import numpy as np
 import tensorflow as tf
 from mouffet.models.TF2Model import TF2Model
-from scipy.ndimage.interpolation import zoom
 from tensorflow.keras import Input, Model, layers, regularizers
 
-from ..data.spectrogram import resize_spectrogram
 from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
 
@@ -78,8 +76,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         print("init_create_net")
         opts = self.opts["net"]
         inputs = Input(
-            shape=(opts["spec_height"], opts["hww_x"] * 2, opts["channels"],),
-            dtype=tf.float32,
+            shape=(opts["spec_height"], opts["hww_x"] * 2,), dtype=tf.float32,
         )
         x = NormalizeSpectrograms(
             learn_log=self.opts["model"].get("learn_log", False),
@@ -167,39 +164,9 @@ class CityNetTF2(TF2Model, AudioDLModel):
         return train_sampler, validation_sampler
 
     def init_optimizer(self):
-        self.optimizer = tf.keras.optimizers.Adam()
-
-    def modify_spectrogram(self, spec, resize_width):
-        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        if resize_width > 0:
-            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
-        return spec
-
-    def prepare_data(self, data):
-        if not self.opts["model"]["learn_log"]:
-            for i, spec in enumerate(data["spectrograms"]):
-                resize_width = self.get_resize_width(data["infos"][i])
-                data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
-                if resize_width > 0:
-                    data["tags_linear_presence"][i] = zoom(
-                        data["tags_linear_presence"][i],
-                        float(resize_width) / spec.shape[1],
-                        order=1,
-                    ).astype(int)
-        return data
-
-    def get_resize_width(self, infos):
-        resize_width = -1
-        if self.opts["model"].get("resize_spectrogram", False):
-            pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
-            resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
-        return resize_width
-
-    def classify(self, data, sampler):
-        spectrogram, infos = data
-        spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
-        return super().classify_spectrogram(spectrogram, sampler)
+        self.optimizer = tf.keras.optimizers.Adam(
+            learning_rate=self.opts["model"]["learning_rate"]
+        )
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
