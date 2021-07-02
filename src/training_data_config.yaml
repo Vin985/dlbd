@@ -37,8 +37,8 @@ databases:
   #* from data will be used
     - name: 'citynet'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/CityNet'
-      spectrogram:
-        sample_rate: 22050
+      # spectrogram:
+      #   sample_rate: 22050
       split:
         validation: 0.2
     - name: 'arctic'
