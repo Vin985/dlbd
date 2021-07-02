@@ -11,9 +11,7 @@ class DLBDDense(CityNetTF2):
         print("init_create_net")
         opts = self.opts["net"]
         inputs = Input(
-            shape=(opts["spec_height"], opts["hww_x"] * 2),
-            # batch_size=128,
-            dtype=tf.float32,
+            shape=(opts["spec_height"], opts["hww_x"] * 2), dtype=tf.float32,
         )
         x = NormalizeSpectrograms(
             learn_log=self.opts["model"].get("learn_log", False),
@@ -26,7 +24,6 @@ class DLBDDense(CityNetTF2):
             bias_initializer=None,
             padding="valid",
             activation=None,
-            # name="conv1_1",
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
         # x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
@@ -73,7 +70,6 @@ class DLBDDense(CityNetTF2):
         print("after model")
         model.summary()
         return model
-
 
 
 class DLBDLite(CityNetTF2):
