@@ -5,6 +5,7 @@ import numpy as np
 
 # from librosa.feature import melspectrogram
 from mouffet.models.dlmodel import DLModel
+import mouffet.utils.common as common_utils
 from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
@@ -19,6 +20,24 @@ class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
 
     def __init__(self, opts=None):
+        input_size = opts["net"].get("input_size", opts["model"]["pixels_in_sec"])
+        if input_size % 2:
+            common_utils.print_warning(
+                (
+                    "Network input size is odd. For performance reasons,"
+                    + " input_size should be even. {} will be used as input size instead of {}."
+                    + " Consider changing the pixel_per_sec or input_size options in the configuration file"
+                ).format(input_size + 1, input_size)
+            )
+            if input_size == opts["model"]["pixels_in_sec"]:
+                common_utils.print_warning(
+                    (
+                        "Input size and pixels per seconds were identical, using {} pixels per seconds as well"
+                    ).format(input_size + 1)
+                )
+            input_size += 1
+            opts["model"]["pixels_in_sec"] = input_size
+        opts["net"]["input_size"] = input_size
         super().__init__(opts)
         # self.wav = None
         # self.sample_rate = None
@@ -96,8 +115,8 @@ class AudioDLModel(DLModel):
 
     def get_resize_width(self, infos):
         resize_width = -1
-            pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
-            resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
+        pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+        resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
         return resize_width
 
     def classify_spectrogram(self, spectrogram, spec_sampler):
