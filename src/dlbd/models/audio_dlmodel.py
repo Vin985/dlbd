@@ -20,21 +20,21 @@ class AudioDLModel(DLModel):
 
     def __init__(self, opts=None):
         super().__init__(opts)
-        self.wav = None
-        self.sample_rate = None
+        # self.wav = None
+        # self.sample_rate = None
 
-    def load_wav(self, wavpath, loadmethod="librosa"):
-        # tic = time()
+    # def load_wav(self, wavpath, loadmethod="librosa"):
+    #     # tic = time()
 
-        if loadmethod == "librosa":
-            # a more correct and robust way -
-            # this resamples any audio file to 22050Hz
-            # TODO: downsample if higher than 22050
-            sample_rate = self.opts.get("resample", None)
-            print(sample_rate)
-            return librosa.load(wavpath, sr=sample_rate)
-        else:
-            raise Exception("Unknown load method")
+    #     if loadmethod == "librosa":
+    #         # a more correct and robust way -
+    #         # this resamples any audio file to 22050Hz
+    #         # TODO: downsample if higher than 22050
+    #         sample_rate = self.opts.get("resample", None)
+    #         print(sample_rate)
+    #         return librosa.load(wavpath, sr=sample_rate)
+    #     else:
+    #         raise Exception("Unknown load method")
 
     # def compute_spec(self, wav, sample_rate):
     #     # tic = time()
@@ -100,4 +100,3 @@ class AudioDLModel(DLModel):
         spectrogram, infos = data
         spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
         return self.classify_spectrogram(spectrogram, sampler)
-
