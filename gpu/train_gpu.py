@@ -4,8 +4,6 @@ import tensorflow as tf
 from mouffet.training.trainer import Trainer
 
 from dlbd.data.audio_data_handler import AudioDataHandler
-from dlbd.models.CityNetTF2Dropout import CityNetTF2Dropout
-from dlbd.utils.split import arctic_split
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 gpus = tf.config.experimental.list_physical_devices("GPU")
@@ -13,10 +11,8 @@ tf.config.experimental.set_memory_growth(gpus[0], True)
 
 trainer = Trainer(
     # opts_path="src/CityNetTF2_Dropout_training_config.yaml",
-    opts_path="src/CityNetTF2_Dropout_training_config_gpu.yaml",
-    model_class=CityNetTF2Dropout,
+    opts_path="src/training_config_gpu.yaml",
     dh_class=AudioDataHandler,
-    split_funcs={"arctic": arctic_split},
 )
 # trainer.train_model()
 trainer.train()
