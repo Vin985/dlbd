@@ -76,7 +76,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         print("init_create_net")
         opts = self.opts["net"]
         inputs = Input(
-            shape=(opts["spec_height"], opts["hww_x"] * 2,), dtype=tf.float32,
+            shape=(opts["spec_height"], opts["input_size"],), dtype=tf.float32,
         )
         x = NormalizeSpectrograms(
             learn_log=self.opts["model"].get("learn_log", False),
