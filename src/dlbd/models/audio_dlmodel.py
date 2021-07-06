@@ -1,6 +1,5 @@
 from time import time
 
-import librosa
 import numpy as np
 
 # from librosa.feature import melspectrogram
@@ -39,38 +38,6 @@ class AudioDLModel(DLModel):
             opts["model"]["pixels_in_sec"] = input_size
         opts["net"]["input_size"] = input_size
         super().__init__(opts)
-        # self.wav = None
-        # self.sample_rate = None
-
-    # def load_wav(self, wavpath, loadmethod="librosa"):
-    #     # tic = time()
-
-    #     if loadmethod == "librosa":
-    #         # a more correct and robust way -
-    #         # this resamples any audio file to 22050Hz
-    #         # TODO: downsample if higher than 22050
-    #         sample_rate = self.opts.get("resample", None)
-    #         print(sample_rate)
-    #         return librosa.load(wavpath, sr=sample_rate)
-    #     else:
-    #         raise Exception("Unknown load method")
-
-    # def compute_spec(self, wav, sample_rate):
-    #     # tic = time()
-    #     spec = melspectrogram(
-    #         wav,
-    #         sr=sample_rate,
-    #         n_fft=self.opts.get("n_fft", DEFAULT_N_FFT),
-    #         hop_length=self.opts.get("hop_length", DEFAULT_HOP_LENGTH),
-    #         n_mels=self.opts.get("n_mels", DEFAULT_N_MELS),
-    #     )
-
-    #     # if self.opts.remove_noise:
-    #     #     spec = Spectrogram.remove_noise(spec)
-
-    #     spec = np.log(self.opts["A"] + self.opts["B"] * spec)
-    #     spec = spec - np.median(spec, axis=1, keepdims=True)
-    #     return spec.astype(np.float32)
 
     def get_ground_truth(self, data):
         return data["tags_linear_presence"]
@@ -90,7 +57,7 @@ class AudioDLModel(DLModel):
             for i, spec in enumerate(data["spectrograms"]):
                 resize_width = self.get_resize_width(data["infos"][i])
 
-                # Issue a warning if the number of pixels desired is too far from the original size
+                # * Issue a warning if the number of pixels desired is too far from the original size
                 original_pps = (
                     data["infos"][i]["sample_rate"]
                     / data["infos"][i]["spec_opts"]["hop_length"]
