@@ -73,7 +73,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
     def create_net(self):
-        print("init_create_net")
         opts = self.opts["net"]
         inputs = Input(
             shape=(opts["spec_height"], opts["input_size"],), dtype=tf.float32,
@@ -82,6 +81,13 @@ class CityNetTF2(TF2Model, AudioDLModel):
             learn_log=self.opts["model"].get("learn_log", False),
             do_augmentation=self.opts["model"].get("do_augmentation", False),
         )(inputs)
+        outputs = self.add_layers(x, opts)
+
+        model = Model(inputs, outputs, name=self.NAME)
+        model.summary()
+        return model
+
+    def add_layers(self, inputs, opts):
         # * First block
         x = layers.Conv2D(
             opts.get("num_filters", 128),
@@ -90,7 +96,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
             padding="valid",
             activation=None,
             kernel_regularizer=regularizers.l2(0.001),
-        )(x)
+        )(inputs)
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         # * Second block
         x = layers.Conv2D(
@@ -120,11 +126,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         outputs = layers.Dense(
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)
-        print("end_layers")
-        model = Model(inputs, outputs, name=self.NAME)
-        print("after model")
-        model.summary()
-        return model
+        return outputs
 
     def init_metrics(self):
         """Inits the metrics used during model evaluation. Fills the metrics
