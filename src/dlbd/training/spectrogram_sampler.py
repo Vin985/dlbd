@@ -1,3 +1,4 @@
+import math
 from random import randint
 
 import numpy as np
@@ -171,8 +172,12 @@ class SpectrogramSampler:
         self.opts = {}
         self.opts["do_augmentation"] = opts["model"].get("do_augmentation", False)
         self.opts["learn_log"] = opts["model"].get("learn_log", False)
-        self.opts["hww_x"] = opts["net"]["hww_x"]
-        self.opts["hww_y"] = opts["net"]["hww_y"]
+        # Half-width window for spectrograms
+        self.opts["hww_spec"] = opts["net"].get(
+            "hww_spec", math.ceil(opts["net"]["input_size"] / 2)
+        )
+        # Half-width window for ground truth. Should ideally be the same as spectrograms
+        self.opts["hww_gt"] = opts["net"].get("hww_gt", self.opts["hww_spec"])
         self.opts["batch_size"] = opts["net"]["batch_size"]
         self.opts["overlap"] = opts["model"].get("spectrogram_overlap", 0.75)
         self.opts["random_start"] = opts["model"].get("random_start", False)
@@ -188,7 +193,7 @@ class SpectrogramSampler:
             [type]: [description]
         """
         # must pad X and Y the same amount
-        pad_hww = max(self.opts["hww_x"], self.opts["hww_y"])
+        pad_hww = max(self.opts["hww_spec"], self.opts["hww_gt"])
 
         # * Create a blank spectrogram with same height as spectrograms and length 2 * padding
         blank_spec = np.zeros((X[0].shape[0], 2 * pad_hww))
@@ -213,7 +218,7 @@ class SpectrogramSampler:
         for idx, spec in enumerate(X):
             self.medians[idx] = np.median(spec, axis=1)
 
-        self.dims = (self.specs.shape[0], self.opts["hww_x"] * 2)
+        self.dims = (self.specs.shape[0], self.opts["hww_spec"] * 2)
         # step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
         self.idxs = np.where(self.labels >= 0)[0]
 
@@ -251,7 +256,7 @@ class SpectrogramSampler:
                 which = self.which_spec[loc]
 
                 X[count] = self.specs[
-                    :, (loc - self.opts["hww_x"]) : (loc + self.opts["hww_x"])
+                    :, (loc - self.opts["hww_spec"]) : (loc + self.opts["hww_spec"])
                 ]
 
                 if not self.opts["learn_log"]:
@@ -259,7 +264,7 @@ class SpectrogramSampler:
 
                 # TODO: Change the way labels are decided?
                 y[count] = self.labels[
-                    (loc - self.opts["hww_y"]) : (loc + self.opts["hww_y"])
+                    (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
                 ].max()
 
                 if self.opts["learn_log"]:
