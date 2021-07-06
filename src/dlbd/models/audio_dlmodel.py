@@ -81,7 +81,6 @@ class AudioDLModel(DLModel):
 
     def get_resize_width(self, infos):
         resize_width = -1
-        if self.opts["model"].get("resize_spectrogram", False):
             pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
             resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
         return resize_width

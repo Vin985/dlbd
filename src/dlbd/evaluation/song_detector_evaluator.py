@@ -20,15 +20,8 @@ class SongDetectorEvaluator(Evaluator):
     @staticmethod
     def classify_element(model, spectrogram, info, sampler):
         preds = model.classify((spectrogram, info), sampler)
-        if model.opts["model"].get("resize_spectrogram", False):
-            pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
-            len_in_s = preds.shape[0] / pix_in_sec
-        else:
-            len_in_s = (
-                preds.shape[0]
-                * info["spec_opts"]["hop_length"]
-                / info["spec_opts"]["sr"]
-            )
+        pix_in_sec = model.opts["model"].get("pixels_in_sec", 20)
+        len_in_s = preds.shape[0] / pix_in_sec
         timeseq = np.linspace(0, len_in_s, preds.shape[0])
         res_df = pd.DataFrame(
             {
