@@ -1,16 +1,19 @@
 import tensorflow as tf
-from tensorflow.keras import Input, Model, layers, regularizers
+from tensorflow.keras import layers, regularizers
 
-from .CityNetTF2 import CityNetTF2, NormalizeSpectrograms
+from .CityNetTF2 import CityNetTF2
 
 
 class DLBDDense(CityNetTF2):
     NAME = "DLBD_dense"
 
-    def add_layers(self, inputs, opts):
+    def add_layers(self, inputs):
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
-            (opts["spec_height"] - opts["wiggle_room"], opts["conv_filter_width"],),
+            self.opts.get("num_filters", 128),
+            (
+                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["conv_filter_width"],
+            ),
             bias_initializer=None,
             padding="valid",
             activation=None,
@@ -18,7 +21,7 @@ class DLBDDense(CityNetTF2):
         )(inputs)
         # * Second block
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
+            self.opts.get("num_filters", 128),
             (1, 3),
             bias_initializer=None,
             padding="valid",
@@ -33,7 +36,7 @@ class DLBDDense(CityNetTF2):
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
-            opts["num_dense_units"],
+            self.opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             kernel_regularizer=regularizers.l2(0.001),
@@ -42,7 +45,7 @@ class DLBDDense(CityNetTF2):
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
         x = layers.Dropout(0.5)(x)
         x = layers.Dense(
-            opts["num_dense_units"],
+            self.opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             # kernel_regularizer=regularizers.l2(0.001),
@@ -68,10 +71,13 @@ class DLBDLite(CityNetTF2):
 
     NAME = "DLBD_lite"
 
-    def add_layers(self, inputs, opts):
+    def add_layers(self, inputs):
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
-            (opts["spec_height"] - opts["wiggle_room"], opts["conv_filter_width"],),
+            self.opts.get("num_filters", 128),
+            (
+                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["conv_filter_width"],
+            ),
             bias_initializer=None,
             padding="valid",
             activation=None,
@@ -79,7 +85,7 @@ class DLBDLite(CityNetTF2):
         )(inputs)
         # * Second block
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
+            self.opts.get("num_filters", 128),
             (1, 3),
             bias_initializer=None,
             padding="valid",
@@ -94,7 +100,7 @@ class DLBDLite(CityNetTF2):
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
-            opts["num_dense_units"],
+            self.opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             kernel_regularizer=regularizers.l2(0.001),

@@ -19,7 +19,7 @@ class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
 
     def __init__(self, opts=None):
-        input_size = opts["net"].get("input_size", opts["model"]["pixels_in_sec"])
+        input_size = opts.get("input_size", opts["pixels_in_sec"])
         if input_size % 2:
             common_utils.print_warning(
                 (
@@ -28,15 +28,15 @@ class AudioDLModel(DLModel):
                     + " Consider changing the pixel_per_sec or input_size options in the configuration file"
                 ).format(input_size + 1, input_size)
             )
-            if input_size == opts["model"]["pixels_in_sec"]:
+            if input_size == opts["pixels_in_sec"]:
                 common_utils.print_warning(
                     (
                         "Input size and pixels per seconds were identical, using {} pixels per seconds as well"
                     ).format(input_size + 1)
                 )
             input_size += 1
-            opts["model"]["pixels_in_sec"] = input_size
-        opts["net"]["input_size"] = input_size
+            opts.add_option("pixels_in_sec", input_size)
+        opts.add_option("input_size", input_size)
         super().__init__(opts)
 
     def get_ground_truth(self, data):
@@ -46,14 +46,14 @@ class AudioDLModel(DLModel):
         return data["spectrograms"]
 
     def modify_spectrogram(self, spec, resize_width):
-        spec = np.log(self.opts["model"]["A"] + self.opts["model"]["B"] * spec)
+        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
         if resize_width > 0:
             spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
         return spec
 
     def prepare_data(self, data):
-        if not self.opts["model"]["learn_log"]:
+        if not self.opts["learn_log"]:
             for i, spec in enumerate(data["spectrograms"]):
                 resize_width = self.get_resize_width(data["infos"][i])
 
@@ -62,7 +62,7 @@ class AudioDLModel(DLModel):
                     data["infos"][i]["sample_rate"]
                     / data["infos"][i]["spec_opts"]["hop_length"]
                 )
-                new_pps = self.opts["model"]["pixels_in_sec"]
+                new_pps = self.opts["pixels_in_sec"]
                 if new_pps / original_pps > 2 or new_pps / original_pps < 0.5:
                     common_utils.print_warning(
                         (
@@ -82,7 +82,7 @@ class AudioDLModel(DLModel):
 
     def get_resize_width(self, infos):
         resize_width = -1
-        pix_in_sec = self.opts["model"].get("pixels_in_sec", 20)
+        pix_in_sec = self.opts.get("pixels_in_sec", 20)
         resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
         return resize_width
 

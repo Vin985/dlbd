@@ -170,17 +170,15 @@ class SpectrogramSampler:
 
     def load_options(self, opts):
         self.opts = {}
-        self.opts["do_augmentation"] = opts["model"].get("do_augmentation", False)
-        self.opts["learn_log"] = opts["model"].get("learn_log", False)
+        self.opts["do_augmentation"] = opts.get("do_augmentation", False)
+        self.opts["learn_log"] = opts.get("learn_log", False)
         # Half-width window for spectrograms
-        self.opts["hww_spec"] = opts["net"].get(
-            "hww_spec", math.ceil(opts["net"]["input_size"] / 2)
-        )
+        self.opts["hww_spec"] = opts.get("hww_spec", math.ceil(opts["input_size"] / 2))
         # Half-width window for ground truth. Should ideally be the same as spectrograms
-        self.opts["hww_gt"] = opts["net"].get("hww_gt", self.opts["hww_spec"])
-        self.opts["batch_size"] = opts["net"]["batch_size"]
-        self.opts["overlap"] = opts["model"].get("spectrogram_overlap", 0.75)
-        self.opts["random_start"] = opts["model"].get("random_start", False)
+        self.opts["hww_gt"] = opts.get("hww_gt", self.opts["hww_spec"])
+        self.opts["batch_size"] = opts["batch_size"]
+        self.opts["overlap"] = opts.get("spectrogram_overlap", 0.75)
+        self.opts["random_start"] = opts.get("random_start", False)
 
     def __call__(self, X, y=None):
         """Call the spectrogram sampler

@@ -15,9 +15,9 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
         self.learn_log = learn_log
         self.do_augmentation = do_augmentation
 
-    def build(self, input_shape):
-        # self.non_trainable_weights.append(self.mel_filterbank)
-        super().build(input_shape)
+    # def build(self, input_shape):
+    #     # self.non_trainable_weights.append(self.mel_filterbank)
+    #     super().build(input_shape)
 
     @tf.function  # (input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32)))
     def normalize(self, x):
@@ -73,25 +73,28 @@ class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
     def create_net(self):
-        opts = self.opts["net"]
         inputs = Input(
-            shape=(opts["spec_height"], opts["input_size"],), dtype=tf.float32,
+            shape=(self.opts["spec_height"], self.opts["input_size"],),
+            dtype=tf.float32,
         )
         x = NormalizeSpectrograms(
-            learn_log=self.opts["model"].get("learn_log", False),
-            do_augmentation=self.opts["model"].get("do_augmentation", False),
+            learn_log=self.opts.get("learn_log", False),
+            do_augmentation=self.opts.get("do_augmentation", False),
         )(inputs)
-        outputs = self.add_layers(x, opts)
+        outputs = self.add_layers(x)
 
         model = Model(inputs, outputs, name=self.NAME)
         model.summary()
         return model
 
-    def add_layers(self, inputs, opts):
+    def add_layers(self, inputs):
         # * First block
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
-            (opts["spec_height"] - opts["wiggle_room"], opts["conv_filter_width"],),
+            self.opts.get("num_filters", 128),
+            (
+                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["conv_filter_width"],
+            ),
             bias_initializer=None,
             padding="valid",
             activation=None,
@@ -100,7 +103,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         # * Second block
         x = layers.Conv2D(
-            opts.get("num_filters", 128),
+            self.opts.get("num_filters", 128),
             (1, 3),
             bias_initializer=None,
             padding="valid",
@@ -113,14 +116,14 @@ class CityNetTF2(TF2Model, AudioDLModel):
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
         x = layers.Dense(
-            opts["num_dense_units"],
+            self.opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
             kernel_regularizer=regularizers.l2(0.001),
         )(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
         x = layers.Dense(
-            opts["num_dense_units"], activation=None, bias_initializer=None,
+            self.opts["num_dense_units"], activation=None, bias_initializer=None,
         )(x)
         x = layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
         outputs = layers.Dense(
@@ -158,7 +161,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         train_sampler = SpectrogramSampler(
             self.opts,
             randomise=True,
-            balanced=self.opts["model"].get("training_balanced", True),
+            balanced=self.opts.get("training_balanced", True),
         )
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
@@ -167,7 +170,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
 
     def init_optimizer(self):
         self.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=self.opts["model"]["learning_rate"]
+            learning_rate=self.opts["learning_rate"]
         )
 
     def predict(self, x):

@@ -77,8 +77,7 @@ models:
       # id: "_mel64_hop_512"
       id_prefixes:
         model--from_epoch: "_fe-"
-      model:
-        from_epoch: [10]
+      from_epoch: [10]
   # - name: "CityNetTF2"
   #   id: "resize_spec_bicubic"
   #   package: "dlbd.audio.models.CityNetTF2"
