@@ -9,15 +9,14 @@ class CityNetTF2Dropout(CityNetTF2):
 
     def create_net(self):
         print("init_create_net")
-        opts = self.opts["net"]
         inputs = Input(
             shape=(opts["spec_height"], opts["hww_x"] * 2),
             # batch_size=128,
             dtype=tf.float32,
         )
         x = NormalizeSpectrograms(
-            learn_log=self.opts["model"].get("learn_log", False),
-            do_augmentation=self.opts["model"].get("do_augmentation", False),
+            learn_log=self.opts.get("learn_log", False),
+            do_augmentation=self.opts.get("do_augmentation", False),
         )(inputs)
         # * First block
         x = layers.Conv2D(

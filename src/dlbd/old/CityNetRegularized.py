@@ -17,7 +17,6 @@ class CityNetRegularized(AudioDLModel):
         super().__init__(opts)
 
     def create_net(self):
-        opts = self.opts["net"]
         channels = opts["channels"]
         net = collections.OrderedDict()
         regularizer = slim.l2_regularizer(0.0005)
