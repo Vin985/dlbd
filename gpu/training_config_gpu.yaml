@@ -6,38 +6,33 @@ id: "{databases_options--spectrogram--n_mels}"
 id_prefixes:
   databases_options--spectrogram--n_mels: "_nmels-"
 
-databases: ['citynet']
+databases: ['citynet', "arctic"]
 
 model_dir: '/home/sylvain/data/results/models/'
 
-model:
-  max_epochs: 40
-  # from_epoch: 0
-  epoch_save_step: 5
-  learn_log: 0
-  do_augmentation: 1
-  A: 0.001 # biotic 
-  B: 10.0 #biotic
-  # # A: 0.025 # anthropic
-  # # B: 2.0 # anthropic
-  ensemble_members: 1
-  training_balanced: True
-  resize_spectrogram: True
-  pixels_in_sec: 20
-  learning_rate: 0.001
+max_epochs: 50
+epoch_save_step: 5
+learn_log: 0
+do_augmentation: 1
+A: 0.001 # biotic 
+B: 10.0 #biotic
+ensemble_members: 1
+training_balanced: True
+resize_spectrogram: True
+pixels_in_sec: 20
+learning_rate: 0.001
 
-net:
-  batch_size: 128
-  do_batch_norm: 1
-  # hww_x: 10
-  # hww_y: 10
-  spec_height: 32
-  channels: 4
-  num_filters: 128
-  num_dense_units: 512
-  conv_filter_width: 4
-  wiggle_room: 5
-  dropout: 0.5
+batch_size: 128
+do_batch_norm: 1
+# hww_x: 10
+# hww_y: 10
+spec_height: 32
+channels: 4
+num_filters: 128
+num_dense_units: 512
+conv_filter_width: 4
+wiggle_room: 5
+dropout: 0.5
 
 logs:
   log_dir: "/home/sylvain/logs/gradient_tape/"
@@ -54,16 +49,41 @@ databases_options:
 scenarios:
   # - name: "CBNP_0"
   #   class: "dlbd.models.CityNetOriginal.CityNetOriginal"
-  - name: "CBNTF2_0_no_resize"
-    class: "dlbd.models.CityNetTF2.CityNetTF2"
-    model:
-      resize_spectrogram: False
-  - name: "CBNTF2_0_resized"
-    class: "dlbd.models.CityNetTF2.CityNetTF2"
-    model:
-      resize_spectrogram: True
-  - name: "DLBDL_0"
-    class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDD_0"
+  # - name: "CBNTF2_0_no_resize"
+  #  class: "dlbd.models.CityNetTF2.CityNetTF2"
+  #  model:
+  #    resize_spectrogram: False
+  #- name: "CBNTF2_0_resized"
+  #  class: "dlbd.models.CityNetTF2.CityNetTF2"
+  #  model:
+  #    resize_spectrogram: True
+  #  databases: ["citynet"]
+  # - name: "DLBDL_0"
+  #  class: "dlbd.models.dlbd.DLBDLite"
+  #  databases: ["citynet"]
+  # - name: "DLBDD_0"
+  #  class: "dlbd.models.dlbd.DLBDDense"
+  #  databases: ["citynet"]
+  #
+  # - name: "ArcticBNTF2"
+  #   class: "dlbd.models.CityNetTF2.CityNetTF2"
+  # - name: "DLBDL"
+  #   class: "dlbd.models.dlbd.DLBDLite"
+  # - name: "DLBDD"
+  #   class: "dlbd.models.dlbd.DLBDDense"
+
+  - name: "DLBDD_1"
     class: "dlbd.models.dlbd.DLBDDense"
+    databases: ["arctic"]
+    use_weights:
+      name: "DLBDD_0_nmels-32"
+  - name: "DLBDL_1"
+    class: "dlbd.models.dlbd.DLBDLite"
+    databases: ["arctic"]
+    use_weights:
+      version: 2
+      name: "DLBDL_0_nmels-32"
+
+
+
 
