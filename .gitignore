@@ -144,3 +144,4 @@ src/training_data_config_test.yaml
 src/training_config_gpu.yaml
 src/training_data_config_gpu.yaml
 file_size.sh
+small_overlap.csv
