@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow.keras as keras
 from mouffet.models.TF2Model import TF2Model
-from tensorflow.keras import Input, Model, layers, regularizers
 
 from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
@@ -72,24 +72,73 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
-    def create_net(self):
-        inputs = Input(
+    # def create_net(self):
+    #     inputs = keras.Input(
+    #         shape=(self.opts["spec_height"], self.opts["input_size"],),
+    #         dtype=tf.float32,
+    #     )
+    #     x = NormalizeSpectrograms(
+    #         learn_log=self.opts.get("learn_log", False),
+    #         do_augmentation=self.opts.get("do_augmentation", False),
+    #     )(inputs)
+    #     outputs = self.add_layers(x)
+
+    #     model = keras.Model(inputs, outputs, name=self.NAME)
+    #     model.summary()
+    #     return model
+
+    def create_model(self):
+        # return self.create_net()
+
+        self.inputs = keras.Input(
             shape=(self.opts["spec_height"], self.opts["input_size"],),
             dtype=tf.float32,
         )
-        x = NormalizeSpectrograms(
-            learn_log=self.opts.get("learn_log", False),
-            do_augmentation=self.opts.get("do_augmentation", False),
-        )(inputs)
-        outputs = self.add_layers(x)
+        if self.opts.get("transfer_learning", False):
+            # * Load weights in training mode: do transfer learning and freeze base layers
+            base_model = keras.Model(
+                self.inputs, self.get_base_layers(), name=self.NAME + "_base"
+            )
+            base_model.trainable = False
+            x = base_model(self.inputs, training=False)
 
-        model = Model(inputs, outputs, name=self.NAME)
+        else:
+            x = self.get_top_layers()
+
+        model = keras.Model(self.inputs, x, name=self.NAME)
         model.summary()
+
         return model
 
-    def add_layers(self, inputs):
+    def init_model(self):
+        self.model = self.create_model()
+        if "weights_opts" in self.opts:
+            self.load_weights()
+
+    def load_weights(self):
+        super().load_weights()
+
+        if self.opts.get("transfer_learning", False):
+            print("adding layers for transfer learning")
+            model = self.get_top_layers(self.model(self.inputs))
+            model = keras.Model(self.inputs, model, name=self.NAME)
+            model.summary()
+            self.model = model
+
+    def get_preprocessing_layers(self, x=None):
+        if not x:
+            x = self.inputs
+        return NormalizeSpectrograms(
+            name="Normalize_spectrograms",
+            learn_log=self.opts.get("learn_log", False),
+            do_augmentation=self.opts.get("do_augmentation", False),
+        )(x)
+
+    def get_base_layers(self, x=None):
+        if not x:
+            x = self.get_preprocessing_layers()
         # * First block
-        x = layers.Conv2D(
+        x = keras.layers.Conv2D(
             self.opts.get("num_filters", 128),
             (
                 self.opts["spec_height"] - self.opts["wiggle_room"],
@@ -98,38 +147,43 @@ class CityNetTF2(TF2Model, AudioDLModel):
             bias_initializer=None,
             padding="valid",
             activation=None,
-            kernel_regularizer=regularizers.l2(0.001),
-        )(inputs)
-        x = layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
+            kernel_regularizer=keras.regularizers.l2(0.001),
+        )(x)
+        x = keras.layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
         # * Second block
-        x = layers.Conv2D(
+        x = keras.layers.Conv2D(
             self.opts.get("num_filters", 128),
             (1, 3),
             bias_initializer=None,
             padding="valid",
             activation=None,
-            kernel_regularizer=regularizers.l2(0.001),
+            kernel_regularizer=keras.regularizers.l2(0.001),
         )(x)
-        x = layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
+        x = keras.layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
         W = x.shape[2]
-        x = layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
+        x = keras.layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
         x = tf.transpose(x, (0, 3, 2, 1))
-        x = layers.Flatten(name="pool2_flat")(x)
-        x = layers.Dense(
+        x = keras.layers.Flatten(name="pool2_flat")(x)
+        x = keras.layers.Dense(
             self.opts["num_dense_units"],
             activation=None,
             bias_initializer=None,
-            kernel_regularizer=regularizers.l2(0.001),
+            kernel_regularizer=keras.regularizers.l2(0.001),
         )(x)
-        x = layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
-        x = layers.Dense(
+        x = keras.layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
+        x = keras.layers.Dense(
             self.opts["num_dense_units"], activation=None, bias_initializer=None,
         )(x)
-        x = layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
-        outputs = layers.Dense(
+        x = keras.layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
+        return x
+
+    def get_top_layers(self, x=None):
+        if not x:
+            x = self.get_base_layers()
+        x = keras.layers.Dense(
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)
-        return outputs
+        return x
 
     def init_metrics(self):
         """Inits the metrics used during model evaluation. Fills the metrics
