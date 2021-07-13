@@ -78,7 +78,12 @@ class StandardDetector(Detector):
                         "end": end,
                     }
                 )
-        events = pd.DataFrame(events)
+        if events:
+            events = pd.DataFrame(events)
+        else:
+            events = pd.DataFrame(
+                columns=["event_index", "recording_id", "start", "end"]
+            )
         return events
 
     def get_events(self, predictions, options, *args, **kwargs):
@@ -153,7 +158,10 @@ class StandardDetector(Detector):
         match_df = self.get_overlap_duration(match_df, "event")
         match_df = self.get_overlap_duration(match_df, "tag")
 
-        events.loc[:, "matched"] = 0
+        if not events.empty:
+            events.loc[:, "matched"] = 0
+        else:
+            events = events.assign(matched=None)
         tags.loc[:, "matched"] = 0
 
         if not match_df.empty:
@@ -167,7 +175,8 @@ class StandardDetector(Detector):
             true_positives_id = res.event_id.unique()
             matched_tags_id = res.tag_id.unique()
 
-            events.loc[events.event_id.isin(true_positives_id), "matched"] = 1
+            if not events.empty:
+                events.loc[events.event_id.isin(true_positives_id), "matched"] = 1
             tags.loc[tags.tag_id.isin(matched_tags_id), "matched"] = 1
 
         return events, tags, match_df
@@ -476,7 +485,7 @@ class StandardDetector(Detector):
         n_tags_matched = tags.matched.sum()
         n_tags_unmatched = n_tags - n_tags_matched
 
-        precision = round(n_true_positives / n_events, 3)
+        precision = round(n_true_positives / n_events, 3) if n_events else 0
         recall = round(n_tags_matched / n_tags, 3) if n_tags else 0
 
         if precision + recall:
