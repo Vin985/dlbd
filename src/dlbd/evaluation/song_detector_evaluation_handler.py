@@ -1,20 +1,30 @@
 import numpy as np
 import pandas as pd
-from mouffet.evaluation.evaluator import Evaluator
+from mouffet.evaluation.evaluation_handler import EvaluationHandler
 
-from ..training.spectrogram_sampler import SpectrogramSampler
-from .detectors.standard_detector import StandardDetector
-from .detectors.subsampling_detector import SubsamplingDetector
 from ..data.audio_data_handler import AudioDataHandler
+from ..training.spectrogram_sampler import SpectrogramSampler
+from .evaluators.standard_evaluator import StandardEvaluator
+from .evaluators.subsampling_evaluator import SubsamplingEvaluator
 
 
-class SongDetectorEvaluator(Evaluator):
+class SongDetectorEvaluationHandler(EvaluationHandler):
 
     DATA_HANDLER_CLASS = AudioDataHandler
 
-    DETECTORS = {
-        "standard": StandardDetector(),
-        "subsampling": SubsamplingDetector(),
+    EVENTS_COLUMNS = {
+        "index": "event_id",
+        "event_index": "event_index",
+        "recording_id": "recording_id",
+        "start": "event_start",
+        "end": "event_end",
+        "event_duration": "event_duration",
+    }
+    TAGS_COLUMNS_RENAME = {"id": "tag_id"}
+
+    EVALUATORS = {
+        "standard": StandardEvaluator(),
+        "subsampling": SubsamplingEvaluator(),
     }
 
     @staticmethod

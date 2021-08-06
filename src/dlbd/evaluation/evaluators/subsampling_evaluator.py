@@ -5,11 +5,11 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-import plotnine
-from mouffet.evaluation.detector import Detector
+from plotnine import ggplot, aes, geom_line, save_as_pdf_pages
+from .song_detector_evaluator import SongDetectorEvaluator
 
 
-class SubsamplingDetector(Detector):
+class SubsamplingEvaluator(SongDetectorEvaluator):
 
     REQUIRES = ["tags_df"]
 
@@ -215,7 +215,7 @@ class SubsamplingDetector(Detector):
         plots = matches.groupby("recording_id").apply(
             self.recording_plot, options, tags_presence, step
         )
-        plotnine.save_as_pdf_pages(plots, "test_save_plots_citynet.pdf")
+        save_as_pdf_pages(plots, "test_save_plots_citynet.pdf")
 
     def get_stats(self, df, tags):
         # TODO: make stats coherent between no resampling and resampling: use tag index in the same way

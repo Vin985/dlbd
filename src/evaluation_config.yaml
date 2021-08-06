@@ -12,11 +12,11 @@ evaluation_dir: "results/evaluation"
 ## Detectors ##
 ###############
 
-detectors_options:
+evaluators_options:
   do_PR_curve: False
   plots: "overlap_duration_bar; detected_tags"
 
-detectors: 
+evaluators: 
     - type: "standard"
       activity_threshold: 0.92
       min_duration: 0.4

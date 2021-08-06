@@ -11,7 +11,7 @@ evaluation_dir: "/home/sylvain/data/results/evaluation"
 ###############
 ## Detectors ##
 ###############
-detectors: 
+evaluators: 
   - type: "standard"
     min_activity: 0.95
     min_duration: 0.3

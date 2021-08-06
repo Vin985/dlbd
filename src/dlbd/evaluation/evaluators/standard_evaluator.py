@@ -1,5 +1,4 @@
 import pandas as pd
-from mouffet.evaluation.detector import Detector
 from plotnine import (
     aes,
     element_text,
@@ -15,10 +14,11 @@ from plotnine import (
     ylab,
 )
 from plotnine.positions.position_dodge import position_dodge
-import numpy as np
+
+from .song_detector_evaluator import SongDetectorEvaluator
 
 
-class StandardDetector(Detector):
+class StandardEvaluator(SongDetectorEvaluator):
 
     REQUIRES = ["tags_df"]
 
