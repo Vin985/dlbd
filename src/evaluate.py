@@ -4,6 +4,10 @@ from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
 
+import pandas as pd
+
+
+pd.options.mode.chained_assignment = "raise"
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

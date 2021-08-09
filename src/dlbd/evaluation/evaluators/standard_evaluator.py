@@ -339,7 +339,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             if tag not in matched_tags:
                 row = tags_summary.loc[
                     (tags_summary.matched == 0) & (tags_summary.tag == tag)
-                ]
+                ].copy()
                 row.prop_matched = 0
                 unmatched.append(row)
         unmatched.append(matched)
