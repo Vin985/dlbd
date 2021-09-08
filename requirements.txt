@@ -1,4 +1,4 @@
-numpy
+numpy==1.19.2
 pandas
 librosa
 tqdm
@@ -7,4 +7,4 @@ tensorflow
 pyyaml
 pillow
 plotnine
-pip install -U git+https://github.com/vin985/mouffet.git
+# pip install -U git+https://github.com/vin985/mouffet.git
