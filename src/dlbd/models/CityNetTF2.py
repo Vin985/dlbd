@@ -31,7 +31,8 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
             two = (one - row_mean) / row_std
 
             three = tf.math.divide(
-                tf.math.subtract(x, tf.math.reduce_mean(x)), tf.math.reduce_std(x),
+                tf.math.subtract(x, tf.math.reduce_mean(x)),
+                tf.math.reduce_std(x),
             )
             four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
             spec = tf.stack([one, two, three, four])
@@ -91,7 +92,10 @@ class CityNetTF2(TF2Model, AudioDLModel):
         # return self.create_net()
 
         self.inputs = keras.Input(
-            shape=(self.opts["spec_height"], self.opts["input_size"],),
+            shape=(
+                self.opts["spec_height"],
+                self.opts["input_size"],
+            ),
             dtype=tf.float32,
         )
         if self.opts.get("transfer_learning", False):
@@ -149,7 +153,10 @@ class CityNetTF2(TF2Model, AudioDLModel):
             activation=None,
             kernel_regularizer=keras.regularizers.l2(0.001),
         )(x)
-        x = keras.layers.LeakyReLU(alpha=1 / 3, name="conv1_1",)(x)
+        x = keras.layers.LeakyReLU(
+            alpha=1 / 3,
+            name="conv1_1",
+        )(x)
         # * Second block
         x = keras.layers.Conv2D(
             self.opts.get("num_filters", 128),
@@ -159,7 +166,10 @@ class CityNetTF2(TF2Model, AudioDLModel):
             activation=None,
             kernel_regularizer=keras.regularizers.l2(0.001),
         )(x)
-        x = keras.layers.LeakyReLU(alpha=1 / 3, name="conv1_2",)(x)
+        x = keras.layers.LeakyReLU(
+            alpha=1 / 3,
+            name="conv1_2",
+        )(x)
         W = x.shape[2]
         x = keras.layers.MaxPool2D(pool_size=(1, W), strides=(1, 1), name="pool2")(x)
         x = tf.transpose(x, (0, 3, 2, 1))
@@ -172,7 +182,9 @@ class CityNetTF2(TF2Model, AudioDLModel):
         )(x)
         x = keras.layers.LeakyReLU(alpha=1 / 3, name="fc6")(x)
         x = keras.layers.Dense(
-            self.opts["num_dense_units"], activation=None, bias_initializer=None,
+            self.opts["num_dense_units"],
+            activation=None,
+            bias_initializer=None,
         )(x)
         x = keras.layers.LeakyReLU(alpha=1 / 3, name="fc7")(x)
         return x
@@ -222,10 +234,11 @@ class CityNetTF2(TF2Model, AudioDLModel):
         )
         return train_sampler, validation_sampler
 
-    def init_optimizer(self):
-        self.optimizer = tf.keras.optimizers.Adam(
-            learning_rate=self.opts["learning_rate"]
-        )
+    def init_optimizer(self, learning_rate):
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
+
+    def set_fine_tuning(self):
+        pass
