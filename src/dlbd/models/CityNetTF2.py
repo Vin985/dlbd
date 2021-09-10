@@ -240,5 +240,16 @@ class CityNetTF2(TF2Model, AudioDLModel):
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
 
-    def set_fine_tuning(self):
-        pass
+    def set_fine_tuning(self, layers=None, count=1):
+        start_at = self.opts.get("fine_tuning", {}).get("start_at", 0)
+        self.model.trainable = True
+        layers = layers if layers else self.model.layers
+
+        for layer in layers:
+            if isinstance(layer, keras.Model):
+                count = self.set_fine_tuning(layer.layers, count)
+            elif isinstance(layer, keras.layers.BatchNormalization) or count < start_at:
+                layer.trainable = False
+            count += 1
+
+        return count
