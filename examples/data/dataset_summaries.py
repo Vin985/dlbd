@@ -1,3 +1,5 @@
+#%%
+
 from pathlib import Path
 
 import pandas as pd
@@ -15,13 +17,18 @@ dh = AudioDataHandler(opts)
 dh.check_datasets()
 res = dh.get_summaries()
 
+#%%
+
 # print(res)
 
 agg_databases = []
 agg_classes = []
+classes_list = {}
+all_classes = []
 for key, val in res.items():
+    classes_list[key] = []
     for key2, val2 in val.items():
-        classes = val2.pop("classes")
+        classes = val2.pop("classes_summary")
         classes["database"] = key
         classes["type"] = key2
         agg_classes.append(classes)
@@ -29,10 +36,27 @@ for key, val in res.items():
         val2["database"] = key
         val2["type"] = key2
         agg_databases.append(val2)
+        classes_list[key] += val2["classes_list"]
+        all_classes += val2["classes_list"]
+
+    classes_list[key] = list(set(classes_list[key]))
+
+all_classes = list(set(all_classes))
+all_classes.sort()
+
+print(all_classes)
+
+pd.DataFrame({"class_type": ["biotic"] * len(all_classes), "tag": all_classes}).to_csv(
+    "generated_classes.csv", index=False
+)
+
 
 classes_df = pd.concat(agg_classes)
 databases_df = pd.DataFrame(agg_databases)
 
-print(classes_df)
-print(databases_df)
 
+# print(classes_df)
+# print(databases_df)
+
+
+# print(classes_df.tag.unique())

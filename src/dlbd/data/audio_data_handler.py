@@ -110,9 +110,13 @@ class AudioDataHandler(DataHandler):
         )
         summary.columns = pd.Index(join_tuple(i, "_") for i in summary.columns)
         summary = summary.reset_index()
+        df.all_tags = df.tag + "," + df.related
+        classes_list = list(filter(None, set(df.all_tags.str.split(",").sum())))
+
         tmp_res = {
             "n_files": len(dataset["spectrograms"]),
             "n_classes": len(df.tag.unique()),
-            "classes": summary,
+            "classes_summary": summary,
+            "classes_list": classes_list,
         }
         return tmp_res
