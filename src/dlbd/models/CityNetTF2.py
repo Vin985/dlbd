@@ -73,24 +73,7 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
-    # def create_net(self):
-    #     inputs = keras.Input(
-    #         shape=(self.opts["spec_height"], self.opts["input_size"],),
-    #         dtype=tf.float32,
-    #     )
-    #     x = NormalizeSpectrograms(
-    #         learn_log=self.opts.get("learn_log", False),
-    #         do_augmentation=self.opts.get("do_augmentation", False),
-    #     )(inputs)
-    #     outputs = self.add_layers(x)
-
-    #     model = keras.Model(inputs, outputs, name=self.NAME)
-    #     model.summary()
-    #     return model
-
     def create_model(self):
-        # return self.create_net()
-
         self.inputs = keras.Input(
             shape=(
                 self.opts["spec_height"],
@@ -113,11 +96,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
         model.summary()
 
         return model
-
-    def init_model(self):
-        self.model = self.create_model()
-        if "weights_opts" in self.opts:
-            self.load_weights()
 
     def load_weights(self):
         super().load_weights()
