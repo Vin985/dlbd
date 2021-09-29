@@ -213,7 +213,10 @@ class CityNetTF2(TF2Model, AudioDLModel):
         return train_sampler, validation_sampler
 
     def init_optimizer(self, learning_rate):
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        if not self.optimizer:
+            tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        else:
+            self.optimizer.lr.assign(learning_rate)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
