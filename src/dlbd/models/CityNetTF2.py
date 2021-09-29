@@ -214,7 +214,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
 
     def init_optimizer(self, learning_rate):
         if not self.optimizer:
-            tf.keras.optimizers.Adam(learning_rate=learning_rate)
+            self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         else:
             self.optimizer.lr.assign(learning_rate)
 
