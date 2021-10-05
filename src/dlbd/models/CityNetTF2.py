@@ -81,7 +81,9 @@ class CityNetTF2(TF2Model, AudioDLModel):
             ),
             dtype=tf.float32,
         )
-        if self.opts.get("transfer_learning", False):
+        if not self.opts.get("inference", False) and self.opts.get(
+            "transfer_learning", False
+        ):
             # * Load weights in training mode: do transfer learning and freeze base layers
             base_model = keras.Model(
                 self.inputs, self.get_base_layers(), name=self.NAME + "_base"
