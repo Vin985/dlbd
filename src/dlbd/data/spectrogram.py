@@ -42,10 +42,14 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
         spec = spec.astype(np.float32)
 
     pcen = spec_opts.get("pcen", {})
+
     if pcen:
         pcen_opts = common_utils.deep_dict_update(DEFAULT_OPTS["pcen"], pcen, copy=True)
         opts["pcen"] = pcen_opts
         spec = librosa.pcen(spec * (2 ** 31), **pcen_opts)
+
+    if spec_opts.get("to_db", False):
+        spec = librosa.amplitude_to_db(spec, ref=np.max)
 
     return spec, opts
 
