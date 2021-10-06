@@ -19,7 +19,9 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
     #     # self.non_trainable_weights.append(self.mel_filterbank)
     #     super().build(input_shape)
 
-    @tf.function  # (input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32)))
+    @tf.function(
+        experimental_relax_shapes=True
+    )  # (input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32)))
     def normalize(self, x):
         print("Tracing with:", x.shape)
         one = x
@@ -44,11 +46,11 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
             else:
                 spec = tf.math.multiply(spec, 1.0 + np.random.randn(1, 1, 1) * 0.1)
                 spec = tf.add(spec, np.random.randn(1, 1, 1) * 0.1)
-                # if np.random.rand() > 0.9:
-                #     print("in random")
-                #     spec = tf.add(
-                #         spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
-                #     )
+                if np.random.rand() > 0.9:
+                    print("in random")
+                    spec = tf.add(
+                        spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
+                    )
         spec = tf.transpose(spec, perm=[1, 2, 0])
         return spec
 
