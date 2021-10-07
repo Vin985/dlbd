@@ -9,6 +9,7 @@ from pathlib import Path
 import librosa
 import numpy as np
 import pandas as pd
+import soundfile
 from mouffet.utils.file import ensure_path_exists, list_files, list_folder
 
 
@@ -61,7 +62,7 @@ def generate_mix(audios, file_df, opts):
     tags = np.random.permutation(file_df.id)
     # Index of used file
     idx = 0
-    file_count = 1
+    file_count = opts.get("start_file_count", 1)
     sr = opts.get("sr", 16000)
     duration = opts.get("duration", 30)
     nframes = sr * duration
@@ -124,8 +125,10 @@ def generate_mix(audios, file_df, opts):
             file_name = Path(opts.get("dest_dir", ".")) / "mix_{}.wav".format(
                 file_count
             )
-            librosa.output.write_wav(
-                file_name, generated, opts.get("sr", 16000),
+            soundfile.write(
+                file_name,
+                generated,
+                opts.get("sr", 16000),
             )
             pd.DataFrame(tag_infos).to_csv(
                 Path(opts.get("dest_dir", ".")) / "mix_{}_tags.csv".format(file_count)
@@ -138,6 +141,7 @@ def generate_mix(audios, file_df, opts):
                 pickle.dump(labels, f, -1)
             print("Generated file {} in {}s.".format(file_name, time.time() - tic))
             file_count += 1
+        idx = 0
 
 
 #%%
@@ -149,11 +153,12 @@ opts = {
     "class:overlap": 0.3,
     "max_filled": 0.3,
     "allow_overlap": False,
-    "dest_dir": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS",
+    "dest_dir": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS/2",
     "src_dir": "/home/vin/Doctorat/data/dl_training/raw/NABS",
-    "n_iter": 1,
+    "n_iter": 10,
     "extensions": [".wav", ".WAV"],
     "recursive": True,
+    "start_file_count": 697,
 }
 
 file_list = list_files(
@@ -174,51 +179,3 @@ audios = load_audios(file_list, opts)
 
 
 generate_mix(audios, file_df, opts)
-
-#%%
-
-# overlap = np.zeros(opts["sr"] * opts["duration"])
-# full = False
-
-# tags = file_df.id.sample(1000, replace=False).tolist()
-
-
-# generated = np.zeros(opts["sr"] * opts["duration"])
-# labels = np.zeros(opts["sr"] * opts["duration"])
-# overlap = np.zeros(opts["sr"] * opts["duration"])
-
-
-# full = False
-# noisy = False
-# start_pos = np.random.choice(range(0, generated.shape[0]), 1000)
-# tags = file_df.id.sample(1000, replace=False).tolist()
-
-
-# idx = 0
-# nframes = opts["sr"] * opts["duration"]
-# max_filled = random.uniform(0, opts["max_filled"])
-
-# for start in start_pos:
-#     audio = audios[tags[idx]]
-#     if not noisy:
-#         noisy = True
-#         snr = random.uniform(20, 50)
-#         noise = get_white_noise(audio, snr, len(generated))
-#         generated += noise
-
-#     end = min(start + len(audio), len(generated) - 1)
-
-#     if not opts["allow_overlap"] and labels[start] == 1 or labels[end] == 1:
-#         continue
-#     dur = min(end - start, len(audio))
-#     generated[start:end] += audio[0:dur]
-#     labels[start:end] = 1
-#     prop_filled = sum(labels) / nframes
-#     print(prop_filled)
-#     idx += 1
-#     if prop_filled > opts["max_filled"]:
-#         break
-
-# librosa.output.write_wav("test_generated.wav", generated, opts["sr"])
-
-#%%
