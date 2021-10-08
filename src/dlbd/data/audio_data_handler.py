@@ -38,6 +38,7 @@ class AudioDataHandler(DataHandler):
                 spec_opts["type"],
                 str(spec_opts["n_mels"]),
                 str(spec_opts["n_fft"]),
+                str(spec_opts["window"]),
                 str(spec_opts["hop_length"]),
             ]
         )
