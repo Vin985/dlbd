@@ -9,6 +9,9 @@ dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 
 use_subfolders: ["spectrogram"]
+subfolders:
+  - type: spectrogram
+    options: ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
 
 data_extensions:
   - ".wav"
@@ -79,7 +82,7 @@ databases:
         type: nips4b
     - name: 'NABS'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/NABS'
-      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS'
+      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS/2'
       tags:
         with_data: True
         suffix: "_tags.csv"
