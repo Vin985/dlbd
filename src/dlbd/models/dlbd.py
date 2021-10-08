@@ -14,7 +14,7 @@ class DLBDDense(CityNetTF2):
         x = layers.Conv2D(
             self.opts.get("num_filters", 128),
             (
-                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["input_height"] - self.opts["wiggle_room"],
                 self.opts["conv_filter_width"],
             ),
             bias_initializer=None,
@@ -86,7 +86,7 @@ class DLBDLite(CityNetTF2):
         x = layers.Conv2D(
             self.opts.get("num_filters", 128),
             (
-                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["input_height"] - self.opts["wiggle_room"],
                 self.opts["conv_filter_width"],
             ),
             bias_initializer=None,

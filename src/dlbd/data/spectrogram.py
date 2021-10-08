@@ -33,7 +33,7 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
 
     spec = librosa.stft(wav, **opts)
 
-    if spec_opts.get("type", "mel") == "mel":
+    if spec_opts.get("type", DEFAULT_OPTS["type"]) == "mel":
         opts.update(
             {
                 "n_mels": spec_opts.get("n_mels", DEFAULT_OPTS["n_mels"]),
@@ -42,7 +42,6 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
         )
         spec = librosa.feature.melspectrogram(S=np.abs(spec) ** 2, **opts)
         spec = spec.astype(np.float32)
-
     pcen = spec_opts.get("pcen", {})
 
     if pcen:
@@ -53,6 +52,7 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
     if spec_opts.get("to_db", False):
         spec = librosa.amplitude_to_db(spec, ref=np.max)
 
+    opts["type"] = spec_opts.get("type", DEFAULT_OPTS["type"])
     return spec, opts
 
 

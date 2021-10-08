@@ -78,8 +78,8 @@ class CityNetTF2(TF2Model, AudioDLModel):
     def create_model(self):
         self.inputs = keras.Input(
             shape=(
-                self.opts["spec_height"],
-                self.opts["input_size"],
+                self.opts["input_height"],
+                self.opts["input_width"],
             ),
             dtype=tf.float32,
         )
@@ -127,7 +127,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         x = keras.layers.Conv2D(
             self.opts.get("num_filters", 128),
             (
-                self.opts["spec_height"] - self.opts["wiggle_room"],
+                self.opts["input_height"] - self.opts["wiggle_room"],
                 self.opts["conv_filter_width"],
             ),
             bias_initializer=None,

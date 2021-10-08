@@ -7,7 +7,11 @@ from mouffet.training import minibatch_generators as mbg
 
 class SpectrogramSampler:
     def __init__(
-        self, opts, randomise=False, seed=None, balanced=True,
+        self,
+        opts,
+        randomise=False,
+        seed=None,
+        balanced=True,
     ):
         self.load_options(opts)
         self.opts["seed"] = seed
@@ -25,7 +29,7 @@ class SpectrogramSampler:
         self.opts["do_augmentation"] = opts.get("do_augmentation", False)
         self.opts["learn_log"] = opts.get("learn_log", False)
         # Half-width window for spectrograms
-        self.opts["hww_spec"] = opts.get("hww_spec", math.ceil(opts["input_size"] / 2))
+        self.opts["hww_spec"] = opts.get("hww_spec", math.ceil(opts["input_width"] / 2))
         # Half-width window for ground truth. Should ideally be the same as spectrograms
         self.opts["hww_gt"] = opts.get("hww_gt", self.opts["hww_spec"])
         self.opts["batch_size"] = opts["batch_size"]

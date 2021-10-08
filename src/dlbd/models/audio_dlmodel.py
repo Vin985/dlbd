@@ -20,24 +20,24 @@ class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
 
     def __init__(self, opts=None):
-        input_size = opts.get("input_size", opts["pixels_in_sec"])
-        if input_size % 2:
+        input_width = opts.get("input_width", opts["pixels_in_sec"])
+        if input_width % 2:
             common_utils.print_warning(
                 (
                     "Network input size is odd. For performance reasons,"
-                    + " input_size should be even. {} will be used as input size instead of {}."
-                    + " Consider changing the pixel_per_sec or input_size options in the configuration file"
-                ).format(input_size + 1, input_size)
+                    + " input_width should be even. {} will be used as input size instead of {}."
+                    + " Consider changing the pixel_per_sec or input_width options in the configuration file"
+                ).format(input_width + 1, input_width)
             )
-            if input_size == opts["pixels_in_sec"]:
+            if input_width == opts["pixels_in_sec"]:
                 common_utils.print_warning(
                     (
                         "Input size and pixels per seconds were identical, using {} pixels per seconds as well"
-                    ).format(input_size + 1)
+                    ).format(input_width + 1)
                 )
-            input_size += 1
-            opts.add_option("pixels_in_sec", input_size)
-        opts.add_option("input_size", input_size)
+            input_width += 1
+            opts.add_option("pixels_in_sec", input_width)
+        opts.add_option("input_width", input_width)
         super().__init__(opts)
 
     def get_ground_truth(self, data):
@@ -57,6 +57,15 @@ class AudioDLModel(DLModel):
         if not self.opts["learn_log"]:
             for i, spec in enumerate(data["spectrograms"]):
                 resize_width = self.get_resize_width(data["infos"][i])
+
+                if (
+                    data["infos"][i]["spec_opts"]["type"] == "mel"
+                    and self.opts.get("input_height", -1)
+                    != data["infos"][i]["spec_opts"]["n_mels"]
+                ):
+                    self.opts.add_option(
+                        "input_height", data["infos"][i]["spec_opts"]["n_mels"]
+                    )
 
                 # * Issue a warning if the number of pixels desired is too far from the original size
                 original_pps = (
