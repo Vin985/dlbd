@@ -90,6 +90,9 @@ databases:
           tag: "tag"
           start: "tag_start"
           end: "tag_end"
+      split:
+        validation: 0.2
+        test: 0.2
       
 
     
