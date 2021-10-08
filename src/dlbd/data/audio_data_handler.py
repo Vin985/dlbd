@@ -28,20 +28,30 @@ class AudioDataHandler(DataHandler):
 
     SPLIT_FUNCS = {"arctic": split_folder, "citynet": citynet_split}
 
-    def get_spectrogram_subfolder_path(self, database):
-        return self.get_spec_subfolder(database.spectrogram)
+    def get_spectrogram_subfolder_path(self, database, opts):
+        return self.get_spec_subfolder(database.spectrogram, opts)
 
-    def get_spec_subfolder(self, spec_opts):
-        spec_folder = "_".join(
-            [
-                str(spec_opts.get("sample_rate", "original")),
-                spec_opts["type"],
-                str(spec_opts["n_mels"]),
-                str(spec_opts["n_fft"]),
-                str(spec_opts["window"]),
-                str(spec_opts["hop_length"]),
-            ]
+    @staticmethod
+    def get_subfolder_option_value(opt, opts, default, prefixes):
+        return prefixes.get(opt, "") + str(opts.get(opt, default[opt]))
+
+    def get_spec_subfolder(self, spec_opts, folder_opts):
+
+        opts = folder_opts.get(
+            "options", ["sample_rate", "type", "win_length", "hop_length"]
         )
+        prefixes = folder_opts.get("prefixes", {})
+        tmp = []
+        for opt in opts:
+            prefix = str(prefixes.get(opt, ""))
+            value = str(spec_opts.get(opt, spectrogram.DEFAULT_OPTS[opt]))
+            if opt == "type":
+                if value == "mel":
+                    value += str(spec_opts.get("n_mels", spectrogram.DEFAULT_OPTS[opt]))
+
+            tmp.append(prefix + value)
+
+        spec_folder = "_".join(tmp)
         return spec_folder
 
     def merge_datasets(self, datasets):
