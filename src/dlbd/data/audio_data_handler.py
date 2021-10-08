@@ -38,7 +38,7 @@ class AudioDataHandler(DataHandler):
     def get_spec_subfolder(self, spec_opts, folder_opts):
 
         opts = folder_opts.get(
-            "options", ["sample_rate", "type", "win_length", "hop_length"]
+            "options", ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
         )
         prefixes = folder_opts.get("prefixes", {})
         tmp = []

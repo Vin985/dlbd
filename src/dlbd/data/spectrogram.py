@@ -7,10 +7,12 @@ from PIL import Image
 from numpy.lib.function_base import copy
 
 DEFAULT_OPTS = {
+    "sample_rate": "original",
     "n_fft": 2048,
     "hop_length": None,
     "n_mels": 32,
     "window": "hann",
+    "win_length": None,
     "pcen": {
         "gain": 0.8,
         "bias": 10,
