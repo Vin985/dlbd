@@ -53,7 +53,7 @@ def rename_columns(df, columns):
 
 def filter_classes(tag_df, classes):
     """Filters the provided tag dataframe to select only tags in the classes list.
-    If no match was found in the 'tag' column and a 'related' column is present in the dataframe, 
+    If no match was found in the 'tag' column and a 'related' column is present in the dataframe,
     this column will be also checked. If a match is found in the 'related' column,
     then value of the 'tag' column will be replaced by the match.
     Matches are decided by the order of the classes list and only the first match will be returned.
