@@ -46,8 +46,8 @@ class AudioDLModel(DLModel):
     def get_raw_data(self, data):
         return data["spectrograms"]
 
-    def modify_spectrogram(self, spec, resize_width):
-        if not self.opts["to_db"]:
+    def modify_spectrogram(self, spec, resize_width, to_db=False):
+        if not to_db:
             spec = np.log(self.opts["A"] + self.opts["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
         if resize_width > 0:
@@ -57,22 +57,18 @@ class AudioDLModel(DLModel):
     def prepare_data(self, data):
         if not self.opts["learn_log"]:
             for i, spec in enumerate(data["spectrograms"]):
-                resize_width = self.get_resize_width(data["infos"][i])
+                infos = data["infos"][i]
+                spec_opts = infos["spec_opts"]
+                resize_width = self.get_resize_width(infos)
 
                 if (
-                    data["infos"][i]["spec_opts"]["type"] == "mel"
-                    and self.opts.get("input_height", -1)
-                    != data["infos"][i]["spec_opts"]["n_mels"]
+                    spec_opts["type"] == "mel"
+                    and self.opts.get("input_height", -1) != spec_opts["n_mels"]
                 ):
-                    self.opts.add_option(
-                        "input_height", data["infos"][i]["spec_opts"]["n_mels"]
-                    )
+                    self.opts.add_option("input_height", spec_opts["n_mels"])
 
                 # * Issue a warning if the number of pixels desired is too far from the original size
-                original_pps = (
-                    data["infos"][i]["sample_rate"]
-                    / data["infos"][i]["spec_opts"]["hop_length"]
-                )
+                original_pps = infos["sample_rate"] / spec_opts["hop_length"]
                 new_pps = self.opts["pixels_in_sec"]
                 if new_pps / original_pps > 2 or new_pps / original_pps < 0.5:
                     common_utils.print_warning(
@@ -82,7 +78,9 @@ class AudioDLModel(DLModel):
                             + " option or the hop_length of the spectrogram so the two values can be closer"
                         ).format(new_pps, original_pps)
                     )
-                data["spectrograms"][i] = self.modify_spectrogram(spec, resize_width)
+                data["spectrograms"][i] = self.modify_spectrogram(
+                    spec, resize_width, to_db=spec_opts["to_db"]
+                )
                 if resize_width > 0:
                     data["tags_linear_presence"][i] = zoom(
                         data["tags_linear_presence"][i],
