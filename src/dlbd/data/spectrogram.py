@@ -29,6 +29,7 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
         "n_fft": spec_opts.get("n_fft", DEFAULT_OPTS["n_fft"]),
         "hop_length": spec_opts.get("hop_length", DEFAULT_OPTS["hop_length"]),
         "window": spec_opts.get("window", DEFAULT_OPTS["window"]),
+        "win_length": spec_opts.get("win_length", DEFAULT_OPTS["win_length"]),
     }
 
     spec = librosa.stft(wav, **opts)
@@ -41,16 +42,16 @@ def generate_spectrogram(wav, sample_rate, spec_opts):
             }
         )
         spec = librosa.feature.melspectrogram(S=np.abs(spec) ** 2, **opts)
+        if spec_opts.get("to_db", False):
+            spec = librosa.power_to_db(spec, ref=np.max)
         spec = spec.astype(np.float32)
+
     pcen = spec_opts.get("pcen", {})
 
     if pcen:
         pcen_opts = common_utils.deep_dict_update(DEFAULT_OPTS["pcen"], pcen, copy=True)
         opts["pcen"] = pcen_opts
         spec = librosa.pcen(spec * (2 ** 31), **pcen_opts)
-
-    if spec_opts.get("to_db", False):
-        spec = librosa.amplitude_to_db(spec, ref=np.max)
 
     opts["type"] = spec_opts.get("type", DEFAULT_OPTS["type"])
     return spec, opts

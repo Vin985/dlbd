@@ -47,7 +47,8 @@ class AudioDLModel(DLModel):
         return data["spectrograms"]
 
     def modify_spectrogram(self, spec, resize_width):
-        spec = np.log(self.opts["A"] + self.opts["B"] * spec)
+        if not self.opts["to_db"]:
+            spec = np.log(self.opts["A"] + self.opts["B"] * spec)
         spec = spec - np.median(spec, axis=1, keepdims=True)
         if resize_width > 0:
             spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
