@@ -6,6 +6,14 @@ import mouffet.utils.common as common_utils
 from PIL import Image
 from numpy.lib.function_base import copy
 
+DEFAULT_PCEN_OPTS = {
+    "gain": 0.8,
+    "bias": 10,
+    "power": 0.25,
+    "time_constant": 0.06,
+    "eps": 1e-06,
+}
+
 DEFAULT_OPTS = {
     "sample_rate": "original",
     "n_fft": 2048,
@@ -13,47 +21,55 @@ DEFAULT_OPTS = {
     "n_mels": 32,
     "window": "hann",
     "win_length": None,
-    "pcen": {
-        "gain": 0.8,
-        "bias": 10,
-        "power": 0.25,
-        "time_constant": 0.06,
-        "eps": 1e-06,
-    },
+    "pcen": {},
     "type": "mel",
+    "to_db": False,
+    "center": True,
+    "pad_mode": "reflect",
+    "dtype": None,
 }
+
+STFT_OPTS_NAME = [
+    "n_fft",
+    "hop_length",
+    "win_length",
+    "window",
+    "center",
+    "dtype",
+    "pad_mode",
+]
 
 
 def generate_spectrogram(wav, sample_rate, spec_opts):
-    opts = {
-        "n_fft": spec_opts.get("n_fft", DEFAULT_OPTS["n_fft"]),
-        "hop_length": spec_opts.get("hop_length", DEFAULT_OPTS["hop_length"]),
-        "window": spec_opts.get("window", DEFAULT_OPTS["window"]),
-        "win_length": spec_opts.get("win_length", DEFAULT_OPTS["win_length"]),
-    }
+    opts = common_utils.deep_dict_update(DEFAULT_OPTS, spec_opts, copy=True)
+    stft_opts = {k: v for k, v in opts.items() if k in STFT_OPTS_NAME}
+    #     "n_fft": spec_opts.get("n_fft", DEFAULT_OPTS["n_fft"]),
+    #     "hop_length": spec_opts.get("hop_length", DEFAULT_OPTS["hop_length"]),
+    #     "window": spec_opts.get("window", DEFAULT_OPTS["window"]),
+    #     "win_length": spec_opts.get("win_length", DEFAULT_OPTS["win_length"]),
+    # }
 
-    spec = librosa.stft(wav, **opts)
+    spec = librosa.stft(wav, **stft_opts)
 
-    if spec_opts.get("type", DEFAULT_OPTS["type"]) == "mel":
-        opts.update(
+    if opts["type"] == "mel":
+        stft_opts.update(
             {
                 "n_mels": spec_opts.get("n_mels", DEFAULT_OPTS["n_mels"]),
                 "sr": sample_rate,
             }
         )
-        spec = librosa.feature.melspectrogram(S=np.abs(spec) ** 2, **opts)
-        if spec_opts.get("to_db", False):
+        spec = librosa.feature.melspectrogram(S=np.abs(spec) ** 2, **stft_opts)
+        if opts["to_db"]:
             spec = librosa.power_to_db(spec, ref=np.max)
         spec = spec.astype(np.float32)
 
     pcen = spec_opts.get("pcen", {})
 
     if pcen:
-        pcen_opts = common_utils.deep_dict_update(DEFAULT_OPTS["pcen"], pcen, copy=True)
+        pcen_opts = common_utils.deep_dict_update(DEFAULT_PCEN_OPTS, pcen, copy=True)
         opts["pcen"] = pcen_opts
         spec = librosa.pcen(spec * (2 ** 31), **pcen_opts)
 
-    opts["type"] = spec_opts.get("type", DEFAULT_OPTS["type"])
     return spec, opts
 
 
