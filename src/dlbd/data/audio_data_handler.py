@@ -28,8 +28,10 @@ class AudioDataHandler(DataHandler):
 
     SPLIT_FUNCS = {"arctic": split_folder, "citynet": citynet_split}
 
-    def get_spectrogram_subfolder_path(self, database, opts):
-        return self.get_spec_subfolder(database.spectrogram, opts)
+    def get_spectrogram_subfolder_path(self, database, folder_opts=None):
+        if folder_opts is None:
+            folder_opts = self.get_subfolder_options(database, "spectrogram")
+        return self.get_spec_subfolder(database.spectrogram, folder_opts)
 
     @staticmethod
     def get_subfolder_option_value(opt, opts, default, prefixes):
