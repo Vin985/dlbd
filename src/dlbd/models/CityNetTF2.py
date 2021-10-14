@@ -205,15 +205,15 @@ class CityNetTF2(TF2Model, AudioDLModel):
             tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
         )
 
-    def init_samplers(self):
+    def init_samplers(self, training_data, validation_data):
         train_sampler = SpectrogramSampler(
             self.opts,
             randomise=True,
             balanced=self.opts.get("training_balanced", True),
-        )
+        )(self.get_raw_data(training_data), self.get_ground_truth(training_data))
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
-        )
+        )(self.get_raw_data(validation_data), self.get_ground_truth(validation_data))
         return train_sampler, validation_sampler
 
     def init_optimizer(self, learning_rate):
