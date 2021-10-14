@@ -43,11 +43,15 @@ STFT_OPTS_NAME = [
 def generate_spectrogram(wav, sample_rate, spec_opts):
     opts = common_utils.deep_dict_update(DEFAULT_OPTS, spec_opts, copy=True)
     stft_opts = {k: v for k, v in opts.items() if k in STFT_OPTS_NAME}
-    #     "n_fft": spec_opts.get("n_fft", DEFAULT_OPTS["n_fft"]),
-    #     "hop_length": spec_opts.get("hop_length", DEFAULT_OPTS["hop_length"]),
-    #     "window": spec_opts.get("window", DEFAULT_OPTS["window"]),
-    #     "win_length": spec_opts.get("win_length", DEFAULT_OPTS["win_length"]),
-    # }
+
+    opts["win_length"] = (
+        opts["win_length"] if opts["win_length"] is not None else opts["n_fft"]
+    )
+    opts["hop_length"] = (
+        opts["hop_length"]
+        if opts["hop_length"] is not None
+        else opts["win_length"] // 4
+    )
 
     spec = librosa.stft(wav, **stft_opts)
 
