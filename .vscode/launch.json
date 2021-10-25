@@ -19,6 +19,15 @@
             "program": "/mnt/win/UMoncton/Doctorat/dev/dlbd/src/train.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/src" //"/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/"
-        }
+        },
+        {
+            "name": "Launch run",
+            "type": "python",
+            "request": "launch",
+            "program": "/mnt/win/UMoncton/Doctorat/dev/dlbd/src/run.py",
+            "args": ["run1"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
     ]
 }
