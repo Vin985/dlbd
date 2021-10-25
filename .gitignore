@@ -8,7 +8,7 @@ test_*
 evaluate.py.lprof
 test
 *.egg-info
-
+*.h5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
