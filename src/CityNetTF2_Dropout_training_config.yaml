@@ -34,7 +34,7 @@ model:
   ensemble_members: 1
   training_balanced: True
   resize_spectrogram: True
-  pixels_in_sec: 60
+  pixels_per_sec: 60
   spectrogram_overlap: .75
   random_start: False
 

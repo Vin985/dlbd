@@ -19,7 +19,7 @@ B: 10.0 #biotic
 ensemble_members: 1
 training_balanced: True
 resize_spectrogram: True
-pixels_in_sec: 20
+pixels_per_sec: 20
 learning_rate: 0.001
 
 batch_size: 128

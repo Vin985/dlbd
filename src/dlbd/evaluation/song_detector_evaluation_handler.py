@@ -30,7 +30,7 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
     @staticmethod
     def classify_element(model, spectrogram, info, sampler):
         preds = model.classify((spectrogram, info), sampler)
-        pix_in_sec = model.opts.get("pixels_in_sec", 20)
+        pix_in_sec = model.opts.get("pixels_per_sec", 20)
         len_in_s = preds.shape[0] / pix_in_sec
         timeseq = np.linspace(0, len_in_s, preds.shape[0])
         res_df = pd.DataFrame(

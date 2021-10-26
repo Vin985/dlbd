@@ -20,7 +20,7 @@ class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
 
     def __init__(self, opts=None):
-        input_width = opts.get("input_width", opts["pixels_in_sec"])
+        input_width = opts.get("input_width", opts["pixels_per_sec"])
         if input_width % 2:
             common_utils.print_warning(
                 (
@@ -29,14 +29,14 @@ class AudioDLModel(DLModel):
                     + " Consider changing the pixel_per_sec or input_width options in the configuration file"
                 ).format(input_width + 1, input_width)
             )
-            if input_width == opts["pixels_in_sec"]:
+            if input_width == opts["pixels_per_sec"]:
                 common_utils.print_warning(
                     (
                         "Input size and pixels per seconds were identical, using {} pixels per seconds as well"
                     ).format(input_width + 1)
                 )
             input_width += 1
-            opts.add_option("pixels_in_sec", input_width)
+            opts.add_option("pixels_per_sec", input_width)
         opts.add_option("input_width", input_width)
         super().__init__(opts)
 
@@ -69,7 +69,7 @@ class AudioDLModel(DLModel):
 
                 # * Issue a warning if the number of pixels desired is too far from the original size
                 original_pps = infos["sample_rate"] / spec_opts["hop_length"]
-                new_pps = self.opts["pixels_in_sec"]
+                new_pps = self.opts["pixels_per_sec"]
                 if new_pps / original_pps > 2 or new_pps / original_pps < 0.5:
                     common_utils.print_warning(
                         (
@@ -91,7 +91,7 @@ class AudioDLModel(DLModel):
 
     def get_resize_width(self, infos):
         resize_width = -1
-        pix_in_sec = self.opts.get("pixels_in_sec", 20)
+        pix_in_sec = self.opts.get("pixels_per_sec", 20)
         resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
         return resize_width
 
