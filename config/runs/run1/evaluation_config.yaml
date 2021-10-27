@@ -71,6 +71,13 @@ models_options:
 models:
   - name: "DLBDL_A2"
     class: "dlbd.models.dlbd.DLBDLite"
+    scenarios:
+      n_mels: 32
+      pixels_per_sec: 200
+      databases_options:
+        spectrogram:
+          hop_length: 128
+          win_length: [512, 256]
   # - name: "DLBDL_Ci"
   #   class: "dlbd.models.dlbd.DLBDLite"
   #   model_dir: "results/models/gpu/run3"
@@ -89,9 +96,9 @@ databases_options:
 
 databases:
   - name: citynet
-  - name: arctic_complete
-  - name: NABS
-  - name: nips4b
+  # - name: arctic_complete
+  # - name: NABS
+  # - name: nips4b
   #- name: NABS
   # - name: nips4b
     # scenarios:

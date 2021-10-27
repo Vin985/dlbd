@@ -1,6 +1,9 @@
+parent_path: "config/run1/parent.yaml"
+
 data_config: "config/data/data_config.yaml"
 model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run1'
 clean_empty_models: True
+skip_trained: True
 
 logs:
   log_dir: "logs/gradient_tape/run1"
@@ -13,23 +16,12 @@ id: "{databases_options--spectrogram--n_mels}"
 id_prefixes:
   databases_options--spectrogram--n_mels: "_nmels-"
 
-##
-## Databases
-##
-
-databases: ['arctic_complete']
-databases_options:
-  spectrogram:
-    n_fft: 2048
-    hop_length: 1024
-    n_mels: 32
-    sample_rate: "original"
 
 ##
 ## Model options
 ##
 
-n_epochs: 20
+# n_epochs: 20
 learning_rate: 0.001
 epoch_save_step: 5
 # from_epoch: 100
@@ -40,14 +32,15 @@ A: 0.001 # biotic
 B: 10.0 #biotic
 ensemble_members: 1
 training_balanced: True
-pixels_in_sec: 20
+pixels_per_sec: 100
 
-batch_size: 128
+input_height: 32
+
+batch_size: 64
 do_batch_norm: 1
-# input_size: 25
+# input_width: 25
 # hww_spec: 20
 # hww_gt: 10
-spec_height: 32
 channels: 4
 num_filters: 128
 num_dense_units: 512
@@ -61,20 +54,31 @@ dropout: 0.5
 #   name:
 
 
+##
+## Databases
+##
+
+databases: ["nips4b"]
+
+databases_options:
+  spectrogram:
+    hop_length: 256
+    win_length: 512
+    n_mels: 32
+    sample_rate: "original"
+    to_db: True
 
 scenarios:
-  # - name: "DLBDL_A"
-  #   class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDL_A2"
+  - name: "DLBDL_A"
     class: "dlbd.models.dlbd.DLBDLite"
-    pixels_in_sec: 44
-    spec_height: 64
-    databases_options:
-      spectrogram:
-        n_fft: 2048
-        hop_length: 512
-        n_mels: 64
-        sample_rate: "original"
+  # - name: "DLBDL_A2"
+    # class: "dlbd.models.dlbd.DLBDLite"
+  # - name: "DLBDL_CNN"
+  #   class: "dlbd.models.dlbd.DLBDLite"
+  #   num_dense_units: 128
+  #   databases_options:
+  #     spectrogram:
+  #       n_fft: [512, 1024, 2048]
     # transfer_learning: True
     # n_epochs: 100
     # learning_rate: 0.001
