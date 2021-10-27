@@ -19,12 +19,13 @@ from plotnine.labels import ggtitle
 from plotnine.positions.position_dodge import position_dodge
 
 from dlbd.data import tag_manager
-from dlbd.data.data_handler import DataHandler
-from dlbd.utils import file as file_utils
+from dlbd.data.audio_data_handler import AudioDataHandler
+from mouffet.utils import file as file_utils
+from mouffet.options.database_options import DatabaseOptions
 
 opts = file_utils.load_config("src/data_config.yaml")
 
-dh = DataHandler(opts)
+dh = AudioDataHandler(opts)
 
 dh.check_datasets()
 plots = []
@@ -61,7 +62,10 @@ for database in opts["databases"]:
             )
             plt = ggplot(
                 data=tags_summary,
-                mapping=aes(x="tag", y="n_tags",),  # "factor(species, ordered=False)",
+                mapping=aes(
+                    x="tag",
+                    y="n_tags",
+                ),  # "factor(species, ordered=False)",
             )
 
         plt = (
@@ -89,4 +93,3 @@ for database in opts["databases"]:
         # )
         # print(tags_summary)
 save_as_pdf_pages(plots, "tag_summaries3_" + opts["class_type"] + ".pdf")
-
