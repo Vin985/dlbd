@@ -13,7 +13,7 @@ from dlbd.data.audio_data_handler import AudioDataHandler
 logging.basicConfig(level=logging.DEBUG)
 
 trainer = TrainingHandler(
-    opts_path="config/run1/training_config.yaml",
+    opts_path="config/runs/run1/training_config.yaml",
     dh_class=AudioDataHandler,
 )
 trainer.train()
