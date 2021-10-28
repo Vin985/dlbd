@@ -33,7 +33,7 @@ DEFAULTS = {
     "evaluation_config": "evaluation_config.yaml",
     "data_config": "data_config.yaml",
     "models_dir": "models",
-    "prediction_dir": "predictions",
+    "predictions_dir": "predictions",
     "evaluations_dir": "evaluations",
 }
 
@@ -99,8 +99,8 @@ for run in args.runs:
     opts_path = Path(args.run_dir) / run
     dest_dir = Path(args.dest_dir) / run
     log_dir = Path(args.log_dir) / run
-    model_dir = dest_dir / DEFAULTS["models"]
-    evaluation_dir = dest_dir / DEFAULTS["evaluation_dir"]
+    model_dir = dest_dir / DEFAULTS["models_dir"]
+    evaluation_dir = dest_dir / DEFAULTS["evaluations_dir"]
     predictions_dir = dest_dir / DEFAULTS["predictions_dir"]
 
     run_opts = {}
