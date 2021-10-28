@@ -25,6 +25,18 @@ import ast
 # gpus = tf.config.experimental.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(gpus[0], True)
 
+DEFAULTS = {
+    "run_dir": "config/runs",
+    "dest_dir": "results/runs",
+    "log_dir": "logs/runs",
+    "training_config": "training_config.yaml",
+    "evaluation_config": "evaluation_config.yaml",
+    "data_config": "data_config.yaml",
+    "models_dir": "models",
+    "prediction_dir": "predictions",
+    "evaluations_dir": "evaluations",
+}
+
 
 logging.basicConfig(level=logging.DEBUG)
 pd.options.mode.chained_assignment = "raise"
@@ -41,42 +53,42 @@ parser.add_argument(
 parser.add_argument(
     "-r",
     "--run_dir",
-    default="config/runs",
+    default=DEFAULTS["run_dir"],
     help="The root directory where runs can be found",
 )
 
 parser.add_argument(
     "-d",
     "--dest_dir",
-    default="results/runs",
+    default=DEFAULTS["dest_dir"],
     help="The root directory where results will be saved",
 )
 
 parser.add_argument(
     "-t",
     "--training_config",
-    default="training_config.yaml",
+    default=DEFAULTS["training_config"],
     help="The name of the training config files",
 )
 
 parser.add_argument(
     "-e",
     "--evaluation_config",
-    default="evaluation_config.yaml",
+    default=DEFAULTS["evaluation_config"],
     help="The name of the evaluation config files",
 )
 
 parser.add_argument(
     "-D",
     "--data_config",
-    default="data_config.yaml",
+    default=DEFAULTS["data_config"],
     help="The name of the data config files",
 )
 
 parser.add_argument(
     "-l",
     "--log_dir",
-    default="logs/runs",
+    default=DEFAULTS["log_dir"],
     help="The root directory where logs will be saved",
 )
 
@@ -87,9 +99,9 @@ for run in args.runs:
     opts_path = Path(args.run_dir) / run
     dest_dir = Path(args.dest_dir) / run
     log_dir = Path(args.log_dir) / run
-    model_dir = dest_dir / "models"
-    evaluation_dir = dest_dir / "evaluation"
-    predictions_dir = dest_dir / "predictions"
+    model_dir = dest_dir / DEFAULTS["models"]
+    evaluation_dir = dest_dir / DEFAULTS["evaluation_dir"]
+    predictions_dir = dest_dir / DEFAULTS["predictions_dir"]
 
     run_opts = {}
 
