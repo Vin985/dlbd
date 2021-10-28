@@ -26,7 +26,7 @@ B: 10.0 #biotic
 ensemble_members: 1
 training_balanced: True
 resize_spectrogram: True
-pixels_in_sec: 200
+pixels_per_sec: 200
 spectrogram_overlap: 0.9
 
 batch_size: 256
