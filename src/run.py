@@ -113,7 +113,7 @@ for run in args.runs:
     for training_scenario in trainer.scenarios:
         # * Make sure all models and logs are saved at the same place
         training_scenario["model_dir"] = str(model_dir)
-        training_scenario["log_dir"] = str(log_dir)
+        training_scenario["logs"]["log_dir"] = str(log_dir)
 
         # * Data config could be overloaded by model so do not force it
         if not "data_config" in training_scenario:
