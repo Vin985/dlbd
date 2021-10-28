@@ -1,0 +1,54 @@
+
+data_config: "config/gpu/runs/data_config.yaml"
+
+id: "{databases_options--spectrogram--n_mels}_{databases_options--spectrogram--n_fft}_{pixels_in_sec}"
+id_prefixes:
+  databases_options--spectrogram--n_mels: "_nmels-"
+  databases_options--spectrogram--n_fft: "fft-"
+
+databases: ['citynet', "nips4b", "NABS", "arctic_complete"]
+
+model_dir: '/home/sylvain/data/results/models/run8'
+logs:
+  log_dir: "/home/sylvain/logs/gradient_tape/run8"
+  use_version: True
+
+clean_empty_models: True
+
+n_epochs: [10, 10]
+epoch_save_step: 3
+learning_rate: [0.01, 0.001]
+
+learn_log: 0
+do_augmentation: 1
+A: 0.001 # biotic 
+B: 10.0 #biotic
+ensemble_members: 1
+training_balanced: True
+resize_spectrogram: True
+pixels_in_sec: 200
+spectrogram_overlap: 0.9
+
+batch_size: 256
+do_batch_norm: 1
+channels: 4
+num_filters: 128
+num_dense_units: 512
+conv_filter_width: 4
+wiggle_room: 5
+dropout: 0.5
+
+databases_options:
+  spectrogram:
+    n_fft: 512
+    n_mels: 64
+    sample_rate: "original"
+    to_db: False
+
+
+
+
+
+
+
+

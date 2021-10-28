@@ -1,0 +1,22 @@
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+
+scenarios:
+  - name: "DLBDL_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLite"
+    pixels_in_sec: 200
+    databases_options:
+      spectrogram:
+        n_fft: [512, 1024, 2048]
+  - name: "DLBDD_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDDense"
+    pixels_in_sec: 200
+    databases_options:
+      spectrogram:
+        n_fft: [512, 1024, 2048]
+
+
+
+
+
+
