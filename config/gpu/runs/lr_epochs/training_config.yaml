@@ -2,7 +2,7 @@ parent_path: "config/gpu/runs/training_parent.yaml"
 
 skip_trained: True
 
-id: "{learning_rate}_{n_epochs}"
+id: "_{learning_rate}_{n_epochs}"
 id_prefixes:
   learning_rate: "lr-"
   n_epochs: "epochs-"
