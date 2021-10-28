@@ -1,7 +1,7 @@
 
 data_config: "config/gpu/runs/data_config.yaml"
 
-id: "{databases_options--spectrogram--n_mels}_{databases_options--spectrogram--n_fft}_{pixels_in_sec}"
+id: "{databases_options--spectrogram--n_mels}_{databases_options--spectrogram--n_fft}_{pixels_per_sec}"
 id_prefixes:
   databases_options--spectrogram--n_mels: "_nmels-"
   databases_options--spectrogram--n_fft: "fft-"

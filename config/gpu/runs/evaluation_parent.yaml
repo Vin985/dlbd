@@ -51,35 +51,6 @@ evaluators:
   #     event_threshold: [0.5, 0.95]
   #     event_method: ["average", "presence"]
 
-############
-## Models ##
-############
-models_options:
-  model_dir: "/home/sylvain/data/results/models/run1"
-  id: "{databases_options--spectrogram--n_mels}"
-  id_prefixes:
-    databases_options--spectrogram--n_mels: "_nmels-"
-
-
-models:
-  - name: "DLBDL_Ci"
-    class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDD_Ci"
-    class: "dlbd.models.dlbd.DLBDDense"
-  - name: "DLBDL_CiNi"
-    class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDD_CiNi"
-    class: "dlbd.models.dlbd.DLBDDense"
-  - name: "DLBDL_CiNa"
-    class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDD_CiNa"
-    class: "dlbd.models.dlbd.DLBDDense"
-  - name: "DLBDL_CiNiNa"
-    class: "dlbd.models.dlbd.DLBDLite"
-  - name: "DLBDD_CiNiNa"
-    class: "dlbd.models.dlbd.DLBDDense"
-
-
 
 ###############
 ## Databases ##
