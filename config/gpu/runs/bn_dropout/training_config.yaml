@@ -14,11 +14,11 @@ pixels_per_sec: 200
 scenarios:
   - name: "DLBDL_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDLite"
+  - name: "DLBDLNoreg_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLiteNoReg"
   - name: "DLBDDDrop_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDDenseDrop"
-  - name: "DLBDLDrop_CiNiNaA"
-    class: "dlbd.models.dlbd.DLBDLiteDrop"
-    n_epochs: 50
+    dropout: 0.2
   - name: "DLBDLBN_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDLiteBN"
   - name: "DLBDLBNrelu"
@@ -31,6 +31,10 @@ scenarios:
     class: "dlbd.models.dlbd.DLBDDenseDropRelu"
     num_dense_units: 256
     num_dense_units2: 32
+  - name: "DLBDLDrop_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLiteDrop"
+    n_epochs: 50
+    dropout: 0.2
 
 
 
