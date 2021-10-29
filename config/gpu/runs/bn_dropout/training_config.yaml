@@ -16,8 +16,19 @@ scenarios:
     class: "dlbd.models.dlbd.DLBDLite"
   - name: "DLBDLDrop_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDLiteDrop"
+    n_epochs: 50
   - name: "DLBDLBN_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDLiteBN"
+  - name: "DLBDLBNrelu"
+    class: "dlbd.models.dlbd.DLBDLiteBNrelu"
+  - name: "DLBDDBNrelu"
+    class: "dlbd.models.dlbd.DLBDDenseBNRelu"
+    num_dense_units: 256
+    num_dense_units2: 32
+  - name: "DLBDDDroprelu"
+    class: "dlbd.models.dlbd.DLBDDenseDropRelu"
+    num_dense_units: 256
+    num_dense_units2: 32
 
 
 
