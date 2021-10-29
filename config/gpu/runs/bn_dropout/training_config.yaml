@@ -1,0 +1,26 @@
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+skip_trained: True
+
+id: "_{learning_rate}_{n_epochs}"
+id_prefixes:
+  learning_rate: "lr-"
+  n_epochs: "epochs-"
+
+n_epochs: 15
+learning_rate: 0.01
+pixels_per_sec: 200
+
+scenarios:
+  - name: "DLBDL_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLite"
+  - name: "DLBDLDrop_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLiteDrop"
+  - name: "DLBDLBN_CiNiNaA"
+    class: "dlbd.models.dlbd.DLBDLiteBN"
+
+
+
+
+
+
