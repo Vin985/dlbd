@@ -183,7 +183,10 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         plot = (
             ggplot(
                 data=matches,
-                mapping=aes(x="time", y="tag",),  # "factor(species, ordered=False)",
+                mapping=aes(
+                    x="time",
+                    y="tag",
+                ),  # "factor(species, ordered=False)",
             )
             + geom_line(mapping=aes(y="event"), color="pink")
             + geom_line(color="blue")
@@ -241,7 +244,11 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         n_tags = tags.shape[0]
         n_unmatched_tags = n_tags - n_matched_tags
 
-        precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
+        precision = (
+            round(n_true_positives / (n_true_positives + n_false_positives), 3)
+            if n_true_positives + n_false_positives > 0
+            else 0
+        )
         recall_samples = round(
             n_true_positives / (n_true_positives + n_false_negatives), 3
         )
@@ -278,4 +285,3 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         if not options.get("PR_curve_x", ""):
             options["PR_curve_x"] = "recall_sample"
         return super().plot_PR_curve(stats, options)
-
