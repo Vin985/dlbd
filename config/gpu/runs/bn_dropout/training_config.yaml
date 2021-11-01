@@ -45,7 +45,7 @@ scenarios:
     num_dense_units: 256
     wiggle_room: [5, 10]
     num_filters: [64, 128]
-    conv_filter_width: 4
+    conv_filter_width: [3,4]
 
 
 
