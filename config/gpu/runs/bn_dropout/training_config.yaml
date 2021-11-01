@@ -38,7 +38,7 @@ scenarios:
       from_epoch: 50
     dropout: 0.2
   - name: "DLBDLBNrelunoreg"
-    class: "dlbd.models.dlbd.DLBDLiteBNReluNoreg"
+    class: "dlbd.models.dlbd.DLBDLiteBNreluNoreg"
     early_stopping:
       patience: 2
     num_dense_units: [256, 512]
