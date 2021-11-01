@@ -42,10 +42,10 @@ scenarios:
     id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}"
     early_stopping:
       patience: 2
-    num_dense_units: [256, 512]
+    num_dense_units: 256
     wiggle_room: [5, 10]
     num_filters: [64, 128]
-    conv_filter_width: [3,4]
+    conv_filter_width: 4
 
 
 
