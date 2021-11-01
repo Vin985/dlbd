@@ -253,8 +253,10 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
             n_true_positives / (n_true_positives + n_false_negatives), 3
         )
         recall_tags = round(n_matched_tags / (n_matched_tags + n_unmatched_tags), 3)
-        f1_score = round(
-            2 * precision * recall_samples / (precision + recall_samples), 3
+        f1_score = (
+            round(2 * precision * recall_samples / (precision + recall_samples), 3)
+            if precision + recall_samples > 0
+            else 0
         )
         return pd.DataFrame(
             [
