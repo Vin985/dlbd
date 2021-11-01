@@ -34,7 +34,17 @@ scenarios:
   - name: "DLBDLDrop_CiNiNaA"
     class: "dlbd.models.dlbd.DLBDLiteDrop"
     n_epochs: 50
+    weights_opts:
+      from_epoch: 50
     dropout: 0.2
+  - name: "DLBDLBNrelunoreg"
+    class: "dlbd.models.dlbd.DLBDLiteBNReluNoreg"
+    early_stopping:
+      patience: 2
+    num_dense_units: [256, 512]
+    wiggle_room: [5, 10]
+    num_filters: [64, 128]
+    conv_filter_width: [3,4]
 
 
 

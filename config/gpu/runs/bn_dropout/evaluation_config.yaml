@@ -1,1 +1,4 @@
 parent_path: "config/gpu/runs/evaluation_parent.yaml"
+
+evaluators_options:
+  draw_plots: False
