@@ -39,6 +39,7 @@ scenarios:
     dropout: 0.2
   - name: "DLBDLBNrelunoreg"
     class: "dlbd.models.dlbd.DLBDLiteBNreluNoreg"
+    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}"
     early_stopping:
       patience: 2
     num_dense_units: [256, 512]
