@@ -15,7 +15,7 @@ pixels_per_sec: 200
 scenarios:
   - name: "DLBDD_3x3"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_sec}"
+    id: "_{num_dense_units}_nf-{num_filters}_pix{pixels_per_sec}"
     early_stopping:
       patience: 2
     is_lite: False
@@ -27,7 +27,7 @@ scenarios:
     pixels_per_sec: [100, 200]
   - name: "DLBDD_3x3_bs"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_{num_dense_units}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_sec}_bs{batch_size}"
+    id: "_{num_dense_units}_nf-{num_filters}_pix{pixels_per_sec}_bs{batch_size}"
     early_stopping:
       patience: 2
     is_lite: False
@@ -50,19 +50,18 @@ scenarios:
     conv_filter_width: 3
     conv_filter_height: 3
     pixels_per_sec: [100, 200]
-    databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
+    databases: [['citynet2', "nips4b2", "NABS2", "arctic_complete2"]]
   - name: "DLBDL_split"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_sec}"
+    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_pix{pixels_per_sec}"
     early_stopping:
       patience: 2
     num_dense_units: 128
     num_dense_units2: 32
     num_filters: 64
     wiggle_room: [5 ,10]
-    conv_filter_height: 3
     pixels_per_sec: [100, 200]
-    databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
+    databases: [['citynet2', "nips4b2", "NABS2", "arctic_complete2"]]
 
 
 
