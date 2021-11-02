@@ -36,7 +36,7 @@ scenarios:
     num_filters: 64
     conv_filter_width: 3
     conv_filter_height: 3
-    - name: "DLBDD_3x3"
+  - name: "DLBDD_3x3"
     class: "dlbd.models.dlbd.DLBD"
     id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_second}"
     early_stopping:
