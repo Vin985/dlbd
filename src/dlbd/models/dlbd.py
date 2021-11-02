@@ -129,7 +129,7 @@ class DLBDDenseDrop(CityNetTF2):
         return x
 
 
-class DLBDLite(CityNetTF2):
+class DLBDLiteOld(CityNetTF2):
     """DLBD Network with one less Dense layer to reduce the number of parameters and overfitting
 
     Args:
@@ -381,7 +381,7 @@ class DLBDLiteBNrelu(CityNetTF2):
         return x
 
 
-class DLBDLiteBNreluNoreg(CityNetTF2):
+class DLBD(CityNetTF2):
     """DLBD Network with one less Dense layer to reduce the number of parameters and overfitting
 
     Args:
@@ -391,16 +391,19 @@ class DLBDLiteBNreluNoreg(CityNetTF2):
         [type]: [description]
     """
 
-    NAME = "DLBD_lite"
+    NAME = "DLBD"
 
     def get_base_layers(self, x=None):
         if x is None:
             x = self.get_preprocessing_layers()
         # * First block
+        conv_filter_height = self.opts.get(
+            "conv_filter_height", self.opts["input_height"] - self.opts["wiggle_room"]
+        )
         x = layers.Conv2D(
             self.opts.get("num_filters", 128),
             (
-                self.opts["input_height"] - self.opts["wiggle_room"],
+                conv_filter_height,
                 self.opts["conv_filter_width"],
             ),
             bias_initializer=None,
@@ -426,9 +429,16 @@ class DLBDLiteBNreluNoreg(CityNetTF2):
             self.opts["num_dense_units"],
             activation="relu",
             bias_initializer=None,
-            kernel_regularizer=regularizers.l2(0.001),
         )(x)
         x = layers.BatchNormalization()(x)
+        if not self.opts.get("is_lite", True):
+            x = layers.Dense(
+                self.opts["num_dense_units2"],
+                activation="relu",
+                bias_initializer=None,
+                # kernel_regularizer=regularizers.l2(0.001),
+            )(x)
+            x = layers.BatchNormalization()(x)
 
         return x
 

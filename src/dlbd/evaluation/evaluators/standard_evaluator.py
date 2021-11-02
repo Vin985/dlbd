@@ -286,10 +286,14 @@ class StandardEvaluator(SongDetectorEvaluator):
             + xlab("Species")
             + ylab("Number of annotations")
             + geom_text(
-                mapping=aes(label="lbl_background"), position=position_dodge(width=0.9),
+                mapping=aes(label="lbl_background"),
+                position=position_dodge(width=0.9),
             )
             + geom_text(
-                mapping=aes(y=max(tags_summary.n_tags) + 30, label="lbl_matched",)
+                mapping=aes(
+                    y=max(tags_summary.n_tags) + 30,
+                    label="lbl_matched",
+                )
             )
             + theme_classic()
             + theme(
@@ -365,7 +369,8 @@ class StandardEvaluator(SongDetectorEvaluator):
             + xlab("Species")
             + ylab("Proportion of annotation matched")
             + geom_text(
-                mapping=aes(label="lbl_matched"), position=position_dodge(width=0.9),
+                mapping=aes(label="lbl_matched"),
+                position=position_dodge(width=0.9),
             )
             + theme_classic()
             + theme(
@@ -396,7 +401,13 @@ class StandardEvaluator(SongDetectorEvaluator):
         matches = matches.loc[matches.tag_overlap > 0]
         # matches.loc[:, "log_dur"] = log()
 
-        plt = ggplot(data=matches, mapping=aes(x="tag_duration", y="tag_overlap",),)
+        plt = ggplot(
+            data=matches,
+            mapping=aes(
+                x="tag_duration",
+                y="tag_overlap",
+            ),
+        )
         plt = (
             plt
             + geom_point()
@@ -442,7 +453,11 @@ class StandardEvaluator(SongDetectorEvaluator):
         # matches.loc[:, "log_dur"] = log()
 
         plt = ggplot(
-            data=matches, mapping=aes(x="tag_duration_bin", fill="tag_overlap_bin",),
+            data=matches,
+            mapping=aes(
+                x="tag_duration_bin",
+                fill="tag_overlap_bin",
+            ),
         )
         plt = (
             plt
@@ -543,7 +558,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             "stats": stats,
             "matches": matches,
         }
-        if options.get("draw_plots", True):
+        if options.get("draw_plots", False):
             res["plots"] = self.draw_plots(
                 data={"events": events, "tags": tags, "matches": matches},
                 options=options,

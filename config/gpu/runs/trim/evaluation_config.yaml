@@ -1,0 +1,5 @@
+data_config: "config/gpu/runs/trim/data_config.yaml"
+parent_path: "config/gpu/runs/evaluation_parent.yaml"
+
+evaluators_options:
+  draw_plots: False

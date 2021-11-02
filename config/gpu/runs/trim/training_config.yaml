@@ -1,0 +1,46 @@
+data_config: "config/gpu/runs/trim/data_config.yaml"
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+skip_trained: True
+
+id: "_{learning_rate}_{n_epochs}"
+id_prefixes:
+  learning_rate: "lr-"
+  n_epochs: "epochs-"
+
+n_epochs: 15
+learning_rate: 0.01
+pixels_per_sec: 200
+
+scenarios:
+  - name: "DLBDD_3x3_100px"
+    class: "dlbd.models.dlbd.DLBD"
+    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_second}"
+    early_stopping:
+      patience: 2
+    is_lite: False
+    num_dense_units: 128
+    num_dense_units2: 32
+    num_filters: 64
+    conv_filter_width: 3
+    conv_filter_height: 3
+    pixels_per_sec: [100, 200]
+  - name: "DLBDD_3x3_100px_split"
+    class: "dlbd.models.dlbd.DLBD"
+    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_conv-{conv_filter_width}_pix{pixels_per_second}"
+    early_stopping:
+      patience: 2
+    is_lite: False
+    num_dense_units: 128
+    num_dense_units2: 32
+    num_filters: 64
+    conv_filter_width: 3
+    conv_filter_height: 3
+    pixels_per_sec: [100, 200]
+    databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
+
+
+
+
+
+
