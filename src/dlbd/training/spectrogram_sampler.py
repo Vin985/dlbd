@@ -14,7 +14,7 @@ class SpectrogramSampler:
         balanced=True,
     ):
         self.load_options(opts)
-        self.opts["seed"] = seed
+        # self.opts["seed"] = seed
         self.opts["randomise"] = randomise
         self.opts["balanced"] = balanced
         self.specs = None
@@ -22,7 +22,10 @@ class SpectrogramSampler:
         self.which_spec = None
         self.medians = None
         self.idxs = []
+        self.tmp_idxs = []
         self.dims = (0, 0)
+        if seed is not None:
+            np.random.seed(seed)
 
     def load_options(self, opts):
         self.opts = {}
@@ -76,22 +79,22 @@ class SpectrogramSampler:
         # step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
         self.idxs = np.where(self.labels >= 0)[0]
 
+        self.reset_idxs()
+
         assert self.labels.shape[0] == self.specs.shape[1]
         return self
+
+    def reset_idxs(self):
+        step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
+        start = randint(0, step) if self.opts["random_start"] else 0
+        self.tmp_idxs = self.idxs[start::step]
 
     def __iter__(self):  # , num_per_class, seed=None
         # num_samples = num_per_class * 2
 
-        if self.opts["seed"] is not None:
-            np.random.seed(self.opts["seed"])
-
-        step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
-        start = randint(0, step) if self.opts["random_start"] else 0
-        idxs = self.idxs[start::step]
-
         for sampled_locs, y in mbg.minibatch_iterator(
-            idxs,
-            self.labels[idxs],
+            self.tmp_idxs,
+            self.labels[self.tmp_idxs],
             self.opts["batch_size"],
             randomise=self.opts["randomise"],
             balanced=self.opts["balanced"],
@@ -134,3 +137,77 @@ class SpectrogramSampler:
 
             else:
                 yield X.astype(np.float32), y.astype(np.int32)
+        self.reset_idxs()
+
+    def __len__(self):
+        if len(self.tmp_idxs):
+            return int(
+                np.ceil(
+                    float(
+                        mbg.get_class_size(self.labels[self.tmp_idxs], "smallest")
+                        * np.unique(self.labels[self.tmp_idxs]).shape[0]
+                    )
+                    / float(self.opts["batch_size"])
+                )
+            )
+        return 0
+
+    # def reset_sampler(self):
+    #     start = randint(0, step) if self.opts["random_start"] else 0
+    #     self.tmp_idxs = self.idxs[start::step]
+
+    #     self.iterator = mbg.minibatch_iterator(
+    #         self.tmp_idxs,
+    #         self.labels[self.tmp_idxs],
+    #         self.opts["batch_size"],
+    #         randomise=self.opts["randomise"],
+    #         balanced=self.opts["balanced"],
+    #         class_size="smallest",
+    #     )
+
+    # def test(self):  # , num_per_class, seed=None
+    #     # num_samples = num_per_class * 2
+    #     self.reset_sampler()
+    #     while True:
+    #         try:
+    #             sampled_locs, y = next(self.iterator)
+    #             # extract the specs
+    #             # avoid using self.batch_size as last batch may be smaller
+    #             bs = y.shape[0]
+    #             X = np.zeros((bs, self.dims[0], self.dims[1]), np.float32)
+    #             y = np.zeros(bs) * np.nan
+    #             if self.opts["learn_log"]:
+    #                 X_medians = np.zeros((bs, self.dims[0]), np.float32)
+
+    #             for count, loc in enumerate(sampled_locs):
+    #                 which = self.which_spec[loc]
+
+    #                 X[count] = self.specs[
+    #                     :, (loc - self.opts["hww_spec"]) : (loc + self.opts["hww_spec"])
+    #                 ]
+
+    #                 if not self.opts["learn_log"]:
+    #                     X[count] = X[count] - self.medians[which][:, None]
+
+    #                 # TODO: Change the way labels are decided?
+    #                 y[count] = self.labels[
+    #                     (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
+    #                 ].max()
+
+    #                 if self.opts["learn_log"]:
+    #                     which = self.which_spec[loc]
+    #                     X_medians[count] = self.medians[which]
+
+    #             if self.opts["learn_log"]:
+    #                 xb = {
+    #                     "input": X.astype(np.float32),
+    #                     "input_med": X_medians.astype(np.float32),
+    #                 }
+    #                 yield xb, y.astype(np.int32)
+
+    #             else:
+    #                 yield X.astype(np.float32), y.astype(np.int32)
+    #         except StopIteration:
+    #             self.reset_sampler()
+
+    # self.reset_sampler()
