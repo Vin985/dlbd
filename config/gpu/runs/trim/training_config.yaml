@@ -62,7 +62,19 @@ scenarios:
     wiggle_room: [5 ,10]
     pixels_per_sec: [100, 200]
     databases: [['citynet2', "nips4b2", "NABS2", "arctic_complete2"]]
-
+  - name: "DLBDD_split"
+    class: "dlbd.models.dlbd.DLBD"
+    id: "_{num_dense_units}_wig-{wiggle_room}_nf-{num_filters}_pix{pixels_per_sec}"
+    early_stopping:
+      patience: 2
+    random_start: True
+    is_lite: False
+    num_dense_units: 32
+    num_dense_units2: 32
+    num_filters: 64
+    wiggle_room: 10
+    pixels_per_sec: 200
+    databases: [['citynet2', "nips4b2", "NABS2", "arctic_complete2"]]
 
 
 
