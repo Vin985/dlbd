@@ -4,6 +4,7 @@ librosa
 tqdm
 feather-format
 tensorflow
+tensorflow-io
 pyyaml
 pillow
 plotnine
