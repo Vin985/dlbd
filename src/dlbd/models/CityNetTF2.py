@@ -1,79 +1,32 @@
-import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 from mouffet.models.TF2Model import TF2Model
+from tensorflow.keras import regularizers
 
 from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
-
-
-class NormalizeSpectrograms(tf.keras.layers.Layer):
-    """Compute log-magnitude mel-scaled spectrograms."""
-
-    def __init__(self, learn_log, do_augmentation, **kwargs):
-        super().__init__(**kwargs)
-        self.learn_log = learn_log
-        self.do_augmentation = do_augmentation
-
-    # def build(self, input_shape):
-    #     # self.non_trainable_weights.append(self.mel_filterbank)
-    #     super().build(input_shape)
-
-    @tf.function(
-        experimental_relax_shapes=True
-    )  # (input_signature=(tf.TensorSpec(shape=[32, 20], dtype=tf.float32)))
-    def normalize(self, x):
-        print("Tracing with:", x.shape)
-        one = x
-        if self.learn_log:
-            spec = tf.stack([one, one, one, one])
-        else:
-            row_mean = tf.expand_dims(tf.math.reduce_mean(x, axis=1), 1)
-            row_std = tf.expand_dims(tf.add(tf.math.reduce_std(x, axis=1), 0.001), 1)
-            two = (one - row_mean) / row_std
-
-            three = tf.math.divide(
-                tf.math.subtract(x, tf.math.reduce_mean(x)),
-                tf.math.reduce_std(x),
-            )
-            four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
-            spec = tf.stack([one, two, three, four])
-        if self.do_augmentation:
-            if self.learn_log:
-                mult = 1.0 + np.random.randn(1, 1, 1) * 0.1
-                mult = np.clip(mult, 0.1, 200)
-                spec *= mult
-            else:
-                spec = tf.math.multiply(spec, 1.0 + np.random.randn(1, 1, 1) * 0.1)
-                spec = tf.add(spec, np.random.randn(1, 1, 1) * 0.1)
-                if np.random.rand() > 0.9:
-                    print("in random")
-                    spec = tf.add(
-                        spec, tf.multiply(tf.roll(spec, 1, axis=0), np.random.randn())
-                    )
-        spec = tf.transpose(spec, perm=[1, 2, 0])
-        return spec
-
-    @tf.function
-    def vectorize(self, spec):
-        return tf.vectorized_map(self.normalize, spec)
-
-    def call(self, spec):
-        res = self.vectorize(spec)
-        return res
-
-    def get_config(self):
-        config = {
-            "do_augmentation": self.do_augmentation,
-            "learn_log": self.learn_log,
-        }
-        config.update(super().get_config())
-
-        return config
+from .layers import MaskSpectrograms, NormalizeSpectrograms
 
 
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
+
+    def get_regularizer(self):
+        if self.opts.get("regularizer", {}):
+            reg_type = self.opts["regularizer"].get("type", "l2")
+            reg_val = self.opts["regularizer"].get("value", 0.001)
+            if reg_type == "l2":
+                regularizer = regularizers.L2(reg_val)
+            elif reg_type == "l1":
+                regularizer = regularizers.L1(reg_val)
+            elif reg_type == "l1_l2":
+                regularizer = regularizers.L1L2(
+                    l1=self.opts["regularizer"].get("l1", 0.01),
+                    l2=self.opts["regularizer"].get("l2", 0.01),
+                )
+        else:
+            regularizer = None
+        return regularizer
 
     def create_model(self):
         self.inputs = keras.Input(
@@ -114,11 +67,21 @@ class CityNetTF2(TF2Model, AudioDLModel):
     def get_preprocessing_layers(self, x=None):
         if not x:
             x = self.inputs
-        return NormalizeSpectrograms(
+        time_mask = self.opts.get("time_mask", True)
+        # * Allow mask to be a boolean instead
+        if time_mask and not isinstance(time_mask, dict):
+            time_mask = {}
+        freq_mask = self.opts.get("time_mask", True)
+        # * Allow mask to be a boolean instead
+        if freq_mask and not isinstance(freq_mask, dict):
+            freq_mask = {}
+        x = MaskSpectrograms(time_mask=time_mask, freq_mask=freq_mask)(x)
+        x = NormalizeSpectrograms(
             name="Normalize_spectrograms",
             learn_log=self.opts.get("learn_log", False),
             do_augmentation=self.opts.get("do_augmentation", False),
         )(x)
+        return x
 
     def get_base_layers(self, x=None):
         if not x:
@@ -178,6 +141,17 @@ class CityNetTF2(TF2Model, AudioDLModel):
             2, activation=None, name="fc8"  # kernel_regularizer=regularizers.l2(0.001),
         )(x)
         return x
+
+    # def modify_spectrogram(self, spec, resize_width, count, to_db=False):
+    #     print("in mod")
+    #     spec = super().modify_spectrogram(spec, resize_width, count, to_db=to_db)
+    #     plt.imshow(spec)
+    #     plt.savefig("/home/vin/test_masks/test_mask_{}.png".format(count))
+    #     spec = tfio.audio.time_mask(spec, param=10)
+    #     spec = tfio.audio.freq_mask(spec, param=30)
+    #     plt.imshow(spec)
+    #     plt.savefig("/home/vin/test_masks/test_mask_{}_done.png".format(count))
+    #     return spec
 
     def init_metrics(self):
         """Inits the metrics used during model evaluation. Fills the metrics

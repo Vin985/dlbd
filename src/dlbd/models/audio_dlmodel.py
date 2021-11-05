@@ -1,5 +1,4 @@
 from time import time
-from mouffet.models.model import Model
 
 import numpy as np
 
