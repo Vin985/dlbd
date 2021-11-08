@@ -36,6 +36,8 @@ scenarios:
     id: "type{regularizer--type}_value{regularizer--value}"
     time_mask: False
     freq_mask: False
+    spectrogram_overlap: 0.75
+    random_start: True
     regularizer:
       type: ["l2", "l1", "l1l2"]
       value: [0.001, 0.01]
