@@ -12,7 +12,7 @@ id_prefixes:
 
 n_epochs: 15
 learning_rate: 0.01
-pixels_per_sec: 170
+pixels_per_sec: 200
 num_dense_units: 128
 num_filters: 64
 wiggle_room: 10
@@ -22,20 +22,20 @@ early_stopping:
 
 scenarios:
   - name: "DLBDL_control_dense128_filt64_pps200_lr01_wr10"
-    id: "pps{pixels_per_sec}"
+    # id: "_pps{pixels_per_sec}"
     class: "dlbd.models.dlbd.DLBD"
     time_mask: False
     freq_mask: False
   - name: "DLBDL_random_overlap"
     class: "dlbd.models.dlbd.DLBD"
-    id: "pps{pixels_per_sec}_{spectrogram_overlap}"
+    id: "_{spectrogram_overlap}"
     random_start: True
     time_mask: False
     freq_mask: False
     spectrogram_overlap: [0.75, 0.8, 0.85, 0.95]
   - name: "DLBDL_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "pps{pixels_per_sec}_type{regularizer--type}_value{regularizer--value}"
+    id: "_type{regularizer--type}_value{regularizer--value}"
     time_mask: False
     freq_mask: False
     spectrogram_overlap: 0.75
@@ -47,13 +47,13 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "pps{pixels_per_sec}_reg-type{regularizer--type}"
+    id: "_reg-type{regularizer--type}"
     regularizer:
       type: "l2"
       value: 0.001
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "pps{pixels_per_sec}reg-type{regularizer--type}_overlap{}_tm{time_mask--value}_fm{freq_mask--value}"
+    id: "_reg-type{regularizer--type}_overlap{}_tm{time_mask--value}_fm{freq_mask--value}"
     regularizer:
       type: "l2"
       value: 0.001
