@@ -11,6 +11,14 @@ from .layers import MaskSpectrograms, NormalizeSpectrograms
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
 
+    CALLBACKS_DEFAULTS = {
+        "early_stopping": {
+            "patience": 3,
+            "monitor": "validation_loss",
+            "restore_best_weights": True,
+        }
+    }
+
     def get_regularizer(self):
         if self.opts.get("regularizer", {}):
             reg_type = self.opts["regularizer"].get("type", "l2")
