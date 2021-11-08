@@ -33,7 +33,7 @@ scenarios:
     spectrogram_overlap: [0.75, 0.8, 0.85, 0.95]
   - name: "DLBDL_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "type{regularizer--type}_value{regularizer--value}}"
+    id: "type{regularizer--type}_value{regularizer--value}"
     time_mask: False
     freq_mask: False
     regularizer:
