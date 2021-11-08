@@ -12,12 +12,13 @@ id_prefixes:
 
 n_epochs: 15
 learning_rate: 0.01
-pixels_per_sec: 200
+pixels_per_sec: 175
 num_dense_units: 128
 num_filters: 64
 wiggle_room: 10
 early_stopping:
-  patience: 3
+  patience: 2
+  min_delta: 0.005
 
 scenarios:
   - name: "DLBDL_control_dense128_filt64_pps200_lr01_wr10"
