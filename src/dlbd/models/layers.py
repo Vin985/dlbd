@@ -95,7 +95,7 @@ class MaskSpectrograms(tf.keras.layers.Layer):
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
             ) > self.freq_mask.get("prop", 70):
-                spec = tfio.audio.freq_mask(spec, param=self.freq_mask.get("prop", 30))
+                spec = tfio.audio.freq_mask(spec, param=self.freq_mask.get("value", 30))
         return spec
 
     @tf.function
