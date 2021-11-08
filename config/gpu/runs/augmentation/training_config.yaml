@@ -26,7 +26,7 @@ scenarios:
     freq_mask: False
   - name: "DLBDL_random_overlap"
     class: "dlbd.models.dlbd.DLBD"
-    id: "{overlap}"
+    id: "{spectrogram_overlap}"
     random_start: True
     time_mask: False
     freq_mask: False
