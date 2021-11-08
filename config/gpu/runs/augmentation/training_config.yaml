@@ -47,6 +47,18 @@ scenarios:
     regularizer:
       type: "l2"
       value: 0.001
+  - name: "DLBDL_mask_reg"
+    class: "dlbd.models.dlbd.DLBD"
+    id: reg-type{regularizer--type}_overlap{}_tm{time_mask--value}_fm{freq_mask--value}"
+    regularizer:
+      type: "l2"
+      value: 0.001
+    spectrogram_overlap: 0.75
+    random_start: True
+    time_mask:
+      value: [10, 20, 30]
+    freq_mask:
+      value: [20, 30, 50, 70]
 
 
 
