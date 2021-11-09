@@ -20,6 +20,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
     }
 
     def get_regularizer(self):
+        regularizer = None
         if self.opts.get("regularizer", {}):
             reg_type = self.opts["regularizer"].get("type", "l2")
             reg_val = self.opts["regularizer"].get("value", 0.001)
@@ -32,8 +33,6 @@ class CityNetTF2(TF2Model, AudioDLModel):
                     l1=self.opts["regularizer"].get("l1", 0.01),
                     l2=self.opts["regularizer"].get("l2", 0.01),
                 )
-        else:
-            regularizer = None
         return regularizer
 
     def create_model(self):
