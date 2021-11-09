@@ -30,8 +30,8 @@ class CityNetTF2(TF2Model, AudioDLModel):
                 regularizer = regularizers.L1(reg_val)
             elif reg_type == "l1_l2":
                 regularizer = regularizers.L1L2(
-                    l1=self.opts["regularizer"].get("l1", 0.01),
-                    l2=self.opts["regularizer"].get("l2", 0.01),
+                    l1=self.opts["regularizer"].get("l1", reg_val),
+                    l2=self.opts["regularizer"].get("l2", reg_val),
                 )
         return regularizer
 
