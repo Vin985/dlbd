@@ -41,7 +41,7 @@ scenarios:
     spectrogram_overlap: 0.75
     random_start: True
     regularizer:
-      type: ["l2", "l1", "l1l2"]
+      type: ["l2", "l1", "l1_l2"]
       value: [0.001, 0.01]
   - name: "DLBDL_mask"
     class: "dlbd.models.dlbd.DLBD"
