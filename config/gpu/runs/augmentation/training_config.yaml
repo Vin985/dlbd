@@ -47,13 +47,13 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_reg-type{regularizer--type}"
+    id: "_type{regularizer--type}"
     regularizer:
       type: "l2"
       value: 0.001
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_reg-type{regularizer--type}_overlap{}_tm{time_mask--value}_fm{freq_mask--value}"
+    id: "_type{regularizer--type}_overlap{spectrogram_overlap}_tm{time_mask--value}_fm{freq_mask--value}"
     regularizer:
       type: "l2"
       value: 0.001
