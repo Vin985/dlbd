@@ -88,7 +88,7 @@ class SpectrogramSampler:
         step = max(round((1 - self.opts["overlap"]) * self.dims[1]), 1)
         start = (
             randint(0, step)
-            if self.opts["randomize"] and self.opts["random_start"]
+            if self.opts["randomise"] and self.opts["random_start"]
             else 0
         )
         self.tmp_idxs = self.idxs[start::step]
