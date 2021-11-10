@@ -18,7 +18,6 @@ num_filters: 64
 wiggle_room: 10
 early_stopping:
   patience: 4
-  min_delta: 0.005
 spectrogram_overlap: 0.75
 random_start: True
 regularizer:
