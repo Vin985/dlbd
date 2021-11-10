@@ -17,15 +17,41 @@ num_dense_units: 128
 num_filters: 64
 wiggle_room: 10
 early_stopping:
-  patience: 4
+  patience: 3
   min_delta: 0.005
+spectrogram_overlap: 0.75
+random_start: True
+regularizer:
+  type: "l2"
+  value: 0.001
+time_mask:
+  value: 20
+freq_mask:
+  value: 50
+num_dense_units: 64
+num_dense_units2: 32
 
 scenarios:
-  - name: "DLBD"
+  - name: "DLBD_conv2_3x3"
     id: "_d1-{num_dense_units}_d2-{num_dense_units2}"
+    class: "dlbd.models.dlbd.DLBD"
+    conv2_filter_width: 3
+    conv2_filter_height: 3
+  - name: "DLBD_dil"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[0,1], [0,2]]
+    regularizer:
+      type: "l2"
+      value: 0.001
+  - name: "DLBD_3x3"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
     spectrogram_overlap: 0.75
     random_start: True
+    dilation_rate: [[0,1], [0,2]]
+    conv_filter_width: 3
+    conv_filter_height: 3
     regularizer:
       type: "l2"
       value: 0.001
@@ -33,6 +59,30 @@ scenarios:
       value: 20
     freq_mask:
       value: 50
+    num_dense_units: 64
+    num_dense_units2: 32
+  - name: "DLBD_3x3x2_dil"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    class: "dlbd.models.dlbd.DLBD"
+    spectrogram_overlap: 0.75
+    random_start: True
+    dilation_rate: [[0,1], [0,2]]
+    conv_filter_width: 3
+    conv_filter_height: 3
+    conv2_filter_width: 3
+    conv2_filter_height: 3
+    regularizer:
+      type: "l2"
+      value: 0.001
+    time_mask:
+      value: 20
+    freq_mask:
+      value: 50
+    num_dense_units: 64
+    num_dense_units2: 32
+  - name: "DLBD"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}"
+    class: "dlbd.models.dlbd.DLBD"
     num_dense_units: [32, 64, 128, 256]
     num_dense_units2: [None, 32, 64, 128]
 

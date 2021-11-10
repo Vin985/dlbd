@@ -40,7 +40,7 @@ class DLBD(CityNetTF2):
             self.opts.get("num_filters", 128),
             (
                 conv_filter_height,
-                self.opts["conv_filter_width"],
+                self.opts.get("conv_filter_width", 4),
             ),
             dilation_rate=self.get_dilation_rate(1),
             bias_initializer=None,
@@ -52,7 +52,10 @@ class DLBD(CityNetTF2):
         # * Second block
         x = layers.Conv2D(
             self.opts.get("num_filters", 128),
-            (1, 3),
+            (
+                self.opts.get("conv2_filter_height", 1),
+                self.opts.get("conv2_filter_width", 3),
+            ),
             bias_initializer=None,
             dilation_rate=self.get_dilation_rate(2),
             padding="valid",
