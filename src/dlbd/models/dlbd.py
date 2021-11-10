@@ -75,8 +75,8 @@ class DLBD(CityNetTF2):
             kernel_regularizer=regularizer,
         )(x)
         x = layers.BatchNormalization()(x)
-        dense2 = self.opts.get("num_dense_units2", None)
-        if dense2:
+        dense2 = self.opts.get("num_dense_units2", 0)
+        if dense2 > 0:
             x = layers.Dense(
                 dense2,
                 activation="relu",
