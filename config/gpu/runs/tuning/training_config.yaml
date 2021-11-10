@@ -17,7 +17,7 @@ num_dense_units: 128
 num_filters: 64
 wiggle_room: 10
 early_stopping:
-  patience: 3
+  patience: 4
   min_delta: 0.005
 spectrogram_overlap: 0.75
 random_start: True
