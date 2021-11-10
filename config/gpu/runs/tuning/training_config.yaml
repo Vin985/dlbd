@@ -22,7 +22,7 @@ early_stopping:
 
 scenarios:
   - name: "DLBD"
-    id: "_d1-{num_dense_i}_d2"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}"
     class: "dlbd.models.dlbd.DLBD"
     spectrogram_overlap: 0.75
     random_start: True
