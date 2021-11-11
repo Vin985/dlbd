@@ -1,0 +1,65 @@
+data_config: "config/gpu/runs/trim/data_config.yaml"
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+skip_trained: True
+
+databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
+
+id: "_{learning_rate}_{n_epochs}"
+id_prefixes:
+  learning_rate: "lr-"
+  n_epochs: "epochs-"
+
+n_epochs: 15
+learning_rate: 0.01
+pixels_per_sec: 200
+num_dense_units: 128
+num_filters: 64
+wiggle_room: 10
+early_stopping:
+  patience: 4
+  min_delta: 0.004
+spectrogram_overlap: 0.75
+random_start: True
+regularizer:
+  type: "l2"
+  value: 0.001
+time_mask:
+  value: 20
+freq_mask:
+  value: 50
+num_dense_units: 128
+num_dense_units2: 0
+
+scenarios:
+  - name: "DLBD_3x3"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    class: "dlbd.models.dlbd.DLBD"
+    spectrogram_overlap: 0.75
+    random_start: True
+    dilation_rate: [[1,2]]
+    conv_filter_width: 3
+    conv_filter_height: 3
+  - name: "DLBD_c2-3x3_dil_d128"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    class: "dlbd.models.dlbd.DLBD"
+    spectrogram_overlap: 0.75
+    random_start: True
+    dilation_rate: [[1,2]]
+    conv2_filter_width: 3
+    conv2_filter_height: 3
+    num_dense_units: 128
+  - name: "DLBD_dilc1"
+    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    class: "dlbd.models.dlbd.DLBD"
+    spectrogram_overlap: 0.75
+    random_start: True
+    dilation_rate: [[2, 2]]
+    conv_filter_width: [3,4]
+    conv_filter_height: [16, 32]
+    conv2_filter_width: 3
+    conv2_filter_height: 3
+    num_dense_units: 128
+
+
+
