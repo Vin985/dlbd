@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import pandas as pd
 from mouffet.evaluation.evaluation_handler import EvaluationHandler
@@ -42,22 +44,40 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         return res_df
 
     def classify_test_data(self, model, database):
+        infos = {}
+        res = []
+        total_audio_duration = 0
+
         test_data = self.data_handler.load_dataset(
             database, "test", load_opts={"file_types": ["spectrograms", "infos"]}
         )
-        res = []
+        infos["database"] = database.name
+        infos["n_files"] = len(test_data["spectrograms"])
 
         test_sampler = SpectrogramSampler(model.opts, balanced=False)
         test_sampler.opts["do_augmentation"] = False
+        start = time.time()
         # test_sampler.opts["batch_size"] = 256
         for i, spec in enumerate(test_data["spectrograms"]):
-            res_df = self.classify_element(
-                model, spec, test_data["infos"][i], test_sampler
-            )
+            audio_infos = test_data["infos"][i]
+            total_audio_duration += audio_infos["length"] / audio_infos["sample_rate"]
+            res_df = self.classify_element(model, spec, audio_infos, test_sampler)
             res.append(res_df)
+
+        end = time.time()
+
+        infos["global_duration"] = round(end - start, 2)
+        infos["total_audio_duration"] = round(total_audio_duration, 2)
+        infos["average_time_per_min"] = round(
+            infos["global_duration"] / (total_audio_duration / 60), 2
+        )
+        infos["average_time_per_file"] = round(
+            infos["global_duration"] / infos["n_files"], 2
+        )
+
         predictions = pd.concat(res)
         predictions = predictions.astype({"recording_path": "category"})
-        return predictions
+        return predictions, infos
 
     def prepare_tags(self, tags):
         tags = tags.astype({"recording_path": "category"})
