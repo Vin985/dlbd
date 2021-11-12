@@ -41,7 +41,9 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
             if len(x[x > threshold]) / len(x) >= options.get("gtc", 0.1):
                 return 2
         elif method == "activity_max":
-            return max(x)
+            if x:
+                return max(x)
+            return x
         elif method == "activity_average":
             return x.mean()
         return 0
