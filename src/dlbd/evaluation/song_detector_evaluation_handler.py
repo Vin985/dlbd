@@ -74,6 +74,7 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         infos["average_time_per_file"] = round(
             infos["global_duration"] / infos["n_files"], 2
         )
+        infos["spectrogram_overlap"] = test_sampler.opts["overlap"]
 
         predictions = pd.concat(res)
         predictions = predictions.astype({"recording_path": "category"})
