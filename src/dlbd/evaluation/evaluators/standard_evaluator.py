@@ -516,28 +516,31 @@ class StandardEvaluator(SongDetectorEvaluator):
             round(n_false_positives / tags_active_dur, 3) if tags_active_dur else 0
         )
 
-        stats = pd.DataFrame(
-            [
-                {
-                    "n_events": events.shape[0],
-                    "n_tags": tags.shape[0],
-                    "n_true_positives": n_true_positives,
-                    "n_false_positives": n_false_positives,
-                    "n_matched_tags": n_tags_matched,
-                    "n_unmatched_tags": n_tags_unmatched,
-                    "precision": precision,
-                    "recall": recall,
-                    "f1_score": f1_score,
-                    "true_positives_ratio": true_positives_ratio,
-                    "false_positive_rate": false_positive_rate,
-                    "prop_tag_overlap_75": (
-                        sum(matches.tag_overlap > 0.75) / matches.shape[0] * 100
-                    ),
-                }
-            ]
+        stats = {
+            "n_events": events.shape[0],
+            "n_tags": tags.shape[0],
+            "n_true_positives": n_true_positives,
+            "n_false_positives": n_false_positives,
+            "n_matched_tags": n_tags_matched,
+            "n_unmatched_tags": n_tags_unmatched,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1_score,
+            "true_positives_ratio": true_positives_ratio,
+            "false_positive_rate": false_positive_rate,
+            "prop_tag_overlap_75": (
+                sum(matches.tag_overlap > 0.75) / matches.shape[0] * 100
+            ),
+        }
+
+        print("Stats for options {0}:".format(options))
+        common_utils.print_warning(
+            "Precision:{}; Recall:{}; F1_score:{}".format(
+                stats["precision"], stats["recall"], stats["f1_score"]
+            )
         )
 
-        return stats
+        return pd.DataFrame([stats])
 
     def draw_plots(self, data, options):
         res = {}
@@ -564,12 +567,6 @@ class StandardEvaluator(SongDetectorEvaluator):
                 data={"events": events, "tags": tags, "matches": matches},
                 options=options,
             )
-        print("Stats for options {0}:".format(options))
-        common_utils.print_warning(
-            "Precision:{}; Recall:{}; F1_score:{}".format(
-                stats["precision"], stats["recall"], stats["f1_score"]
-            )
-        )
         return res
 
     # def plot_PR_curve(self, stats, options):
