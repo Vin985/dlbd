@@ -5,8 +5,12 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-from plotnine import ggplot, aes, geom_line, save_as_pdf_pages
+from mouffet.utils import common as common_utils
+from plotnine import aes, geom_line, ggplot, save_as_pdf_pages
+
 from .song_detector_evaluator import SongDetectorEvaluator
+
+from sklearn import metrics
 
 
 class SubsamplingEvaluator(SongDetectorEvaluator):
@@ -23,22 +27,26 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
     }
 
     def has_event(self, x, options):
-        method = options.get("event_method", "presence")
+        method = options.get("event_method", "activity_max")
         threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
         if method == "presence":
             if max(x) >= threshold:
-                return 1
+                return 2
         elif method == "average":
             if x.mean() >= threshold:
-                return 1
+                return 2
         elif method == "min_proportion":
             if len(x[x > threshold]) / len(x) >= options.get("gtc", 0.1):
-                return 1
+                return 2
+        elif method == "activity_max":
+            return max(x)
+        elif method == "activity_average":
+            return x.mean()
         return 0
 
     def has_tag(self, x):
         if max(x) > 0:
-            return 2
+            return 1
         return 0
 
     def get_tag_index(self, x, step, tags, options):
@@ -169,7 +177,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         )
         if tags is not None:
             events.loc[:, "tag"] = 0
-            events.loc[events.tag_index.str.len() > 0, "tag"] = 2
+            events.loc[events.tag_index.str.len() > 0, "tag"] = 1
         return events
 
     @staticmethod
@@ -220,16 +228,31 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         )
         save_as_pdf_pages(plots, "test_save_plots_citynet.pdf")
 
-    def get_stats(self, df, tags):
+    def get_stats(self, df, tags, options):
+
+        auc = None
+        ap = None
         # TODO: make stats coherent between no resampling and resampling: use tag index in the same way
+        method = options.get("event_method", "presence")
+        if method.startswith("activity_"):
+            df["activity"] = df.event
+            df.loc[:, "event"] = 0
+            df.loc[
+                df.activity
+                >= options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD),
+                "event",
+            ] = 2
+            auc = round(metrics.roc_auc_score(df.tag, df.activity), 2)
+            ap = round(metrics.average_precision_score(df.tag, df.activity), 2)
+
         res = df.tag + df.event
 
         n_true_positives = len(res[res == 3])
         # n_true_negatives = len(res[res == 0])
-        n_false_positives = len(res[res == 1])
-        n_false_negatives = len(res[res == 2])
+        n_false_positives = len(res[res == 2])
+        n_false_negatives = len(res[res == 1])
 
-        tagged_samples = len(df.tag[df.tag == 2])
+        tagged_samples = len(df.tag[df.tag == 1])
 
         matched_tags = df.tag_index.loc[
             (df.tag_index.str.len() > 0) & (df.event > 0)
@@ -258,29 +281,48 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
             if precision + recall_samples > 0
             else 0
         )
-        return pd.DataFrame(
-            [
-                {
-                    "n_events": int(df.event.sum()),
-                    "n_tags": n_tags,
-                    "n_true_positives": n_true_positives,
-                    "n_false_positives": n_false_positives,
-                    "n_matched_tags": n_matched_tags,
-                    "n_unmatched_tags": n_unmatched_tags,
-                    "n_tagged_samples": tagged_samples,
-                    "precision": precision,
-                    "recall_sample": recall_samples,
-                    "recall_tags": recall_tags,
-                    "f1_score": f1_score,
-                }
-            ]
+        f1_score_tags = (
+            round(2 * precision * recall_tags / (precision + recall_tags), 3)
+            if precision + recall_tags > 0
+            else 0
         )
+
+        stats = {
+            "n_events": int(df.event.sum()),
+            "n_tags": n_tags,
+            "n_true_positives": n_true_positives,
+            "n_false_positives": n_false_positives,
+            "n_matched_tags": n_matched_tags,
+            "n_unmatched_tags": n_unmatched_tags,
+            "n_tagged_samples": tagged_samples,
+            "precision": precision,
+            "recall_sample": recall_samples,
+            "recall_tags": recall_tags,
+            "f1_score": f1_score,
+            "f1_score_tags": f1_score_tags,
+            "auc": auc,
+            "ap": ap,
+        }
+
+        print("Stats for options {0}:".format(options))
+        common_utils.print_warning(
+            "Precision: {}; Recall: {}; F1_score: {}; Recall_tags: {}; F1_score_tags: {}; AUC: {}; Average precision: {}".format(
+                stats["precision"],
+                stats["recall_sample"],
+                stats["f1_score"],
+                stats["recall_tags"],
+                stats["f1_score_tags"],
+                stats["auc"],
+                stats["ap"],
+            )
+        )
+
+        return pd.DataFrame([stats])
 
     def evaluate(self, predictions, tags, options):
         tags = tags["tags_df"]
         events = self.get_events(predictions, options, tags)
-        stats = self.get_stats(events, tags)
-        print("Stats for options {0}: {1}".format(options, stats))
+        stats = self.get_stats(events, tags, options)
         return {"stats": stats, "matches": events}
 
     def plot_PR_curve(self, stats, options):

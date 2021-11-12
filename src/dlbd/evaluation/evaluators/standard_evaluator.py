@@ -1,4 +1,5 @@
 import pandas as pd
+from mouffet.utils import common as common_utils
 from plotnine import (
     aes,
     element_text,
@@ -563,7 +564,12 @@ class StandardEvaluator(SongDetectorEvaluator):
                 data={"events": events, "tags": tags, "matches": matches},
                 options=options,
             )
-        print("Stats for options {0}:\n {1}".format(options, stats))
+        print("Stats for options {0}:".format(options))
+        common_utils.print_warning(
+            "Precision:{}; Recall:{}; F1_score:{}".format(
+                stats["precision"], stats["recall"], stats["f1_score"]
+            )
+        )
         return res
 
     # def plot_PR_curve(self, stats, options):
