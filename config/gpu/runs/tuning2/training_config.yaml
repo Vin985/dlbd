@@ -13,7 +13,6 @@ id_prefixes:
 n_epochs: 15
 learning_rate: 0.01
 pixels_per_sec: 200
-num_dense_units: 128
 num_filters: 64
 wiggle_room: 10
 early_stopping:
@@ -29,7 +28,6 @@ time_mask:
 freq_mask:
   value: 50
 num_dense_units: 128
-num_dense_units2: 0
 
 scenarios:
   - name: "DLBD_3x3"
@@ -59,6 +57,12 @@ scenarios:
     conv_filter_height: [16, 32]
     conv2_filter_width: 3
     conv2_filter_height: 3
+  - name: "DLBD_input_width"
+    id: "_pps{pixels_per_second}_iw{input_width}"
+    class: "dlbd.models.dlbd.DLBD"
+    spectrogram_overlap: 0.75
+    random_start: True
+    input_width: [50, 100, 150]
     num_dense_units: 128
 
 
