@@ -53,8 +53,8 @@ scenarios:
     spectrogram_overlap: 0.75
     random_start: True
     dilation_rate: [[2, 2]]
-    conv_filter_width: [3,4]
-    conv_filter_height: [16, 32]
+    conv_filter_width: 3
+    conv_filter_height: 16
     conv2_filter_width: 3
     conv2_filter_height: 3
   - name: "DLBD_input_width"

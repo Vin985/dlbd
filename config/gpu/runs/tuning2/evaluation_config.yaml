@@ -13,5 +13,6 @@ evaluators:
     dtc_threshold: 0
     gtc_threshold: 0
   - type: subsampling
-    sample_step: [0.1, 0.5, 1]
-    activity_threshold: [0.5, 0.6, 0.7]
+    scenarios:
+      sample_step: [0.1, 0.5, 1]
+      activity_threshold: [0.5, 0.6, 0.7]
