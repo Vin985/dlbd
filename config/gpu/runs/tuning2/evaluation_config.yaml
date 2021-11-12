@@ -3,6 +3,7 @@ parent_path: "config/gpu/runs/evaluation_parent.yaml"
 
 models_options:
   spectrogram_overlap: 0.95
+  reclassify: True
 
 evaluators_options:
   draw_plots: False
