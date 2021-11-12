@@ -137,6 +137,16 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
     def match_events_apply(self, predictions, options, tags=None):
         recording_id = predictions.name
         step = options.get("sample_step", self.DEFAULT_SAMPLE_STEP) * 1000
+        real_step = int(
+            round(predictions.index.to_series().diff().max().total_seconds() * 1e3)
+        )
+        if step < real_step:
+            step = real_step
+            common_utils.print_warning(
+                "Warning! specified resamplig step lower than the resolution of predictions. Using real step of {}ms instead".format(
+                    step
+                )
+            )
         resampler = predictions.resample(str(step) + "ms") if step else predictions
         resample_func = functools.partial(self.has_event, options=options)
         agg_funcs = {
