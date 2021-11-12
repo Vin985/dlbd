@@ -54,19 +54,25 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         return 0
 
     def get_tag_index(self, x, step, tags, options):
-        start = x.index.values[0].item() / 10 ** 9
-        end = start + step
-        method = options.get("tag_method", "presence")
-        tmp = None
-        if method == "presence":
-            tmp = np.unique(tags["id"][(tags["start"] < end) & (tags["end"] >= start)])
-        elif method == "proportion":
-            overlap = (
-                np.minimum(tags["end"], end) - np.maximum(tags["start"], start)
-            ) / step
-            inside = (tags["start"] >= start) & (tags["end"] <= end)
-            tmp = np.unique(tags["id"][inside | (overlap >= options.get("gtc", 0.3))])
-        return tmp.tolist()
+        tmp = []
+        if not x.empty:
+            start = x.index.values[0].item() / 10 ** 9
+            end = start + step
+            method = options.get("tag_method", "presence")
+            if method == "presence":
+                tmp = np.unique(
+                    tags["id"][(tags["start"] < end) & (tags["end"] >= start)]
+                )
+            elif method == "proportion":
+                overlap = (
+                    np.minimum(tags["end"], end) - np.maximum(tags["start"], start)
+                ) / step
+                inside = (tags["start"] >= start) & (tags["end"] <= end)
+                tmp = np.unique(
+                    tags["id"][inside | (overlap >= options.get("gtc", 0.3))]
+                )
+            tmp = tmp.tolist()
+        return tmp
 
     def isolate_events(self, predictions, step):
         tmp = predictions.loc[predictions.event > 0]
