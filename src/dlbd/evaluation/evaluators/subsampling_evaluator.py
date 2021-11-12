@@ -21,13 +21,15 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
     DEFAULT_EVENT_THRESHOLD = 0.5
     DEFAULT_SAMPLE_STEP = 1
 
+    DEFAULT_EVENT_METHOD = "activity_max"
+
     DEFAULT_PR_CURVE_OPTIONS = {
         "variable": "activity_threshold",
         "values": {"end": 1, "start": 0, "step": 0.05},
     }
 
     def has_event(self, x, options):
-        method = options.get("event_method", "activity_max")
+        method = options.get("event_method", self.DEFAULT_EVENT_METHOD)
         threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
         if method == "presence":
             if max(x) >= threshold:
@@ -233,7 +235,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         auc = None
         ap = None
         # TODO: make stats coherent between no resampling and resampling: use tag index in the same way
-        method = options.get("event_method", "presence")
+        method = options.get("event_method", self.DEFAULT_EVENT_METHOD)
         if method.startswith("activity_"):
             df["activity"] = df.event
             df.loc[:, "event"] = 0
