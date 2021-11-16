@@ -33,14 +33,14 @@ freq_mask: False
 
 scenarios:
   - name: "DLBDL_original_mask"
-    id: "_patience{early_stopping--patience}"
+    id: "_tm{time_mask--value}-{time_mask--prop}_fm{freq_mask--value}-{freq_mask--prop}"
     class: "dlbd.models.dlbd.DLBD"
     time_mask:
-      value: [15, 20, 30]
-      prop: [70, 90, 1]
+      value: [30, 20, 15]
+      prop: [95, 70]
     freq_mask:
-      value: [30, 50, 70, 100]
-      prop: [70, 90, 1]
+      value: [100, 70, 50, 30]
+      prop: [95, 70]
   - name: "DLBD_3x3_nomask"
     id: "_dil{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
