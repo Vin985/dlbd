@@ -37,10 +37,10 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
     time_mask:
       value: [30, 20, 15]
-      prop: [95, 70]
+      prop: [95, 70, 50]
     freq_mask:
-      value: [100, 70, 50, 30]
-      prop: [95, 70]
+      value: [100, 60, 30]
+      prop: [95, 70, 50]
   - name: "DLBD_3x3_nomask"
     id: "_dil{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
