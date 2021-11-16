@@ -89,12 +89,12 @@ class MaskSpectrograms(tf.keras.layers.Layer):
         if self.time_mask:
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) > self.time_mask.get("prop", 70):
+            ) <= self.time_mask.get("prop", 70):
                 spec = tfio.audio.time_mask(spec, param=self.time_mask.get("value", 10))
         if self.freq_mask:
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) > self.freq_mask.get("prop", 70):
+            ) <= self.freq_mask.get("prop", 70):
                 spec = tfio.audio.freq_mask(spec, param=self.freq_mask.get("value", 30))
         return spec
 
