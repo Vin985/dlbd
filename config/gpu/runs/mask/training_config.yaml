@@ -10,7 +10,7 @@ id_prefixes:
   learning_rate: "lr-"
   n_epochs: "epochs-"
 
-n_epochs: 100
+n_epochs: 50
 learning_rate: 0.01
 pixels_per_sec: 200
 num_filters: 64
@@ -20,9 +20,9 @@ early_stopping:
   min_delta: 0.005
 spectrogram_overlap: 0.75
 random_start: True
-regularizer:
-  type: "l2"
-  value: 0.001
+# regularizer:
+#   type: "l2"
+#   value: 0.001
 # time_mask:
 #   value: 20
 # freq_mask:
@@ -37,10 +37,10 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
     time_mask:
       value: [30, 20, 15]
-      prop: [95, 70, 50]
+      prop: [50, 70, 95]
     freq_mask:
       value: [100, 60, 30]
-      prop: [95, 70, 50]
+      prop: [50, 70, 95]
   - name: "DLBD_3x3_nomask"
     id: "_dil{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
