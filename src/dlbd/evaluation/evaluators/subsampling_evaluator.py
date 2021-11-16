@@ -345,7 +345,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         stats = self.get_stats(events, tags, options)
         return {"stats": stats, "matches": events}
 
-    def plot_PR_curve(self, stats, options):
-        if not options.get("PR_curve_x", ""):
-            options["PR_curve_x"] = "recall_sample"
-        return super().plot_PR_curve(stats, options)
+    # def plot_PR_curve(self, stats, options):
+    #     if not options.get("PR_curve_x", ""):
+    #         options["PR_curve_x"] = "recall_sample"
+    #     return super().plot_PR_curve(stats, options)  # pylint: disable=no-member

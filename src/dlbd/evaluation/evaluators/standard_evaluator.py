@@ -26,7 +26,7 @@ class StandardEvaluator(SongDetectorEvaluator):
     DEFAULT_MIN_DURATION = 0.1
     DEFAULT_END_THRESHOLD = 0.6
 
-    DEFAULT_PLOTS = "detected_tags; overlap_duration"
+    DEFAULT_PLOTS = ["detected_tags", "overlap_duration"]
 
     def get_recording_events(self, predictions, options=None):
         options = options or {}
@@ -541,16 +541,6 @@ class StandardEvaluator(SongDetectorEvaluator):
         )
 
         return pd.DataFrame([stats])
-
-    def draw_plots(self, data, options):
-        res = {}
-        plots = options.get("plots", self.DEFAULT_PLOTS).split(";")
-        for to_plot in plots:
-            func_name = "plot_" + to_plot.strip()
-            if hasattr(self, func_name) and callable(getattr(self, func_name)):
-                tmp = getattr(self, func_name)(data, options)
-                res[to_plot] = tmp
-        return res
 
     def evaluate(self, predictions, tags, options):
         tags = tags["tags_df"]

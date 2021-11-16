@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 from mouffet.evaluation.evaluation_handler import EvaluationHandler
 
+from dlbd.evaluation.evaluators.citynet_evaluator import CityNetEvaluator
+
+
 from ..data.audio_data_handler import AudioDataHandler
 from ..training.spectrogram_sampler import SpectrogramSampler
 from .evaluators.standard_evaluator import StandardEvaluator
@@ -27,6 +30,7 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
     EVALUATORS = {
         "standard": StandardEvaluator(),
         "subsampling": SubsamplingEvaluator(),
+        "citynet": CityNetEvaluator(),
     }
 
     @staticmethod
