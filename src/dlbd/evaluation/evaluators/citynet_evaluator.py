@@ -1,17 +1,24 @@
 import math
 
 import matplotlib
-from mouffet.evaluation.detector import Detector
-from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
+import pandas as pd
+from mouffet.evaluation.evaluator import Evaluator
 
 import matplotlib.pyplot as plt
+from mouffet.utils import common as common_utils
+from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
+from sklearn import metrics
 
-matplotlib.use("agg")
+# matplotlib.use("agg")
 
 
-class CityNetDetector(Detector):
+class CityNetEvaluator(Evaluator):
+
+    REQUIRES = ["tags_df"]
 
     DEFAULT_EVENT_THRESHOLD = 0.5
+
+    DEFAULT_TIME_BUFFER = 0.5
 
     def __init__(self):
         super().__init__()
@@ -29,11 +36,17 @@ class CityNetDetector(Detector):
         tags = tags[tags.recording_id == predictions.name]
         threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
         predictions.loc[predictions.activity > threshold, "events"] = 2
+        dur = max(predictions.time)
         if not predictions.empty:
             step = predictions.time.values[1] - predictions.time.values[0]
             for tag in tags.itertuples():
-                start = math.ceil(tag.tag_start / step)
-                end = math.ceil(tag.tag_end / step)
+                start = max(
+                    0, math.ceil((tag.tag_start - self.DEFAULT_TIME_BUFFER) / step)
+                )
+                end = min(
+                    math.ceil(dur / step),
+                    math.ceil((tag.tag_end + self.DEFAULT_TIME_BUFFER) / step),
+                )
                 predictions.tags.iloc[start:end] = 1
         return predictions
 
@@ -54,17 +67,17 @@ class CityNetDetector(Detector):
         B = float(n_true_negatives) / (n_false_positives + n_true_negatives)
         balanced_accuracy = round((A + B) / 2.0, 3)
 
-        f1 = f1_score(predictions.tags, predictions.events == 2)
-
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
         average_precision = round(
-            average_precision_score(predictions.tags, predictions.events), 3
+            average_precision_score(predictions.tags, predictions.activity), 3
         )
+        auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
 
-        self.get_precision_recall_curve(predictions, precision, recall)
+        # self.get_precision_recall_curve(predictions, precision, recall)
 
-        f1_2 = round(2 * precision * recall / (precision + recall), 3)
+        f1_score = round(2 * precision * recall / (precision + recall), 3)
+
         stats = {
             # "n_events": events.shape[0],
             # "n_tags": tags.shape[0],
@@ -81,14 +94,22 @@ class CityNetDetector(Detector):
             # "false_positive_rate": false_positive_rate,
             "precision": precision,
             "recall": recall,
-            "f1_1": f1,
-            "f1_2": f1_2,
+            "f1_score": f1_score,
+            "auc": auc,
+            "ap": average_precision,
         }
-        return {
-            "stats": stats,
-            "predictions": predictions,
-            "options": options,
-        }
+
+        print("Stats for options {0}:".format(options))
+        common_utils.print_warning(
+            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; Average precision: {}".format(
+                stats["precision"],
+                stats["recall"],
+                stats["f1_score"],
+                stats["auc"],
+                stats["ap"],
+            )
+        )
+        return pd.DataFrame([stats])
 
     def get_precision_recall_curve(self, predictions, prec, rec):
 
@@ -109,6 +130,10 @@ class CityNetDetector(Detector):
         tags = tags["tags_df"]
         events = self.get_events(predictions, tags, options)
         stats = self.get_stats(events, options)
-        print("Stats for options {0}: {1}".format(options, stats["stats"]))
-        stats = {}
-        return stats
+        res = {"stats": stats, "matches": events}
+        if options.get("draw_plots", False):
+            res["plots"] = self.draw_plots(
+                data={"events": events, "tags": tags},
+                options=options,
+            )
+        return res
