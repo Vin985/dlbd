@@ -10,18 +10,18 @@ id_prefixes:
   learning_rate: "lr-"
   n_epochs: "epochs-"
 
-n_epochs: 15
+n_epochs: 100
 learning_rate: 0.01
 pixels_per_sec: 200
 num_filters: 64
 wiggle_room: 10
 early_stopping:
-  patience: 2
+  patience: 5
   min_delta: 0.005
 spectrogram_overlap: 0.75
 random_start: True
 regularizer:
-  type: "l1_l2"
+  type: "l2"
   value: 0.001
 # time_mask:
 #   value: 20
