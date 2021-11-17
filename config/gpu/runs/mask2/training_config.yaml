@@ -41,8 +41,10 @@ scenarios:
     freq_mask:
       value: 100
       prop: 50
-    num_dense_units: [128, 256, 512]
-    num_dense_units2: [32, 64, 128]    
+    #num_dense_units: [128, 256, 512]
+    #num_dense_units2: [32, 64, 128]    
+    num_dense_units: 128
+    num_dense_units2: 32    
   # - name: "DLBD_3x3_nomask"
   #   id: "_dil{dilation_rate}"
   #   class: "dlbd.models.dlbd.DLBD"
