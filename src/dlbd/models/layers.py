@@ -71,11 +71,11 @@ class MaskSpectrograms(tf.keras.layers.Layer):
 
 
         "time_mask", "Options for the time masking augmentation", , "dict"
-        "prop", "proportion of the time the masking will occur", 70, "int"
-        "value", "",10, "int"
+        "prop", "proportion of the time the masking will occur", 90, "int"
+        "value", "", shape[0] / 2, "int"
         "freq_mask", "Options for the frequency asking augmentation", , "dict"
-        "prop", "proportion of the time the masking will occur", 70, "int"
-        "value", "", 30 , "int"
+        "prop", "proportion of the time the masking will occur", 90, "int"
+        "value", "", shape[1] / 2 , "int"
 
     """
 
@@ -86,16 +86,23 @@ class MaskSpectrograms(tf.keras.layers.Layer):
 
     @tf.function(experimental_relax_shapes=True)
     def mask(self, spec):
+        # * Use freq_mask for time masking  and vice-versa as our spectrograms shapes
+        # * are inverted compared to tf ones (freq in the first dim, time in the seconf)
         if self.time_mask:
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) <= self.time_mask.get("prop", 70):
-                spec = tfio.audio.time_mask(spec, param=self.time_mask.get("value", 10))
+            ) <= self.time_mask.get("prop", 90):
+
+                spec = tfio.audio.freq_mask(
+                    spec, param=self.time_mask.get("value", int(spec.shape[0] / 2))
+                )
         if self.freq_mask:
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) <= self.freq_mask.get("prop", 70):
-                spec = tfio.audio.freq_mask(spec, param=self.freq_mask.get("value", 30))
+            ) <= self.freq_mask.get("prop", 90):
+                spec = tfio.audio.time_mask(
+                    spec, param=self.freq_mask.get("value", int(spec.shape[1] / 2))
+                )
         return spec
 
     @tf.function
