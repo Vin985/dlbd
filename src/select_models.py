@@ -4,9 +4,14 @@ from pathlib import Path
 
 
 results_dir = Path("/home/vin/Desktop/results")
+file_name = "mask_091541_stats.csv"
+file_path = results_dir / file_name
 
 
-results = pd.read_csv(results_dir / "best_172835_stats.csv")
+results = pd.read_csv(file_path)
+
+
+print(file_path.stem)
 
 
 def rank_stats(x, metrics):
@@ -44,11 +49,15 @@ metrics = [
 ]
 r2 = results.groupby(["database", "evaluator"]).apply(rank_stats, metrics)
 r2 = r2.reset_index(drop=True)
-r2.to_csv(results_dir / "best_ranked.csv", index=False)
+r2.to_csv(
+    results_dir / (file_path.stem.replace("_stats", "_ranked") + ".csv"), index=False
+)
 
 #%%
 
 
 r3 = r2.groupby(["model", "model_opts", "evaluator"]).apply(agg_stats, metrics)
 r3 = r3.reset_index()
-r3.to_csv(results_dir / "best_agg.csv", index=False)
+r3.to_csv(
+    results_dir / (file_path.stem.replace("_stats", "_agg") + ".csv"), index=False
+)
