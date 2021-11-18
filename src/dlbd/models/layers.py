@@ -82,26 +82,29 @@ class MaskSpectrograms(tf.keras.layers.Layer):
     def __init__(self, time_mask, freq_mask, **kwargs):
         super().__init__(**kwargs)
         self.time_mask = time_mask
+        self.time_opts = time_mask if isinstance(time_mask, dict) else {}
         self.freq_mask = freq_mask
+        self.freq_opts = freq_mask if isinstance(freq_mask, dict) else {}
 
     @tf.function(experimental_relax_shapes=True)
     def mask(self, spec):
         # * Use freq_mask for time masking  and vice-versa as our spectrograms shapes
         # * are inverted compared to tf ones (freq in the first dim, time in the seconf)
         if self.time_mask:
+            # * Allow mask to be a boolean instead
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) <= self.time_mask.get("prop", 90):
+            ) <= self.time_opts.get("prop", 90):
 
                 spec = tfio.audio.freq_mask(
-                    spec, param=self.time_mask.get("value", int(spec.shape[0] / 2))
+                    spec, param=self.time_opts.get("value", int(spec.shape[0] / 2))
                 )
         if self.freq_mask:
             if tf.random.uniform(  # pylint: disable=unexpected-keyword-arg
                 shape=(), minval=1, maxval=100, dtype=tf.int32
-            ) <= self.freq_mask.get("prop", 90):
+            ) <= self.freq_opts.get("prop", 90):
                 spec = tfio.audio.time_mask(
-                    spec, param=self.freq_mask.get("value", int(spec.shape[1] / 2))
+                    spec, param=self.freq_opts.get("value", int(spec.shape[1] / 2))
                 )
         return spec
 

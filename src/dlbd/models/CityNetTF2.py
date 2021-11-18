@@ -7,6 +7,9 @@ from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
 from .layers import MaskSpectrograms, NormalizeSpectrograms
 
+import tensorflow_io as tfio
+import matplotlib.pyplot as plt
+
 
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
@@ -75,13 +78,7 @@ class CityNetTF2(TF2Model, AudioDLModel):
         if not x:
             x = self.inputs
         time_mask = self.opts.get("time_mask", True)
-        # * Allow mask to be a boolean instead
-        if time_mask and not isinstance(time_mask, dict):
-            time_mask = {}
-        freq_mask = self.opts.get("time_mask", True)
-        # * Allow mask to be a boolean instead
-        if freq_mask and not isinstance(freq_mask, dict):
-            freq_mask = {}
+        freq_mask = self.opts.get("freq_mask", True)
         x = MaskSpectrograms(time_mask=time_mask, freq_mask=freq_mask)(x)
         x = NormalizeSpectrograms(
             name="Normalize_spectrograms",
@@ -150,13 +147,14 @@ class CityNetTF2(TF2Model, AudioDLModel):
         return x
 
     # def modify_spectrogram(self, spec, resize_width, count, to_db=False):
+    # * To use, add count argument in audio_dlmodel.modify_spectrogram and prepare_data
     #     print("in mod")
     #     spec = super().modify_spectrogram(spec, resize_width, count, to_db=to_db)
-    #     plt.imshow(spec)
+    #     plt.imshow(spec, aspect="auto")
     #     plt.savefig("/home/vin/test_masks/test_mask_{}.png".format(count))
     #     spec = tfio.audio.time_mask(spec, param=10)
-    #     spec = tfio.audio.freq_mask(spec, param=30)
-    #     plt.imshow(spec)
+    #     spec = tfio.audio.freq_mask(spec, param=100)
+    #     plt.imshow(spec, aspect="auto")
     #     plt.savefig("/home/vin/test_masks/test_mask_{}_done.png".format(count))
     #     return spec
 
