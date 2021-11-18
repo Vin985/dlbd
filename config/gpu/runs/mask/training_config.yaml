@@ -36,34 +36,34 @@ scenarios:
     id: "_tm{time_mask--value}-{time_mask--prop}_fm{freq_mask--value}-{freq_mask--prop}"
     class: "dlbd.models.dlbd.DLBD"
     time_mask:
-      value: [30, 15]
-      prop: [50, 70, 95]
+      value: [50, 100]
+      prop: [50, 75, 100]
     freq_mask:
-      value: [100, 50]
-      prop: [50, 70, 95]
-  - name: "DLBD_3x3_nomask"
-    id: "_dil{dilation_rate}"
-    class: "dlbd.models.dlbd.DLBD"
-    dilation_rate: [[1,2]]
-    conv_filter_width: 3
-    conv_filter_height: 3
-  - name: "DLBD_3x3x2_nomask"
-    class: "dlbd.models.dlbd.DLBD"
-    id: "_dil{dilation_rate}"
-    dilation_rate: [[1,2]]
-    conv_filter_width: 3
-    conv_filter_height: 3
-    conv2_filter_width: 3
-    conv2_filter_height: 3
-  - name: "DLBD_c2-3x3_nomask"
-    id: "_dil{dilation_rate}"
-    class: "dlbd.models.dlbd.DLBD"
-    dilation_rate: [[1,2]]
-    conv2_filter_width: 3
-    conv2_filter_height: 3
-  - name: "DLBDL_original_nomask"
-    id: "_patience{early_stopping--patience}_overlap{spectrogram_overlap}"
-    class: "dlbd.models.dlbd.DLBD"
+      value: [15, 30]
+      prop: [50, 75, 100]
+  # - name: "DLBD_3x3_nomask"
+  #   id: "_dil{dilation_rate}"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   dilation_rate: [[1,2]]
+  #   conv_filter_width: 3
+  #   conv_filter_height: 3
+  # - name: "DLBD_3x3x2_nomask"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   id: "_dil{dilation_rate}"
+  #   dilation_rate: [[1,2]]
+  #   conv_filter_width: 3
+  #   conv_filter_height: 3
+  #   conv2_filter_width: 3
+  #   conv2_filter_height: 3
+  # - name: "DLBD_c2-3x3_nomask"
+  #   id: "_dil{dilation_rate}"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   dilation_rate: [[1,2]]
+  #   conv2_filter_width: 3
+  #   conv2_filter_height: 3
+  # - name: "DLBDL_original_nomask"
+  #   id: "_patience{early_stopping--patience}_overlap{spectrogram_overlap}"
+  #   class: "dlbd.models.dlbd.DLBD"
 
 
 
