@@ -33,10 +33,10 @@ freq_mask: True
 
 scenarios:
   - name: "DLBDL_original_mask"
-    id: "du{num_dense_units}_du2{num_dense_units2}"
+    id: "{num_dense_units}_{num_dense_units2}"
     class: "dlbd.models.dlbd.DLBD"
     num_dense_units: [128, 256, 512]
-    num_dense_units2: [None, 32, 64, 128]
+    num_dense_units2: [0, 32, 64, 128]
   - name: "DLBD_3x3_d128"
     id: "_dil{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
