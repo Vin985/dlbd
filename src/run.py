@@ -1,22 +1,18 @@
 import argparse
+import ast
 import logging
-
-# import os
-import sys
-import time
+import shutil
 from pathlib import Path
-from mouffet.utils.common import print_error
 
 import mouffet.utils.file as file_utils
 import pandas as pd
 from mouffet.training.training_handler import TrainingHandler
+from mouffet.utils.common import print_error, print_warning
 
 from dlbd.data.audio_data_handler import AudioDataHandler
 from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
-
-import ast
 
 # import tensorflow as tf
 
@@ -92,6 +88,14 @@ parser.add_argument(
     help="The root directory where logs will be saved",
 )
 
+parser.add_argument(
+    "-c",
+    "--clean",
+    action="store_const",
+    const=1,
+    help="Clean logs and results directories for each run if they exist",
+)
+
 args = parser.parse_args()
 
 
@@ -102,6 +106,15 @@ for run in args.runs:
     model_dir = dest_dir / DEFAULTS["models_dir"]
     evaluation_dir = dest_dir / DEFAULTS["evaluations_dir"]
     predictions_dir = dest_dir / DEFAULTS["predictions_dir"]
+
+    # TODO: Implement clean argument and check if other arguments work
+    if args.clean:
+        if dest_dir.exists():
+            print_warning("Removing {}".format(dest_dir))
+            shutil.rmtree(dest_dir)
+        if log_dir.exists():
+            print_warning("Removing {}".format(log_dir))
+            shutil.rmtree(log_dir)
 
     run_opts = {}
 
