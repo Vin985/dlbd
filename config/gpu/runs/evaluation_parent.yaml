@@ -68,9 +68,9 @@ databases:
     # scenarios:
     #     spectrogram:
     #       sample_rate: ["original", 22050]
-  - name: citynet
-  - name: arctic_complete
-  - name: nips4b
+  - name: citynet2
+  - name: arctic_complete2
+  - name: nips4b2
   # - name: NABS
 #  - name: citynet
   # - name: nips4b
