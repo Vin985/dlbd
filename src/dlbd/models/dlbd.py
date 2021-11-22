@@ -22,7 +22,10 @@ class DLBD(CityNetTF2):
         if dr:
             if isinstance(dr, list):
                 if idx <= len(dr):
-                    return dr[idx - 1]
+                    val = dr[idx - 1]
+                    if isinstance(val, list):
+                        val = tuple(val)
+                    return val
             elif isinstance(dr, int):
                 return dr
         return 1
