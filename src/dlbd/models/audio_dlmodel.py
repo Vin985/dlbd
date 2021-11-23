@@ -8,7 +8,7 @@ import mouffet.utils.common as common_utils
 from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
-from ..data.spectrogram import resize_spectrogram
+from ..data.audio_utils import resize_spectrogram
 
 DEFAULT_N_FFT = 2048
 DEFAULT_HOP_LENGTH = 1024  # 512

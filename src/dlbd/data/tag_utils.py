@@ -3,19 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from plotnine import (
-    aes,
-    geom_bar,
-    geom_text,
-    ggplot,
-    scale_x_discrete,
-    element_text,
-    theme_classic,
-    theme,
-    xlab,
-    ylab,
-)
-from plotnine.positions.position_dodge import position_dodge
+from scipy.ndimage.interpolation import zoom
+
 
 DEFAULT_OPTIONS = {
     "audiotagger": {
@@ -34,6 +23,17 @@ DEFAULT_OPTIONS = {
     },
     "nisp4b": {"columns_name": {}, "columns_type": {}},
 }
+
+
+def load_tags(tags_dir, opts, audio_info, spec_len):
+    tag_opts = opts["tags"]
+    tag_df = get_tag_df(audio_info, tags_dir, tag_opts)
+
+    tmp_tags = filter_classes(tag_df, opts["classes"])
+    tag_presence = get_tag_presence(tmp_tags, audio_info, tag_opts)
+    factor = float(spec_len) / tag_presence.shape[0]
+    zoomed_presence = zoom(tag_presence, factor).astype(int)
+    return tmp_tags, zoomed_presence
 
 
 def rename_columns(df, columns):
@@ -163,6 +163,19 @@ def get_tag_presence(tag_df, audio_info, tag_opts):
 
 
 def summary(tags, opts=None):
+    from plotnine import (
+        aes,
+        geom_bar,
+        geom_text,
+        ggplot,
+        element_text,
+        theme_classic,
+        theme,
+        xlab,
+        ylab,
+    )
+    from plotnine.positions.position_dodge import position_dodge
+
     print(tags)
     tags_summary = (
         tags.groupby(["tag", "background"])

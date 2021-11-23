@@ -7,9 +7,6 @@ from ..training.spectrogram_sampler import SpectrogramSampler
 from .audio_dlmodel import AudioDLModel
 from .layers import MaskSpectrograms, NormalizeSpectrograms
 
-import tensorflow_io as tfio
-import matplotlib.pyplot as plt
-
 
 class CityNetTF2(TF2Model, AudioDLModel):
     NAME = "CityNetTF2"
