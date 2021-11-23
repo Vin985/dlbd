@@ -45,6 +45,12 @@ scenarios:
     dilation_rate: [[1, [1,2]], [[1,2], 1], [[1,2], [1,2]]]
   - name: "DLBDL_original"
     class: "dlbd.models.dlbd.DLBD"
+  - name: "DLBDL_dl1-2_1_pat5_delta0"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    early_stopping:
+      patience: 5
+      min_delta: 0
 
 
 
