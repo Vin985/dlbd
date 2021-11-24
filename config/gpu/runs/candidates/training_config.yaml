@@ -59,6 +59,26 @@ scenarios:
       patience: [5, 8]
       min_delta: 0.001
       restore_best_weights: [True, False]
+  - name: "DLBDL_dl1-2_1"
+    id: "_pat{early_stopping--patience}_restore{early_stopping--restore_best_weights}_delta{early_stopping--min_delta}"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    early_stopping:
+      patience: [5,8]
+      min_delta: [0.001, 0.002, 0.004]
+      restore_best_weights: [True, False]
+  - name: "DLBDL_replicate_1"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+  - name: "DLBDL_replicate_2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+  - name: "DLBDL_replicate_3"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+  - name: "DLBDL_replicate_4"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
 
 
 
