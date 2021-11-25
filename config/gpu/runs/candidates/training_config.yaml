@@ -79,7 +79,32 @@ scenarios:
   - name: "DLBDL_replicate_4"
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[[1,2], 1]]
-
+  - name: "DLBDL_replicate_5_regl2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    regularizer:
+      type: "l2"
+      value: 0.001
+  - name: "DLBDL_replicate_6_regl2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    regularizer:
+      type: "l2"
+      value: 0.001
+  - name: "DLBDL_replicate_6_regl2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    regularizer:
+      type: "l2"
+      value: 0.001
+  - name: "DLBDL_noes"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    early_stopping: False
+  - name: "DLBDL_noes_2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    early_stopping: False
 
 
 
