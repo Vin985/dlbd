@@ -105,6 +105,14 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[[1,2], 1]]
     early_stopping: False
+  - name: "DLBDL_ma1"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    use_ma: True
+  - name: "DLBDL_ma2"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    use_ma: True
 
 
 

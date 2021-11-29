@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow_addons as tfa
 import tensorflow.keras as keras
 from mouffet.models.TF2Model import TF2Model
 from tensorflow.keras import regularizers
@@ -192,11 +193,16 @@ class CityNetTF2(TF2Model, AudioDLModel):
         )(self.get_raw_data(validation_data), self.get_ground_truth(validation_data))
         return train_sampler, validation_sampler
 
-    def init_optimizer(self, learning_rate):
-        if not self.optimizer:
-            self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    def init_optimizer(self, learning_rate=0.01):
+        if not self.model.optimizer:
+            self.model.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+            if self.opts.get("use_ma", False):
+                print("using moving average")
+                self.model.optimizer = tfa.optimizers.MovingAverage(
+                    self.model.optimizer
+                )
         else:
-            self.optimizer.lr.assign(learning_rate)
+            self.model.optimizer.lr.assign(learning_rate)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
