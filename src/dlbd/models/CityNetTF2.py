@@ -201,6 +201,9 @@ class CityNetTF2(TF2Model, AudioDLModel):
                 self.model.optimizer = tfa.optimizers.MovingAverage(
                     self.model.optimizer
                 )
+            elif self.opts.get("use_swa", False):
+                print("using stochastic average")
+                self.model.optimizer = tfa.optimizers.SWA(self.model.optimizer)
         else:
             self.model.optimizer.lr.assign(learning_rate)
 

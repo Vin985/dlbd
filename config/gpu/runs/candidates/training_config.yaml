@@ -113,6 +113,22 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[[1,2], 1]]
     use_ma: True
+  - name: "DLBDL_swa"
+    class: "dlbd.models.dlbd.DLBD"
+    dilation_rate: [[[1,2], 1]]
+    use_swa: True
+  - name: "DLBDL2"
+    class: "dlbd.models.dlbd.DLBD2"
+    dilation_rate: [[[1,2], 1]]
+  - name: "DLBDL2_ma"
+    class: "dlbd.models.dlbd.DLBD2"
+    dilation_rate: [[[1,2], 1]]
+    use_ma: True
+  - name: "DLBDL2_swa"
+    class: "dlbd.models.dlbd.DLBD2"
+    dilation_rate: [[[1,2], 1]]
+    use_swa: True
+
 
 
 
