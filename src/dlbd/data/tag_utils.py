@@ -136,6 +136,16 @@ def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
         return pd.DataFrame()
 
 
+def get_bad_challenge_tag_df(tags_dir):
+    tag_path = tags_dir / "tags.csv"
+    if tag_path.exists():
+        print("Loading tag file: " + str(tag_path))
+        tag_df = pd.read_csv(tag_path)
+        return tag_df
+    else:
+        raise ValueError("Error - no annotations file found %s" % str(tag_path))
+
+
 def get_tag_df(audio_info, labels_dir, tag_opts):
     tag_type = tag_opts.get("type", "audiotagger")
 

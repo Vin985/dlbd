@@ -8,6 +8,8 @@ from ..options.audio_database_options import AudioDatabaseOptions
 from . import audio_utils, tag_utils
 from .split import citynet_split
 
+from .loaders import AudioDataLoader
+
 
 class AudioDataStructure(DataStructure):
     STRUCTURE = {
@@ -19,6 +21,10 @@ class AudioDataStructure(DataStructure):
 
 
 class AudioDataHandler(DataHandler):
+    def __init__(self, opts, loader_cls=None):
+        super().__init__(opts, loader_cls=loader_cls)
+        if self.loader is None:
+            self.loader = AudioDataLoader
 
     OPTIONS_CLASS = AudioDatabaseOptions
 
