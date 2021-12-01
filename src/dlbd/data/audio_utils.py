@@ -85,6 +85,7 @@ def resize_spectrogram(spec, size, resample_method="bicubic"):
 
 
 def load_audio_data(file_path, spec_opts):
+    print("Loading audio file: " + str(file_path))
     sr = spec_opts.get("sample_rate", "original")
     if sr and sr == "original":
         sr = None
