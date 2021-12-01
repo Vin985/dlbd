@@ -34,12 +34,12 @@ class BADChallengeLoader(AudioDataLoader):
     def finalize_dataset(self):
         pass
 
-    def load_file_data(self, file_path, tags_dir, opts):
+    def load_file_data(self, file_path, opts):
         spec, audio_info = audio_utils.load_audio_data(file_path, opts["spectrogram"])
         self.data["spectrograms"].append(spec)
         self.data["infos"].append(audio_info)
 
-    def load_dataset(self, database, db_opts, paths, file_list, db_type, overwrite):
+    def load_dataset(self, database, paths, file_list, db_type, overwrite):
         db_opts = self.load_data_options(database)
         tags_dir = paths["tags"][db_type]
         self.data["tags_df"] = tag_utils.get_bad_challenge_tag_df(tags_dir)
@@ -47,10 +47,7 @@ class BADChallengeLoader(AudioDataLoader):
             try:
                 if not isinstance(file_path, Path):
                     file_path = Path(file_path)
-                tags_dir = paths["tags"][db_type]
-                self.load_file_data(
-                    file_path=file_path, tags_dir=tags_dir, opts=db_opts
-                )
+                self.load_file_data(file_path=file_path, opts=db_opts)
             except Exception:
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())
