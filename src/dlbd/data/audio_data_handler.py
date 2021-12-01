@@ -5,10 +5,10 @@ from mouffet.data.split import split_folder
 from mouffet.utils.common import join_tuple
 
 from ..options.audio_database_options import AudioDatabaseOptions
-from . import audio_utils, tag_utils
+from . import audio_utils
 from .split import citynet_split
 
-from .loaders import AudioDataLoader
+from .loaders import AudioDataLoader, BADChallengeLoader
 
 
 class AudioDataStructure(DataStructure):
@@ -21,10 +21,11 @@ class AudioDataStructure(DataStructure):
 
 
 class AudioDataHandler(DataHandler):
+
+    LOADERS = {"default": AudioDataLoader, "bad_challenge": BADChallengeLoader}
+
     def __init__(self, opts, loader_cls=None):
         super().__init__(opts, loader_cls=loader_cls)
-        if self.loader is None:
-            self.loader = AudioDataLoader
 
     OPTIONS_CLASS = AudioDatabaseOptions
 
@@ -67,27 +68,27 @@ class AudioDataHandler(DataHandler):
         merged["tags_df"] = pd.concat(merged["tags_df"])
         return merged
 
-    def finalize_dataset(self):
-        self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
+    # def finalize_dataset(self):
+    #     self.tmp_db_data["tags_df"] = pd.concat(self.tmp_db_data["tags_df"])
 
-    def load_data_options(self, database):
-        # db_opts = database.get("options", {})
-        opts = {}
-        opts["tags"] = database.tags
-        opts["spectrogram"] = database.spectrogram
-        opts["classes"] = self.load_classes(database)
-        return opts
+    # def load_data_options(self, database):
+    #     # db_opts = database.get("options", {})
+    #     opts = {}
+    #     opts["tags"] = database.tags
+    #     opts["spectrogram"] = database.spectrogram
+    #     opts["classes"] = self.load_classes(database)
+    #     return opts
 
-    def load_file_data(self, file_path, tags_dir, opts):
-        spec, audio_info = audio_utils.load_audio_data(file_path, opts["spectrogram"])
-        tags_df, tags_linear = tag_utils.load_tags(
-            tags_dir, opts, audio_info, spec.shape[1]
-        )
+    # def load_file_data(self, file_path, tags_dir, opts):
+    #     spec, audio_info = audio_utils.load_audio_data(file_path, opts["spectrogram"])
+    #     tags_df, tags_linear = tag_utils.load_tags(
+    #         tags_dir, opts, audio_info, spec.shape[1]
+    #     )
 
-        self.tmp_db_data["spectrograms"].append(spec)
-        self.tmp_db_data["infos"].append(audio_info)
-        self.tmp_db_data["tags_df"].append(tags_df)
-        self.tmp_db_data["tags_linear_presence"].append(tags_linear)
+    #     self.tmp_db_data["spectrograms"].append(spec)
+    #     self.tmp_db_data["infos"].append(audio_info)
+    #     self.tmp_db_data["tags_df"].append(tags_df)
+    #     self.tmp_db_data["tags_linear_presence"].append(tags_linear)
 
     def get_summary(self, dataset):
         df = dataset["tags_df"]
