@@ -172,6 +172,19 @@ def get_tag_presence(tag_df, audio_info, tag_opts):
     return tag_presence
 
 
+def prepare_tags(tags):
+    tags = tags.astype({"recording_path": "category"})
+    tags["tag_duration"] = tags["tag_end"] - tags["tag_start"]
+    tags.reset_index(inplace=True)
+    tags.rename(
+        columns={"index": "tag_index", "recording_path": "recording_id"},
+        inplace=True,
+    )
+    tags.reset_index(inplace=True)
+    tags.rename(columns={"index": "id"}, inplace=True)
+    return tags
+
+
 def summary(tags, opts=None):
     from plotnine import (
         aes,

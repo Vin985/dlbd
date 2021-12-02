@@ -2,14 +2,16 @@ import traceback
 from pathlib import Path
 
 import pandas as pd
-
 from mouffet.data.data_loader import DataLoader
+
 from . import audio_utils, tag_utils
 
 
 class AudioDataLoader(DataLoader):
-    def load_data_options(self, database):
-        # db_opts = database.get("options", {})
+
+    CALLBACKS = {"onload": {"tags_df": tag_utils.prepare_tags}}
+
+    def dataset_options(self, database):
         opts = {}
         opts["tags"] = database.tags
         opts["spectrogram"] = database.spectrogram
@@ -30,7 +32,10 @@ class AudioDataLoader(DataLoader):
         self.data["tags_df"] = pd.concat(self.data["tags_df"])
 
 
-class BADChallengeLoader(AudioDataLoader):
+class BADChallengeDataLoader(AudioDataLoader):
+
+    CALLBACKS = {}
+
     def finalize_dataset(self):
         pass
 
@@ -39,15 +44,19 @@ class BADChallengeLoader(AudioDataLoader):
         self.data["spectrograms"].append(spec)
         self.data["infos"].append(audio_info)
 
-    def load_dataset(self, database, paths, file_list, db_type, overwrite):
-        db_opts = self.load_data_options(database)
+    def generate_dataset(self, database, paths, file_list, db_type, overwrite):
+        db_opts = self.dataset_options(database)
         tags_dir = paths["tags"][db_type]
         self.data["tags_df"] = tag_utils.get_bad_challenge_tag_df(tags_dir)
+        cpt = 0
         for file_path in file_list:
+            if cpt == 10:
+                return
             try:
                 if not isinstance(file_path, Path):
                     file_path = Path(file_path)
                 self.load_file_data(file_path=file_path, opts=db_opts)
+                cpt += 1
             except Exception:
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())
