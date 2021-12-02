@@ -20,6 +20,15 @@ evaluation_config_path = "challenges/evaluation_config.yaml"
 
 evaluation_config = file_utils.load_config(evaluation_config_path)
 
+
+def load_model_options(opts, updates):
+    model_opt = ast.literal_eval(opts)
+    model_opt.update(updates)
+    return model_opt
+
+
+updates = {"model_dir": models_dir}
+
 models = evaluation_config.get("models", [])
 if not models:
     models_stats_path = Path(models_dir / TrainingHandler.MODELS_STATS_FILE_NAME)
@@ -29,8 +38,10 @@ if not models:
             "opts", keep="last"
         )
     if models_stats is not None:
-        models = [ast.literal_eval(row.opts) for row in models_stats.itertuples()]
-        evaluation_config["models"] = models
+        models = [
+            load_model_options(row.opts, updates) for row in models_stats.itertuples()
+        ]
+        evaluation_config["models"] = [models[0]]
 
 
 evaluator = SongDetectorEvaluationHandler(

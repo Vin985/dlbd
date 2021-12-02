@@ -39,7 +39,7 @@ databases:
     - name: 'warblr'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/warblr/'
       tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/warblr/test'
-      generate_file_lists: True
+      # generate_file_lists: True
       loader: "bad_challenge"
       db_types: ["test"]
     
