@@ -25,7 +25,9 @@
             "type": "python",
             "request": "launch",
             "program": "/mnt/win/UMoncton/Doctorat/dev/dlbd/src/run.py",
-            "args": ["run1"],
+            "args": [
+                "run2"
+            ],
             "console": "integratedTerminal",
             "justMyCode": false
         },
