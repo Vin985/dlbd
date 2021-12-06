@@ -5,8 +5,8 @@ save_results: True #True
 ###########
 ## Paths ##
 ###########
-predictions_dir: "challenges/results/predictions"
-evaluation_dir: "challenges/results/evaluation"
+predictions_dir: "applications/challenges/results/predictions"
+evaluation_dir: "applications/challenges/results/evaluation"
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False

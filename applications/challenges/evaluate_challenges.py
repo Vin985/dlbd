@@ -16,7 +16,7 @@ tags_file = "tags.csv"
 warblr_dir = Path("/mnt/win/UMoncton/Doctorat/data/dl_training/raw/warblr/test")
 models_dir = Path("/home/vin/Desktop/results/candidates_models")
 
-evaluation_config_path = "challenges/evaluation_config.yaml"
+evaluation_config_path = "applications/challenges/evaluation_config.yaml"
 
 evaluation_config = file_utils.load_config(evaluation_config_path)
 
