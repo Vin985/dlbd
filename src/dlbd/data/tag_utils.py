@@ -1,4 +1,5 @@
 import os
+from mouffet.utils.common import print_warning
 
 import numpy as np
 import pandas as pd
@@ -29,7 +30,7 @@ def load_tags(tags_dir, opts, audio_info, spec_len):
     tag_opts = opts["tags"]
     tag_df = get_tag_df(audio_info, tags_dir, tag_opts)
 
-    tmp_tags = filter_classes(tag_df, opts["classes"])
+    tmp_tags = filter_classes(tag_df, opts)
     tag_presence = get_tag_presence(tmp_tags, audio_info, tag_opts)
     factor = float(spec_len) / tag_presence.shape[0]
     zoomed_presence = zoom(tag_presence, factor).astype(int)
@@ -51,7 +52,7 @@ def rename_columns(df, columns):
     return df
 
 
-def filter_classes(tag_df, classes):
+def filter_classes(tag_df, opts):
     """Filters the provided tag dataframe to select only tags in the classes list.
     If no match was found in the 'tag' column and a 'related' column is present in the dataframe,
     this column will be also checked. If a match is found in the 'related' column,
@@ -66,6 +67,7 @@ def filter_classes(tag_df, classes):
     Returns:
         pandas.Dataframe: filtered and possibly altered dataframe with 'tag' values only in list
     """
+    classes = opts["classes"]
     if tag_df.empty:
         return tag_df
     tag_df = tag_df.dropna(subset=["tag"])
@@ -77,16 +79,23 @@ def filter_classes(tag_df, classes):
     match = tag_df.tag.values
     i = 0
     for tag, related in df2.itertuples(name=None, index=False):
+        found = False
         tag = tag.lower()
         if tag in classes:
-            res[i] = True
+            found = True
         else:
             related_tags = related.lower().split(",")
             for c in classes:
                 if c in related_tags:
-                    res[i] = True
+                    found = True
                     match[i] = c
                     break
+            # * If we arrived here, class was not found
+        if not found and opts["tags"].get("print_missing_classes", False):
+            print_warning(
+                "class {} not present in accepted classes, skipping".format(tag)
+            )
+        res[i] = found
         i += 1
     tag_df.loc[:, "tag"] = match
     return tag_df[res]
@@ -130,6 +139,8 @@ def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
         print("Loading tag file: " + str(tag_path))
         tag_df = pd.read_csv(tag_path, names=["tag_start", "tag_duration", "tag"])
         tag_df["tag_end"] = tag_df["tag_start"] + tag_df["tag_duration"]
+
+        tag_df["tag"].loc[tag_df["tag"] == "Unknown"] = "UNKN"
         return tag_df
     else:
         print("Warning - no annotations found for %s" % str(audio_file_path))
@@ -183,6 +194,52 @@ def prepare_tags(tags):
     tags.reset_index(inplace=True)
     tags.rename(columns={"index": "id"}, inplace=True)
     return tags
+
+
+def flatten_tags(tags_df):
+    """Flattens all tags, meaning reduce all overlapping tags to a single tag which starts at the
+    beginning of the first tag and stops at the end of the last tag
+
+    Args:
+        tags_df (pandas.DataFrame): A dataframe with all the tags. Works with tags in the
+        AudioTagger format
+
+    Returns:
+        pandas.DataFrame: A DataFrame with all tags flattened
+    """
+    res = []
+    previous = {}
+    tags_df.sort_values(by=["tag_start"])
+    for _, tag in tags_df.iterrows():
+        if not previous:
+            previous = {
+                "tag_start": tag.tag_start,
+                "tag_end": tag.tag_end,
+                "tag_duration": tag.tag_duration,
+                "n_tags": 1,
+            }
+            res.append(previous)
+        else:
+            # * Next tag overlaps with the previous one
+            if previous["tag_start"] <= tag.tag_start < previous["tag_end"]:
+                # * Tag ends later than the previous one: use the end of this one instead
+                if tag.tag_end > previous["tag_end"]:
+                    previous["tag_end"] = tag.tag_end
+                    previous["n_tags"] += 1
+                    previous["tag_duration"] = (
+                        previous["tag_end"] - previous["tag_start"]
+                    )
+            else:
+                # * Tag starts after the next one, create new tag
+                previous = {
+                    "tag_start": tag.tag_start,
+                    "tag_end": tag.tag_end,
+                    "tag_duration": tag.tag_duration,
+                    "n_tags": 1,
+                }
+                res.append(previous)
+    res = pd.DataFrame(res)
+    return res
 
 
 def summary(tags, opts=None):
