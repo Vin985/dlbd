@@ -194,18 +194,16 @@ class CityNetTF2(TF2Model, AudioDLModel):
         return train_sampler, validation_sampler
 
     def init_optimizer(self, learning_rate=0.01):
-        if not self.model.optimizer:
-            self.model.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        if not self.optimizer:
+            self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
             if self.opts.get("use_ma", False):
                 print("using moving average")
-                self.model.optimizer = tfa.optimizers.MovingAverage(
-                    self.model.optimizer
-                )
+                self.optimizer = tfa.optimizers.MovingAverage(self.optimizer)
             elif self.opts.get("use_swa", False):
                 print("using stochastic average")
-                self.model.optimizer = tfa.optimizers.SWA(self.model.optimizer)
+                self.optimizer = tfa.optimizers.SWA(self.optimizer)
         else:
-            self.model.optimizer.lr.assign(learning_rate)
+            self.optimizer.lr.assign(learning_rate)
 
     def predict(self, x):
         return tf.nn.softmax(self.model(x, training=False)).numpy()
