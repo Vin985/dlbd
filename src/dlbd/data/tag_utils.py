@@ -140,7 +140,7 @@ def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
         tag_df = pd.read_csv(tag_path, names=["tag_start", "tag_duration", "tag"])
         tag_df["tag_end"] = tag_df["tag_start"] + tag_df["tag_duration"]
 
-        tag_df["tag"].loc[tag_df["tag"] == "Unknown"] = "UNKN"
+        tag_df.loc[tag_df["tag"] == "Unknown", "tag"] = "UNKN"
         return tag_df
     else:
         print("Warning - no annotations found for %s" % str(audio_file_path))
