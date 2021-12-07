@@ -38,6 +38,7 @@ class SpectrogramSampler:
         self.opts["batch_size"] = opts["batch_size"]
         self.opts["overlap"] = opts.get("spectrogram_overlap", 0.75)
         self.opts["random_start"] = opts.get("random_start", False)
+        self.opts["gt_prop"] = opts.get("gt_prop", 0)
 
     def __call__(self, X, y=None):
         """Call the spectrogram sampler
@@ -124,9 +125,12 @@ class SpectrogramSampler:
                     X[count] = X[count] - self.medians[which][:, None]
 
                 # TODO: Change the way labels are decided?
-                y[count] = self.labels[
-                    (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
-                ].max()
+                y[count] = int(
+                    self.labels[
+                        (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
+                    ].mean()
+                    > self.opts["gt_prop"]
+                )
 
                 if self.opts["learn_log"]:
                     which = self.which_spec[loc]
