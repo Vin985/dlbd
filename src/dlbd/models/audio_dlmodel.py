@@ -10,10 +10,6 @@ from tqdm import tqdm
 
 from ..data.audio_utils import resize_spectrogram
 
-DEFAULT_N_FFT = 2048
-DEFAULT_HOP_LENGTH = 1024  # 512
-DEFAULT_N_MELS = 32  # 128
-
 
 class AudioDLModel(DLModel):
     NAME = "AUDIODLMODEL"
@@ -69,7 +65,9 @@ class AudioDLModel(DLModel):
                 # * Issue a warning if the number of pixels desired is too far from the original size
                 original_pps = infos["sample_rate"] / spec_opts["hop_length"]
                 new_pps = self.opts["pixels_per_sec"]
-                if new_pps / original_pps > 2 or new_pps / original_pps < 0.5:
+                if self.opts.get("verbose", False) and (
+                    new_pps / original_pps > 2 or new_pps / original_pps < 0.5
+                ):
                     common_utils.print_warning(
                         (
                             "WARNING: The number of pixels per seconds when resizing -{}-"
