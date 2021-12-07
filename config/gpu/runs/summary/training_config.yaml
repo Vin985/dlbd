@@ -3,7 +3,7 @@ parent_path: "config/gpu/runs/training_parent.yaml"
 
 skip_trained: True
 
-databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
+databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete3"]
 
 n_epochs: 50
 learning_rate: 0.01
