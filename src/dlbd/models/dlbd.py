@@ -70,8 +70,9 @@ class DLBD(CityNetTF2):
         x = layers.BatchNormalization()(x)
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
+        dense1 = self.opts.get("num_dense_units", 128)
         x = layers.Dense(
-            self.opts["num_dense_units"],
+            dense1,
             activation="relu",
             bias_initializer=None,
             kernel_regularizer=regularizer,
@@ -79,6 +80,8 @@ class DLBD(CityNetTF2):
         x = layers.BatchNormalization()(x)
         dense2 = self.opts.get("num_dense_units2", 0)
         if dense2 > 0:
+            if dense2 > dense1:
+                dense2 = dense1
             x = layers.Dense(
                 dense2,
                 activation="relu",
@@ -152,8 +155,9 @@ class DLBD2(DLBD):
         # x = layers.BatchNormalization()(x)
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
+        dense1 = self.opts.get("num_dense_units", 128)
         x = layers.Dense(
-            self.opts["num_dense_units"],
+            dense1,
             activation="relu",
             bias_initializer=None,
             kernel_regularizer=regularizer,
@@ -161,6 +165,8 @@ class DLBD2(DLBD):
         x = layers.BatchNormalization()(x)
         dense2 = self.opts.get("num_dense_units2", 0)
         if dense2 > 0:
+            if dense2 > dense1:
+                dense2 == dense1
             x = layers.Dense(
                 dense2,
                 activation="relu",
