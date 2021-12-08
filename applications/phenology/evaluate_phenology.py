@@ -116,17 +116,6 @@ ref_per_day = ref_df[["date", "duration"]].groupby("date").mean().reset_index()
 ref_per_day["type"] = "ground_truth"
 ref_per_day["mov_avg"] = ref_per_day.duration.rolling(4, center=True).mean()
 ref_per_day["diff"] = 0
-#%%
-
-
-# plt = (
-#     ggplot(data=ref_per_day, mapping=aes("date", "duration"))
-#     + geom_point()
-#     + geom_line()
-#     + geom_line(mapping=aes("date", "mov_avg"), color="red")
-# )
-
-# plt
 
 #%%
 
@@ -171,28 +160,6 @@ else:
     res_df = pd.concat([ref_per_day] + res).reset_index()
     res_df.to_feather(agg_path)
 print(res_df)
-#%%
-
-
-# plt = (
-#     ggplot(
-#         data=res_df.dropna(),
-#         mapping=aes("date", "duration", color="factor(type)"),
-#     )
-#     + geom_point()
-#     + geom_line(mapping=aes("date", "mov_avg", color="factor(type)"))
-#     + facet_grid("type~", scales="free")
-#     # + geom_smooth(
-#     #     method="mavg",
-#     #     se=False,
-#     #     method_args={"window": 4, "center": True, "min_periods": 1},
-#     # )
-# )
-
-# plt.save(Path(evaluator.opts["evaluation_dir"]) / "phenology_sub.pdf")
-
-# save_as_pdf_pages(plt, Path(evaluator.opts["evaluation_dir"]) / "phenology.pdf")
-
 #%%
 
 
