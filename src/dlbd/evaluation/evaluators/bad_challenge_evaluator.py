@@ -1,18 +1,28 @@
 import math
+from pathlib import Path
 
 import matplotlib
+import matplotlib.pyplot as plt
 import pandas as pd
 from mouffet.evaluation.evaluator import Evaluator
-
-import matplotlib.pyplot as plt
 from mouffet.utils import common as common_utils
-from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
 from sklearn import metrics
+from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
+
+from .citynet_evaluator import CityNetEvaluator
+from .standard_evaluator import StandardEvaluator
+from .subsampling_evaluator import SubsamplingEvaluator
 
 # matplotlib.use("agg")
 
 
 class BADChallengeEvaluator(Evaluator):
+
+    EVALUATORS = {
+        "standard": StandardEvaluator(),
+        "subsampling": SubsamplingEvaluator(),
+        "citynet": CityNetEvaluator(),
+    }
 
     REQUIRES = ["tags_df"]
 
@@ -23,32 +33,24 @@ class BADChallengeEvaluator(Evaluator):
     def __init__(self):
         super().__init__()
 
-    def get_events(self, predictions, tags, options):
-        predictions = predictions[["activity", "recording_id", "time"]].copy()
-        predictions["events"] = 0
-        predictions["tags"] = 0
-        events = predictions.groupby("recording_id", as_index=True, observed=True)
-        events = events.apply(self.get_recording_events, tags, options)
-        return events
+    def has_bird_standard(self, events):
+        if not events.empty:
+            return 2
+        return 0
 
-    def get_recording_events(self, predictions, tags, options=None):
-        options = options or {}
-        tags = tags[tags.recording_id == predictions.name]
-        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
-        predictions.loc[predictions.activity > threshold, "events"] = 2
-        dur = max(predictions.time)
-        if not predictions.empty:
-            step = predictions.time.values[1] - predictions.time.values[0]
-            for tag in tags.itertuples():
-                start = max(
-                    0, math.ceil((tag.tag_start - self.DEFAULT_TIME_BUFFER) / step)
-                )
-                end = min(
-                    math.ceil(dur / step),
-                    math.ceil((tag.tag_end + self.DEFAULT_TIME_BUFFER) / step),
-                )
-                predictions.tags.iloc[start:end] = 1
-        return predictions
+    def get_events(self, predictions, options):
+        method = options["method"]
+        events = self.EVALUATORS[method].get_events(predictions, options)
+        agg_func = getattr(self, "has_bird_" + method)
+        res = []
+        for recording in predictions.recording_id.unique():
+            tmp = {}
+            rec_events = events.loc[events.recording_id == recording]
+            tmp["itemid"] = Path(recording).stem
+            tmp["events"] = agg_func(rec_events)
+            res.append(tmp)
+        res_df = pd.DataFrame(res)
+        return res_df
 
     def get_stats(self, predictions, options):
 
@@ -69,10 +71,10 @@ class BADChallengeEvaluator(Evaluator):
 
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
-        average_precision = round(
-            average_precision_score(predictions.tags, predictions.activity), 3
-        )
-        auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
+        # average_precision = round(
+        #     average_precision_score(predictions.tags, predictions.activity), 3
+        # )
+        # auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
 
         # self.get_precision_recall_curve(predictions, precision, recall)
 
@@ -87,7 +89,7 @@ class BADChallengeEvaluator(Evaluator):
             "n_false_negatives": n_false_negatives,
             "unbalanced_accuracy": unbalanced_accuracy,
             "balanced_accuracy": balanced_accuracy,
-            "average_precision": average_precision,
+            # "average_precision": average_precision,
             # "n_tags_matched": n_tags_matched,
             # "n_tags_unmatched": n_tags_unmatched,
             # "true_positives_ratio": true_positives_ratio,
@@ -95,40 +97,27 @@ class BADChallengeEvaluator(Evaluator):
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
-            "auc": auc,
-            "ap": average_precision,
+            # "auc": auc,
+            # "ap": average_precision,
         }
 
         print("Stats for options {0}:".format(options))
         common_utils.print_warning(
-            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; Average precision: {}".format(
+            "Precision: {}; Recall: {}; F1_score: {}".format(
                 stats["precision"],
                 stats["recall"],
                 stats["f1_score"],
-                stats["auc"],
-                stats["ap"],
+                # stats["auc"],
+                # stats["ap"],
             )
         )
         return pd.DataFrame([stats])
 
-    def get_precision_recall_curve(self, predictions, prec, rec):
-
-        precision, recall, _ = precision_recall_curve(
-            predictions.tags, predictions.activity
-        )
-        plt.plot(recall, precision)
-        plt.plot(rec, prec, "ob", ms=6)
-        plt.xlim(0, 1.05)
-        plt.ylim(0, 1.05)
-        plt.ylabel("Precision")
-        plt.xlabel("Recall")
-        plt.gca().set_aspect("equal", adjustable="box")
-        plt.draw()
-        plt.savefig("pr_curve.pdf")
-
     def evaluate(self, predictions, tags, options):
+        events = self.get_events(predictions, options)
         tags = tags["tags_df"]
-        events = self.get_events(predictions, tags, options)
+        tags = tags.rename(columns={"hasbird": "tags"})
+        events = events.merge(tags)
         stats = self.get_stats(events, options)
         res = {"stats": stats, "matches": events}
         if options.get("draw_plots", False):

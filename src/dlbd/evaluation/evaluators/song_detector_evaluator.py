@@ -30,11 +30,3 @@ class SongDetectorEvaluator(Evaluator):
         "variable": "activity_threshold",
         "values": {"end": 1, "start": 0, "step": 0.05},
     }
-
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def get_events(self, predictions, options, *args, **kwargs):
-        pass
-
