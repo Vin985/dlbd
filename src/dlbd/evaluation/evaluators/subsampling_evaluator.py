@@ -143,9 +143,10 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         if step < real_step:
             step = real_step
             common_utils.print_warning(
-                "Warning! specified resamplig step lower than the resolution of predictions. Using real step of {}ms instead".format(
-                    step
-                )
+                (
+                    "Warning! The specified resamplig step is lower than the resolution of "
+                    + "predictions. Using the predictions step of {}ms instead"
+                ).format(step)
             )
         resampler = predictions.resample(str(step) + "ms") if step else predictions
         resample_func = functools.partial(self.has_event, options=options)
