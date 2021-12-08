@@ -27,8 +27,8 @@ scenarios:
     dilation_rate: [[[1, 2], 1]]
     class: "dlbd.models.dlbd.DLBD"
     wriggle_room: [3, 5, 10]
-    batch_size: [32, 64,128, 256]
-    num_filters: [32, 64, 128]
+    batch_size: [256, 128, 64, 32]
+    num_filters: [64, 128, 32]
     num_dense_units: [32, 64, 128, 256, 512]
     num_dense_units2: [0, 32, 64, 128, 256, 512]
     pixels_per_sec: [50, 100, 200]
