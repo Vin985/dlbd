@@ -1,10 +1,11 @@
 import tensorflow as tf
+from mouffet.utils import common as common_utils
 from tensorflow.keras import layers
 
-from .CityNetTF2 import CityNetTF2
+from .AudioDetector import AudioDetector
 
 
-class DLBD(CityNetTF2):
+class DLBD(AudioDetector):
     """DLBD Network with one less Dense layer to reduce the number of parameters and overfitting
 
     Args:
@@ -16,18 +17,17 @@ class DLBD(CityNetTF2):
 
     NAME = "DLBD"
 
-    def get_dilation_rate(self, idx):
-        dr = self.opts.get("dilation_rate", 0)
-        if dr:
-            if isinstance(dr, list):
-                if idx <= len(dr):
-                    val = dr[idx - 1]
-                    if isinstance(val, list):
-                        val = tuple(val)
-                    return val
-            elif isinstance(dr, int):
-                return dr
-        return 1
+    def check_options(self):
+        num_dense_units2 = self.opts.get("num_dense_units2", 0)
+        if num_dense_units2 and (
+            num_dense_units2 > self.opts.get("num_dense_units", 128)
+        ):
+            common_utils.print_error(
+                "Error: 'num_dense_units2' is greater than 'num_dense_units'."
+            )
+            return False
+
+        return True
 
     def get_base_layers(self, x=None):
         if x is None:
@@ -70,9 +70,8 @@ class DLBD(CityNetTF2):
         x = layers.BatchNormalization()(x)
         x = tf.transpose(x, (0, 3, 2, 1))
         x = layers.Flatten(name="pool2_flat")(x)
-        dense1 = self.opts.get("num_dense_units", 128)
         x = layers.Dense(
-            dense1,
+            self.opts.get("num_dense_units", 128),
             activation="relu",
             bias_initializer=None,
             kernel_regularizer=regularizer,
@@ -80,8 +79,6 @@ class DLBD(CityNetTF2):
         x = layers.BatchNormalization()(x)
         dense2 = self.opts.get("num_dense_units2", 0)
         if dense2 > 0:
-            if dense2 > dense1:
-                dense2 = dense1
             x = layers.Dense(
                 dense2,
                 activation="relu",
