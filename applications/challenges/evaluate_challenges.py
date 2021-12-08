@@ -47,4 +47,4 @@ if not models:
 evaluator = SongDetectorEvaluationHandler(
     opts=evaluation_config, dh_class=AudioDataHandler
 )
-evaluator.evaluate()
+events = evaluator.evaluate()
