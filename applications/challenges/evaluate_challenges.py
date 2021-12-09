@@ -38,13 +38,23 @@ if not models:
             "opts", keep="last"
         )
     if models_stats is not None:
+
+        model_ids = evaluation_config.get("model_ids", [])
+        if model_ids:
+            models_stats = models_stats.loc[models_stats.model_id.isin(model_ids)]
         models = [
             load_model_options(row.opts, updates) for row in models_stats.itertuples()
         ]
-        evaluation_config["models"] = [models[0]]
+
+        # models = [
+        #     load_model_options(row.opts, updates) for row in models_stats.itertuples()
+        # ]
+        evaluation_config["models"] = models
 
 
 evaluator = SongDetectorEvaluationHandler(
     opts=evaluation_config, dh_class=AudioDataHandler
 )
 events = evaluator.evaluate()
+
+# print(events)
