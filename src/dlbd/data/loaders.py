@@ -48,15 +48,15 @@ class BADChallengeDataLoader(AudioDataLoader):
         db_opts = self.dataset_options(database)
         tags_dir = paths["tags"][db_type]
         self.data["tags_df"] = tag_utils.get_bad_challenge_tag_df(tags_dir)
-        cpt = 0
+        # cpt = 0
         for file_path in file_list:
-            if cpt == 10:
-                return
+            # if cpt == 10:
+            #     return
             try:
                 if not isinstance(file_path, Path):
                     file_path = Path(file_path)
                 self.load_file_data(file_path=file_path, opts=db_opts)
-                cpt += 1
+                # cpt += 1
             except Exception:
                 print("Error loading: " + str(file_path) + ", skipping.")
                 print(traceback.format_exc())

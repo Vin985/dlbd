@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from mouffet.evaluation.evaluator import Evaluator
 from mouffet.utils import common as common_utils
+from pandas_path import path
 from sklearn import metrics
 from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
 
@@ -38,18 +39,29 @@ class BADChallengeEvaluator(Evaluator):
             return 2
         return 0
 
+    def has_bird_simple(self, predictions, options):
+        tmp = predictions.groupby("recording_id").agg({"activity": "max"}).reset_index()
+        tmp["itemid"] = tmp.recording_id.path.stem
+        tmp = tmp.drop(columns="recording_id")
+        tmp.loc[tmp.activity >= options["activity_threshold"], "events"] = 2
+        return tmp
+
     def get_events(self, predictions, options):
         method = options["method"]
-        events = self.EVALUATORS[method].get_events(predictions, options)
-        agg_func = getattr(self, "has_bird_" + method)
-        res = []
-        for recording in predictions.recording_id.unique():
-            tmp = {}
-            rec_events = events.loc[events.recording_id == recording]
-            tmp["itemid"] = Path(recording).stem
-            tmp["events"] = agg_func(rec_events)
-            res.append(tmp)
-        res_df = pd.DataFrame(res)
+        if method == "simple":
+            res_df = self.has_bird_simple(predictions, options)
+        else:
+            events = self.EVALUATORS[method].get_events(predictions, options)
+            agg_func = getattr(self, "has_bird_" + method)
+            res = []
+            for recording in predictions.recording_id.unique():
+                # * We iterate instead of groupby in case no events are detected
+                tmp = {}
+                rec_events = events.loc[events.recording_id == recording]
+                tmp["itemid"] = Path(recording).stem
+                tmp["events"] = agg_func(rec_events)
+                res.append(tmp)
+            res_df = pd.DataFrame(res)
         return res_df
 
     def get_stats(self, predictions, options):
@@ -61,6 +73,9 @@ class BADChallengeEvaluator(Evaluator):
         n_false_positives = len(res[res == 2])
         n_false_negatives = len(res[res == 1])
 
+        average_precision = None
+        auc = None
+
         unbalanced_accuracy = round(
             (float(n_true_positives + n_true_negatives) / predictions.shape[0]), 3
         )
@@ -71,12 +86,15 @@ class BADChallengeEvaluator(Evaluator):
 
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
-        # average_precision = round(
-        #     average_precision_score(predictions.tags, predictions.activity), 3
-        # )
-        # auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
+        if options["method"] == "simple":
+            average_precision = round(
+                average_precision_score(predictions.tags, predictions.activity), 3
+            )
+            auc = round(
+                metrics.roc_auc_score(predictions.tags, predictions.activity), 3
+            )
 
-        # self.get_precision_recall_curve(predictions, precision, recall)
+            # self.get_precision_recall_curve(predictions, precision, recall)
 
         f1_score = round(2 * precision * recall / (precision + recall), 3)
 
@@ -97,18 +115,18 @@ class BADChallengeEvaluator(Evaluator):
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
-            # "auc": auc,
-            # "ap": average_precision,
+            "auc": auc,
+            "ap": average_precision,
         }
 
         print("Stats for options {0}:".format(options))
         common_utils.print_warning(
-            "Precision: {}; Recall: {}; F1_score: {}".format(
+            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; mAP: {}".format(
                 stats["precision"],
                 stats["recall"],
                 stats["f1_score"],
-                # stats["auc"],
-                # stats["ap"],
+                stats["auc"],
+                stats["ap"],
             )
         )
         return pd.DataFrame([stats])
