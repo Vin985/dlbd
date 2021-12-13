@@ -39,9 +39,9 @@ scenarios:
     wriggle_room: 3 #[3, 5, 10]
     batch_size: 256 #[256, 128, 64, 32]
     num_filters: 128 # [64, 128, 32]
-    num_dense_units: [32, 64, 128, 256, 512]
+    num_dense_units: [64, 128, 256, 512]
     num_dense_units2: [0, 32, 64, 128, 256, 512]
-    pixels_per_sec: [50, 100, 200]
+    pixels_per_sec: [100, 200]
 
 
 
