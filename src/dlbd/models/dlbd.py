@@ -1,8 +1,8 @@
 import tensorflow as tf
-from mouffet.utils import common as common_utils
+from mouffet import common_utils
 from tensorflow.keras import layers
 
-from .AudioDetector import AudioDetector
+from . import AudioDetector
 
 
 class DLBD(AudioDetector):

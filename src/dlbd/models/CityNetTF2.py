@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras as keras
 
-from dlbd.models.AudioDetector import AudioDetector
+from . import AudioDetector
 
 
 class CityNetTF2(AudioDetector):

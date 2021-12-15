@@ -1,11 +1,9 @@
 import os
-from mouffet.utils.common import print_warning
 
 import numpy as np
 import pandas as pd
-
+from mouffet import common_utils
 from scipy.ndimage.interpolation import zoom
-
 
 DEFAULT_OPTIONS = {
     "audiotagger": {
@@ -92,7 +90,7 @@ def filter_classes(tag_df, opts):
                     break
             # * If we arrived here, class was not found
         if not found and opts["tags"].get("print_missing_classes", False):
-            print_warning(
+            common_utils.print_warning(
                 "class {} not present in accepted classes, skipping".format(tag)
             )
         res[i] = found
@@ -140,7 +138,9 @@ def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
         tag_df = pd.read_csv(tag_path, names=["tag_start", "tag_duration", "tag"])
         tag_df["tag_end"] = tag_df["tag_start"] + tag_df["tag_duration"]
 
-        tag_df.loc[tag_df["tag"] == "Unknown", "tag"] = "UNKN"
+        tag_df.loc[
+            tag_df["tag"] == "Unknown", "tag"  # pylint: disable=unsubscriptable-object
+        ] = "UNKN"
         return tag_df
     else:
         print("Warning - no annotations found for %s" % str(audio_file_path))
@@ -245,12 +245,12 @@ def flatten_tags(tags_df):
 def summary(tags, opts=None):
     from plotnine import (
         aes,
+        element_text,
         geom_bar,
         geom_text,
         ggplot,
-        element_text,
-        theme_classic,
         theme,
+        theme_classic,
         xlab,
         ylab,
     )

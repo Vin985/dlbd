@@ -3,9 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from dlbd.data import audio_utils
 
-from ..training.spectrogram_sampler import SpectrogramSampler
+from ..data import audio_utils
+from ..training import SpectrogramSampler
 
 
 def classify_elements(elements, model, spec_opts=None):

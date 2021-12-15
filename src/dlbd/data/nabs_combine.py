@@ -10,7 +10,7 @@ import librosa
 import numpy as np
 import pandas as pd
 import soundfile
-from mouffet.utils.file import ensure_path_exists, list_files, list_folder
+from mouffet import file_utils
 
 
 def get_white_noise(signal, SNR, shape=None):
@@ -50,7 +50,9 @@ def load_audios(file_list, opts):
     res = [librosa.load(str(file_path), sr=sr)[0] for file_path in file_list]
 
     if opts.get("load_preloaded", True) and not preloaded_file.exists():
-        with open(ensure_path_exists(preloaded_file, is_file=True), "wb") as f:
+        with open(
+            file_utils.ensure_path_exists(preloaded_file, is_file=True), "wb"
+        ) as f:
             pickle.dump(res, f, -1)
             print("Saved file: ", preloaded_file)
 
@@ -137,7 +139,9 @@ def generate_mix(audios, file_df, opts):
             labels_file = Path(opts.get("dest_dir", ".")) / "mix_{}_labels.pkl".format(
                 file_count
             )
-            with open(ensure_path_exists(labels_file, is_file=True), "wb") as f:
+            with open(
+                file_utils.ensure_path_exists(labels_file, is_file=True), "wb"
+            ) as f:
                 pickle.dump(labels, f, -1)
             print("Generated file {} in {}s.".format(file_name, time.time() - tic))
             file_count += 1
@@ -161,7 +165,7 @@ opts = {
     "start_file_count": 697,
 }
 
-file_list = list_files(
+file_list = file_utils.list_files(
     Path(opts["src_dir"]),
     opts.get("extensions", [".wav", ".WAV"]),
     opts.get("recursive", True),

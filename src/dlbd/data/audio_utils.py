@@ -1,5 +1,5 @@
 import librosa
-import mouffet.utils.common as common_utils
+from mouffet import common_utils
 import numpy as np
 from PIL import Image
 

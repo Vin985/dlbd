@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_io as tfio
-from tensorflow_io.python.ops.audio_ops import freq_mask, time_mask
 
 
 class NormalizeSpectrograms(tf.keras.layers.Layer):

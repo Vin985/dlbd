@@ -2,7 +2,7 @@ import traceback
 from pathlib import Path
 
 import pandas as pd
-from mouffet.data.data_loader import DataLoader
+from mouffet.data import DataLoader
 
 from . import audio_utils, tag_utils
 

@@ -1,15 +1,4 @@
-from abc import abstractmethod
-
-import pandas as pd
-from plotnine import aes, element_text, geom_line, ggplot, ggtitle, theme, theme_classic
-
-from mouffet.utils.common import (
-    deep_dict_update,
-    expand_options_dict,
-    listdict2dictlist,
-)
-
-from mouffet.evaluation.evaluator import Evaluator
+from mouffet.evaluation import Evaluator
 
 
 class SongDetectorEvaluator(Evaluator):

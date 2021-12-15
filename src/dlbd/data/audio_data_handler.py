@@ -1,14 +1,12 @@
 import pandas as pd
-from mouffet.data.data_handler import DataHandler
-from mouffet.data.data_structure import DataStructure
+from mouffet import common_utils
+from mouffet.data import DataHandler, DataStructure
 from mouffet.data.split import split_folder
-from mouffet.utils.common import join_tuple
 
-from ..options.audio_database_options import AudioDatabaseOptions
+from ..options import AudioDatabaseOptions
 from . import audio_utils
-from .split import citynet_split
-
 from .loaders import AudioDataLoader, BADChallengeDataLoader
+from .split import citynet_split
 
 
 class AudioDataStructure(DataStructure):
@@ -76,7 +74,9 @@ class AudioDataHandler(DataHandler):
         summary = df.groupby("tag").agg(
             {"duration": ["sum", "mean", "std", "min", "max"], "tag": "size"}
         )
-        summary.columns = pd.Index(join_tuple(i, "_") for i in summary.columns)
+        summary.columns = pd.Index(
+            common_utils.join_tuple(i, "_") for i in summary.columns
+        )
         summary = summary.reset_index()
         df.all_tags = df.tag + "," + df.related
         classes_list = list(filter(None, set(df.all_tags.str.split(",").sum())))

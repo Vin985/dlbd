@@ -1,11 +1,13 @@
 from mouffet.evaluation.evaluation_handler import EvaluationHandler
 
-from ..data.audio_data_handler import AudioDataHandler
+from ..data import AudioDataHandler
 from . import predictions
-from .evaluators.bad_challenge_evaluator import BADChallengeEvaluator
-from .evaluators.citynet_evaluator import CityNetEvaluator
-from .evaluators.standard_evaluator import StandardEvaluator
-from .evaluators.subsampling_evaluator import SubsamplingEvaluator
+from .evaluators import (
+    BADChallengeEvaluator,
+    CityNetEvaluator,
+    StandardEvaluator,
+    SubsamplingEvaluator,
+)
 
 
 class SongDetectorEvaluationHandler(EvaluationHandler):

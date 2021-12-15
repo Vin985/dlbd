@@ -1,4 +1,4 @@
-from mouffet.options.database_options import DatabaseOptions
+from mouffet.options import DatabaseOptions
 
 
 class AudioDatabaseOptions(DatabaseOptions):
@@ -12,4 +12,3 @@ class AudioDatabaseOptions(DatabaseOptions):
             "tags_suffix": "-sceneRect.csv",
         }
     )
-

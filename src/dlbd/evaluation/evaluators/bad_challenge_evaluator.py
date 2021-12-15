@@ -1,14 +1,10 @@
-import math
 from pathlib import Path
 
-import matplotlib
-import matplotlib.pyplot as plt
 import pandas as pd
-from mouffet.evaluation.evaluator import Evaluator
-from mouffet.utils import common as common_utils
+from mouffet.evaluation import Evaluator
+from mouffet import common_utils
 from pandas_path import path
 from sklearn import metrics
-from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
 
 from .citynet_evaluator import CityNetEvaluator
 from .standard_evaluator import StandardEvaluator
@@ -88,7 +84,8 @@ class BADChallengeEvaluator(Evaluator):
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
         if options["method"] == "simple":
             average_precision = round(
-                average_precision_score(predictions.tags, predictions.activity), 3
+                metrics.average_precision_score(predictions.tags, predictions.activity),
+                3,
             )
             auc = round(
                 metrics.roc_auc_score(predictions.tags, predictions.activity), 3

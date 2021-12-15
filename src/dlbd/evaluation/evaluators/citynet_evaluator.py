@@ -1,15 +1,10 @@
 import math
 
-import matplotlib
-import pandas as pd
-from mouffet.evaluation.evaluator import Evaluator
-
 import matplotlib.pyplot as plt
-from mouffet.utils import common as common_utils
-from sklearn.metrics import average_precision_score, f1_score, precision_recall_curve
+import pandas as pd
+from mouffet import common_utils
+from mouffet.evaluation import Evaluator
 from sklearn import metrics
-
-# matplotlib.use("agg")
 
 
 class CityNetEvaluator(Evaluator):
@@ -19,9 +14,6 @@ class CityNetEvaluator(Evaluator):
     DEFAULT_EVENT_THRESHOLD = 0.5
 
     DEFAULT_TIME_BUFFER = 0.5
-
-    def __init__(self):
-        super().__init__()
 
     def get_events(self, predictions, tags, options):
         predictions = predictions[["activity", "recording_id", "time"]].copy()
@@ -70,7 +62,7 @@ class CityNetEvaluator(Evaluator):
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
         average_precision = round(
-            average_precision_score(predictions.tags, predictions.activity), 3
+            metrics.average_precision_score(predictions.tags, predictions.activity), 3
         )
         auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
 
@@ -113,7 +105,7 @@ class CityNetEvaluator(Evaluator):
 
     def get_precision_recall_curve(self, predictions, prec, rec):
 
-        precision, recall, _ = precision_recall_curve(
+        precision, recall, _ = metrics.precision_recall_curve(
             predictions.tags, predictions.activity
         )
         plt.plot(recall, precision)

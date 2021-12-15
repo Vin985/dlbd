@@ -5,12 +5,11 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-from mouffet.utils import common as common_utils
+from mouffet import common_utils
 from plotnine import aes, geom_line, ggplot, save_as_pdf_pages
-
-from .song_detector_evaluator import SongDetectorEvaluator
-
 from sklearn import metrics
+
+from . import SongDetectorEvaluator
 
 
 class SubsamplingEvaluator(SongDetectorEvaluator):

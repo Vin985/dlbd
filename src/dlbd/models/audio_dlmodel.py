@@ -2,9 +2,8 @@ from time import time
 
 import numpy as np
 
-# from librosa.feature import melspectrogram
-from mouffet.models.dlmodel import DLModel
-import mouffet.utils.common as common_utils
+from mouffet.models import DLModel
+from mouffet import common_utils
 from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from mouffet.utils import common as common_utils
+from mouffet import common_utils
 from plotnine import (
     aes,
     element_text,
@@ -16,7 +16,7 @@ from plotnine import (
 )
 from plotnine.positions.position_dodge import position_dodge
 
-from .song_detector_evaluator import SongDetectorEvaluator
+from . import SongDetectorEvaluator
 
 
 class StandardEvaluator(SongDetectorEvaluator):
