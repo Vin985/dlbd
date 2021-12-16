@@ -1,169 +1,31 @@
-import argparse
-import ast
 import logging
-import shutil
-from pathlib import Path
 
-import mouffet.utils.file as file_utils
 import pandas as pd
+from mouffet.runs import RunArgumentParser, launch_runs
 from mouffet.training.training_handler import TrainingHandler
-from mouffet.utils.common import print_error, print_warning
 
 from dlbd.data.audio_data_handler import AudioDataHandler
 from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
 
+logging.basicConfig(level=logging.DEBUG)
+pd.options.mode.chained_assignment = "raise"
 # import tensorflow as tf
 
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"cd
 # gpus = tf.config.experimental.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(gpus[0], True)
 
-DEFAULTS = {
-    "run_dir": "config/runs",
-    "dest_dir": "results/runs",
-    "log_dir": "logs/runs",
-    "training_config": "training_config.yaml",
-    "evaluation_config": "evaluation_config.yaml",
-    "data_config": "data_config.yaml",
-    "models_dir": "models",
-    "predictions_dir": "predictions",
-    "evaluations_dir": "evaluations",
-}
-
-
-logging.basicConfig(level=logging.DEBUG)
-pd.options.mode.chained_assignment = "raise"
-
-
-parser = argparse.ArgumentParser(
-    description="Perform training and evaluation runs in one go"
-)
-
-parser.add_argument(
-    "runs", metavar="run", type=str, nargs="+", help="the name of the run"
-)
-
-parser.add_argument(
-    "-r",
-    "--run_dir",
-    default=DEFAULTS["run_dir"],
-    help="The root directory where runs can be found",
-)
-
-parser.add_argument(
-    "-d",
-    "--dest_dir",
-    default=DEFAULTS["dest_dir"],
-    help="The root directory where results will be saved",
-)
-
-parser.add_argument(
-    "-t",
-    "--training_config",
-    default=DEFAULTS["training_config"],
-    help="The name of the training config files",
-)
-
-parser.add_argument(
-    "-e",
-    "--evaluation_config",
-    default=DEFAULTS["evaluation_config"],
-    help="The name of the evaluation config files",
-)
-
-parser.add_argument(
-    "-D",
-    "--data_config",
-    default=DEFAULTS["data_config"],
-    help="The name of the data config files",
-)
-
-parser.add_argument(
-    "-l",
-    "--log_dir",
-    default=DEFAULTS["log_dir"],
-    help="The root directory where logs will be saved",
-)
-
-parser.add_argument(
-    "-c",
-    "--clean",
-    action="store_const",
-    const=1,
-    help="Clean logs and results directories for each run if they exist",
-)
-
+parser = RunArgumentParser()
 args = parser.parse_args()
 
-
-for run in args.runs:
-    opts_path = Path(args.run_dir) / run
-    dest_dir = Path(args.dest_dir) / run
-    log_dir = Path(args.log_dir) / run
-    model_dir = dest_dir / DEFAULTS["models_dir"]
-    evaluation_dir = dest_dir / DEFAULTS["evaluations_dir"]
-    predictions_dir = dest_dir / DEFAULTS["predictions_dir"]
-
-    # TODO: Implement clean argument and check if other arguments work
-    if args.clean:
-        if dest_dir.exists():
-            print_warning("Removing {}".format(dest_dir))
-            shutil.rmtree(dest_dir)
-        if log_dir.exists():
-            print_warning("Removing {}".format(log_dir))
-            shutil.rmtree(log_dir)
-
-    run_opts = {}
-
-    # * Perform training
-    trainer = TrainingHandler(
-        opts_path=opts_path / args.training_config,
-        dh_class=AudioDataHandler,
-    )
-    for training_scenario in trainer.scenarios:
-        # * Make sure all models and logs are saved at the same place
-        training_scenario["model_dir"] = str(model_dir)
-        training_scenario["logs"]["log_dir"] = str(log_dir)
-
-        # * Data config could be overloaded by model so do not force it
-        if not "data_config" in training_scenario:
-            training_scenario["data_config"] = str(opts_path / args.data_config)
-
-        trainer.train_scenario(training_scenario)
-
-    # *#####################
-    # * Perform evaluation
-    # *#####################
-
-    evaluation_config = file_utils.load_config(opts_path / args.evaluation_config)
-    # * Make sure predictions and evaluations are saved in the results directory
-    evaluation_config["predictions_dir"] = str(predictions_dir)
-    evaluation_config["evaluation_dir"] = str(evaluation_dir)
-
-    # * Data config could be overloaded by model so do not force it
-    if not "data_config" in evaluation_config:
-        evaluation_config["data_config"] = str(opts_path / args.data_config)
-
-    models_stats_path = Path(model_dir / TrainingHandler.MODELS_STATS_FILE_NAME)
-    models_stats = None
-    if models_stats_path.exists():
-        models_stats = pd.read_csv(models_stats_path).drop_duplicates(
-            "opts", keep="last"
-        )
-    if models_stats is not None:
-        models = [ast.literal_eval(row.opts) for row in models_stats.itertuples()]
-        evaluation_config["models"] = models
-        evaluator = SongDetectorEvaluationHandler(
-            opts=evaluation_config, dh_class=AudioDataHandler
-        )
-        evaluator.evaluate()
-    else:
-        print_error(
-            "No trained models found for this run. Please train models before evaluating them!"
-        )
-
-    # trainer.train()
-    # res = evaluator.evaluate()
+launch_runs(
+    args,
+    handler_classes={
+        "training": TrainingHandler,
+        "data": AudioDataHandler,
+        "evaluation": SongDetectorEvaluationHandler,
+    },
+)
