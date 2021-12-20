@@ -6,10 +6,15 @@ from pathlib import Path
 import mouffet.utils.file as file_utils
 import pandas as pd
 from dlbd.data.audio_data_handler import AudioDataHandler
+from dlbd.evaluation import EVALUATORS
 from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
 from mouffet.training.training_handler import TrainingHandler
+
+from bad_challenge_evaluator import BADChallengeEvaluator
+
+EVALUATORS.register_evaluator("bad_challenge", BADChallengeEvaluator)
 
 wavs_dir = "wavs"
 tags_file = "tags.csv"

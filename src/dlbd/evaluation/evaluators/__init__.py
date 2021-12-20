@@ -1,5 +1,5 @@
 from .song_detector_evaluator import SongDetectorEvaluator
-from .bad_challenge_evaluator import BADChallengeEvaluator
+
 from .citynet_evaluator import CityNetEvaluator
 from .standard_evaluator import StandardEvaluator
 from .subsampling_evaluator import SubsamplingEvaluator

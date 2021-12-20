@@ -1,34 +1,20 @@
 from pathlib import Path
 
 import pandas as pd
-from mouffet.evaluation import Evaluator
+from dlbd.evaluation import EVALUATORS
 from mouffet import common_utils
+from mouffet.evaluation import Evaluator
 from pandas_path import path
 from sklearn import metrics
 
-from .citynet_evaluator import CityNetEvaluator
-from .standard_evaluator import StandardEvaluator
-from .subsampling_evaluator import SubsamplingEvaluator
-
-# matplotlib.use("agg")
-
 
 class BADChallengeEvaluator(Evaluator):
-
-    EVALUATORS = {
-        "standard": StandardEvaluator(),
-        "subsampling": SubsamplingEvaluator(),
-        "citynet": CityNetEvaluator(),
-    }
 
     REQUIRES = ["tags_df"]
 
     DEFAULT_EVENT_THRESHOLD = 0.5
 
     DEFAULT_TIME_BUFFER = 0.5
-
-    def __init__(self):
-        super().__init__()
 
     def has_bird_standard(self, events):
         if not events.empty:
@@ -47,7 +33,7 @@ class BADChallengeEvaluator(Evaluator):
         if method == "simple":
             res_df = self.has_bird_simple(predictions, options)
         else:
-            events = self.EVALUATORS[method].get_events(predictions, options)
+            events = EVALUATORS[method].get_events(predictions, options)
             agg_func = getattr(self, "has_bird_" + method)
             res = []
             for recording in predictions.recording_id.unique():

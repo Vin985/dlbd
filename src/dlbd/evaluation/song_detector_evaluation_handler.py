@@ -2,12 +2,6 @@ from mouffet.evaluation.evaluation_handler import EvaluationHandler
 
 from ..data import AudioDataHandler
 from . import predictions
-from .evaluators import (
-    BADChallengeEvaluator,
-    CityNetEvaluator,
-    StandardEvaluator,
-    SubsamplingEvaluator,
-)
 
 
 class SongDetectorEvaluationHandler(EvaluationHandler):
@@ -23,13 +17,6 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         "event_duration": "event_duration",
     }
     TAGS_COLUMNS_RENAME = {"id": "tag_id"}
-
-    EVALUATORS = {
-        "standard": StandardEvaluator(),
-        "subsampling": SubsamplingEvaluator(),
-        "citynet": CityNetEvaluator(),
-        "bad_challenge": BADChallengeEvaluator(),
-    }
 
     def classify_database(self, model, database, db_type="test"):
 
