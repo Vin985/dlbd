@@ -91,9 +91,11 @@ class StandardEvaluator(SongDetectorEvaluator):
     def get_events(self, predictions, options, *args, **kwargs):
         predictions = predictions[["activity", "recording_id", "time"]]
         events = predictions.groupby("recording_id", as_index=False, observed=True)
-        events = events.apply(self.get_recording_events, options)
-        events.reset_index(inplace=True)
-        events.drop(["level_0", "level_1"], axis=1, inplace=True)
+        events = (
+            events.apply(self.get_recording_events, options)
+            .reset_index()
+            .drop(["level_0", "level_1"], axis=1)
+        )
         events["event_duration"] = events["end"] - events["start"]
         events.reset_index(inplace=True)
         events = events[self.EVENTS_COLUMNS.keys()]
@@ -141,11 +143,23 @@ class StandardEvaluator(SongDetectorEvaluator):
     def get_overlap_duration(self, match_df, overlap_type):
         overlap_func = getattr(self, overlap_type + "_overlap_duration")
         if not match_df.empty:
+            tmp_df = match_df[
+                [
+                    "event_id",
+                    "tag_id",
+                    "tag_start",
+                    "tag_end",
+                    "event_start",
+                    "event_end",
+                    "tag_duration",
+                    "event_duration",
+                ]
+            ]
             overlap_duration = (
-                match_df.groupby(overlap_type + "_id").apply(overlap_func)
+                tmp_df.groupby(overlap_type + "_id").apply(overlap_func)
                 # .rename(overlap_type + "_overlap_duration")
-                .reset_index()
             )
+            overlap_duration = overlap_duration.reset_index()
             tmp = match_df.merge(overlap_duration)
             tmp[overlap_type + "_overlap"] = (
                 tmp[overlap_type + "_overlap_duration"]
