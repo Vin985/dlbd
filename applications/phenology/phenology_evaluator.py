@@ -1,10 +1,24 @@
 from pathlib import Path
 
 import pandas as pd
+from dlbd.data.tag_utils import flatten_tags
 from dlbd.evaluation import EVALUATORS
 from mouffet import common_utils
 from mouffet.evaluation import Evaluator
+from plotnine import (
+    aes,
+    facet_grid,
+    geom_line,
+    geom_point,
+    geom_smooth,
+    ggplot,
+    ggtitle,
+    save_as_pdf_pages,
+)
+from plotnine.labels import ggtitle
+from scipy.spatial.distance import euclidean
 from sklearn import metrics
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 # matplotlib.use("agg")
 
@@ -115,57 +129,145 @@ class PhenologyEvaluator(Evaluator):
         )
         return pd.DataFrame([stats])
 
-    def file_events_duration(self, df):
+    def file_event_duration(self, df):
         # * Returns total duration of events in a file
         if df.empty:
             return 0
         return df.drop_duplicates("event_id")["event_duration"].sum()
 
+    def file_tag_duration(self, df):
+        flattened = flatten_tags(df.drop_duplicates("tag_id"))
+        return flattened.tag_duration.sum()
+
     def daily_mean_activity(self, df):
         # * Returns mean activity duration in a day
         return df["event_duration"].mean()
 
-    def evaluate(self, predictions, tags, options):
+    def get_daily_activity(self, df, options, df_type="event"):
         res = {}
+        # * Get total duration per file
+        file_song_duration = (
+            df.groupby("file_name")
+            .apply(getattr(self, "file_" + df_type + "_duration"))
+            .reset_index()
+            .rename(columns={0: "total_duration"})
+        )
+        file_song_duration[
+            ["site", "plot", "date", "time", "to_drop"]
+        ] = file_song_duration.file_name.str.split("_", expand=True)
+        file_song_duration = file_song_duration.assign(
+            full_date=[
+                str(x) + "_" + y
+                for x, y in zip(file_song_duration["date"], file_song_duration["time"])
+            ]
+        )
+        file_song_duration["full_date"] = pd.to_datetime(
+            file_song_duration["full_date"], format="%Y-%m-%d_%H%M%S"
+        )
+        file_song_duration["date"] = pd.to_datetime(
+            file_song_duration["date"], format="%Y-%m-%d"
+        )
+        file_song_duration = file_song_duration.drop(columns=["to_drop", "file_name"])
+        res["file_duration"] = file_song_duration
+
+        # * Get mean duration per day
+        daily_duration = (
+            file_song_duration[["date", "total_duration"]]
+            .groupby("date")
+            .agg("mean")
+            .dropna()
+        )
+
+        trend = seasonal_decompose(
+            daily_duration, model="additive", extrapolate_trend="freq"
+        ).trend.reset_index(name="trend")
+
+        daily_duration = daily_duration.reset_index().merge(trend)
+
+        daily_duration["trend_norm"] = (
+            daily_duration.trend - daily_duration.trend.mean()
+        ) / daily_duration.trend.std()
+
+        if df_type == "tag":
+            daily_duration["type"] = "ground_truth"
+        else:
+            daily_duration["type"] = options["scenario_info"]["model"]
+
+        res["daily_duration"] = daily_duration
+
+        return res
+
+    def plot_distances(self, data, options):
+        plt_df = data["df"]
+        tmp_plt = (
+            ggplot(
+                data=plt_df,
+                mapping=aes("date", "trend_norm", color="type"),
+            )
+            + geom_line()
+            + ggtitle("Distance: {}".format(data["distance"]))
+        )
+
+        return tmp_plt
+        # norm_plt = (
+        #     ggplot(
+        #         data=trend.dropna(),
+        #         mapping=aes(
+        #             "date",
+        #             "norm",
+        #         ),
+        #     )
+        #     + geom_line(colour="#ff0000")
+        #     + geom_point(data=peaks_df, mapping=aes("date", "norm"), colour="#00ff00")
+        #     + geom_line(
+        #         data=ref,
+        #         mapping=aes("date", "norm"),
+        #         colour="#0000ff",
+        #     )
+        #     + ggtitle(model)
+        # )
+        # plots.append(tmp_plt)
+        # norm_plots.append(norm_plt)
+
+    def evaluate(self, predictions, tags, options):
         method = options["method"]
         stats = EVALUATORS[method].evaluate(predictions, tags, options)
 
         matches = stats["matches"]
 
-        # * Get total duration per file
-        matches = (
-            matches[["file_name", "event_id", "event_duration"]]
-            .groupby("file_name")
-            .apply(self.file_events_duration)
-            .reset_index()
-            .rename(columns={0: "total_duration"})
-        )
-        matches[
-            ["site", "plot", "date", "time", "to_drop"]
-        ] = matches.file_name.str.split("_", expand=True)
-        matches = matches.assign(
-            full_date=[
-                str(x) + "_" + y for x, y in zip(matches["date"], matches["time"])
-            ]
-        )
-        matches["full_date"] = pd.to_datetime(
-            matches["full_date"], format="%Y-%m-%d_%H%M%S"
-        )
-        matches["date"] = pd.to_datetime(matches["date"], format="%Y-%m-%d")
-        matches = matches.drop(columns=["to_drop", "file_name"])
-        res["full_match"] = matches
+        daily_tags_duration = self.get_daily_activity(matches, options, "tag")
+        daily_events_duration = self.get_daily_activity(matches, options, "event")
 
-        # * Get mean duration per day
-        matches_per_day = (
-            matches[["date", "total_duration"]]
-            .groupby("date")
-            .agg("mean")
-            .reset_index()
+        eucl_distance = round(
+            euclidean(
+                daily_tags_duration["daily_duration"].trend_norm,
+                daily_events_duration["daily_duration"].trend_norm,
+            ),
+            3,
         )
-        matches_per_day["type"] = options["scenario_info"]["model"]
-        matches_per_day["mov_avg"] = matches_per_day.total_duration.rolling(
-            4, center=True
-        ).mean()
-        # matches_per_day["diff"] = matches_per_day["mov_avg"] - ref_per_day["mov_avg"]
-        res["matches_per_day"] = matches_per_day
-        return res
+
+        common_utils.print_warning(
+            "Distance for model {}: eucl: {}".format(
+                options["scenario_info"]["model"], eucl_distance
+            )
+        )
+
+        stats["stats"].loc[:, "eucl_distance"] = eucl_distance
+        stats["tags_duration"] = daily_tags_duration
+        stats["events_duration"] = daily_events_duration
+
+        if options.get("draw_plots", False):
+            stats["plots"] = self.draw_plots(
+                data={
+                    "df": pd.concat(
+                        [
+                            daily_tags_duration["daily_duration"],
+                            daily_events_duration["daily_duration"],
+                        ]
+                    ),
+                    "distance": eucl_distance,
+                },
+                options=options,
+            )
+
+        return stats

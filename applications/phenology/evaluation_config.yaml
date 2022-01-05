@@ -12,7 +12,8 @@ models_options:
   reclassify: False
 
 evaluators_options:
-  draw_plots: False
+  draw_plots: True
+  plots: ["distances"]
 
 evaluators:
   - type: "phenology"
@@ -38,15 +39,16 @@ databases_options:
 
 model_ids:
   - "DLBDL_dl1-2_1_pat8_restoreFalse"
-  - "DLBDL_dl1-2_1_pat8_restoreTrue_delta0.002"
-  - "DLBDL_dl1-2_1_pat8_restoreFalse_delta0.002"
-  - "DLBDL_noes_lr-0.01_epochs-50"
-  - "DLBDL_replicate_2_lr-0.01_epochs-50"
-  - "DLBDL_replicate_1_lr-0.01_epochs-50"
-  - "DLBDL_dl1-2_1_pat5_restoreTrue_delta0.002"
-  - "DLBDL_dl1-2-1-2"
-  - "DLBDL_pat8_delta0.002"
-  - "DLBDL_pat5_delta0"
+  # - "DLBDL_dl1-2_1_pat8_restoreTrue_delta0.002"
+  # - "DLBDL_dl1-2_1_pat8_restoreFalse_delta0.002"
+  # - "DLBDL_noes_lr-0.01_epochs-50"
+  # - "DLBDL_replicate_2_lr-0.01_epochs-50"
+  # - "DLBDL_replicate_1_lr-0.01_epochs-50"
+  # - "DLBDL_dl1-2_1_pat5_restoreTrue_delta0.002"
+  # - "DLBDL_dl1-2-1-2"
+  # - "DLBDL_pat8_delta0.002"
+  # - "DLBDL_pat5_delta0"
+  - "DLBDL_replicate_6_regl2_lr-0.01_epochs-50"
 
 
 
