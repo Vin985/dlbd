@@ -29,6 +29,16 @@ class StandardEvaluator(SongDetectorEvaluator):
 
     DEFAULT_PLOTS = ["detected_tags", "overlap_duration"]
 
+    MATCH_TYPES = {
+        "recording_id": "category",
+        "tag": "category",
+        "noise": "int32",
+        "background": "bool",
+        "file_name": "category",
+        "tag_id": "int32",
+        "tag_index": "int32",
+    }
+
     def file_event_duration(self, df):
         # * Returns total duration of events in a file
         if df.empty:
@@ -74,7 +84,7 @@ class StandardEvaluator(SongDetectorEvaluator):
                 if (end - start) > min_duration:
                     events.append(
                         {
-                            "event_index": event_index,
+                            # "event_index": event_index,
                             "recording_id": recording_id,
                             "start": max(start - buffer, 0),
                             "end": min(end + buffer, last_time),
@@ -85,7 +95,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             if end - start > min_duration:
                 events.append(
                     {
-                        "event_index": event_index,
+                        # "event_index": event_index,
                         "recording_id": recording_id,
                         "start": max(start - buffer, 0),
                         "end": end,
@@ -94,9 +104,7 @@ class StandardEvaluator(SongDetectorEvaluator):
         if events:
             events = pd.DataFrame(events)
         else:
-            events = pd.DataFrame(
-                columns=["event_index", "recording_id", "start", "end"]
-            )
+            events = pd.DataFrame(columns=["recording_id", "start", "end"])
         return events
 
     def get_events(self, predictions, options, *args, **kwargs):
@@ -111,6 +119,7 @@ class StandardEvaluator(SongDetectorEvaluator):
         events.reset_index(inplace=True)
         events = events[self.EVENTS_COLUMNS.keys()]
         events.rename(columns=self.EVENTS_COLUMNS, inplace=True)
+        events.recording_id = events.recording_id.astype("category")
         return events
 
     @staticmethod
@@ -193,6 +202,7 @@ class StandardEvaluator(SongDetectorEvaluator):
         match_df.loc[match_df.event_id.isna(), "event_id"] = -1
         match_df.event_id = match_df.event_id.astype("int")
         match_df.reset_index(inplace=True)
+        match_df = match_df.astype(self.MATCH_TYPES)
         match_df = self.get_overlap_duration(match_df, "event")
         match_df = self.get_overlap_duration(match_df, "tag")
 

@@ -5,7 +5,7 @@ class SongDetectorEvaluator(Evaluator):
 
     EVENTS_COLUMNS = {
         "index": "event_id",
-        "event_index": "event_index",
+        # "event_index": "event_index",
         "recording_id": "recording_id",
         "start": "event_start",
         "end": "event_end",
