@@ -159,6 +159,10 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
                     + "predictions. Using the predictions step of {}ms instead"
                 ).format(step)
             )
+        # * Remove last row if it is a multiple of step since it leads to a bin with just one value
+        # * when resampling, thus leading to a bias in estimation
+        if predictions.index[predictions.shape[0] - 1].value % step == 0:
+            predictions = predictions.head(-1)
         resampler = predictions.resample(str(step) + "ms") if step else predictions
         resample_func = functools.partial(self.has_event, options=options)
         agg_funcs = {
