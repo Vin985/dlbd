@@ -17,6 +17,7 @@ from plotnine import (
 from plotnine.positions.position_dodge import position_dodge
 
 from . import SongDetectorEvaluator
+from ...data.tag_utils import flatten_tags
 
 
 class StandardEvaluator(SongDetectorEvaluator):
@@ -27,6 +28,16 @@ class StandardEvaluator(SongDetectorEvaluator):
     DEFAULT_END_THRESHOLD = 0.6
 
     DEFAULT_PLOTS = ["detected_tags", "overlap_duration"]
+
+    def file_event_duration(self, df):
+        # * Returns total duration of events in a file
+        if df.empty:
+            return 0
+        return df.drop_duplicates("event_id")["event_duration"].sum()
+
+    def file_tag_duration(self, df):
+        flattened = flatten_tags(df.drop_duplicates("tag_id"))
+        return flattened.tag_duration.sum()
 
     def get_recording_events(self, predictions, options=None):
         # print("events for recording {}".format(predictions.name))

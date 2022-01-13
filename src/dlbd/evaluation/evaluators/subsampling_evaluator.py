@@ -27,6 +27,18 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         "values": {"end": 1, "start": 0, "step": 0.05},
     }
 
+    def file_event_duration(self, df):
+        if df.shape[0] > 0:
+            step = df.step.iloc[0]
+            return df.event.sum() / 2 * step / 1000
+        return 0
+
+    def file_tag_duration(self, df):
+        if df.shape[0] > 0:
+            step = df.step.iloc[0]
+            return df.tag.sum() * step / 1000
+        return 0
+
     def has_event(self, x, options):
         method = options.get("event_method", self.DEFAULT_EVENT_METHOD)
         threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
@@ -168,6 +180,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
             .reset_index()
             .rename(columns={"activity": "event", "datetime": "time"})
         )
+        res["step"] = step
         return res
 
     def get_events(self, predictions, options=None, tags=None, *args, **kwargs):
@@ -198,6 +211,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         if tags is not None:
             events.loc[:, "tag"] = 0
             events.loc[events.tag_index.str.len() > 0, "tag"] = 1
+        events.attrs["step"] = step
         return events
 
     @staticmethod

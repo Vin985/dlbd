@@ -15,6 +15,18 @@ class CityNetEvaluator(Evaluator):
 
     DEFAULT_TIME_BUFFER = 0.5
 
+    def file_event_duration(self, df):
+        if df.shape[0] > 0:
+            step = df.time.iloc[1] - df.time.iloc[0]
+            return df.events.sum() / 2 * step
+        return 0
+
+    def file_tag_duration(self, df):
+        if df.shape[0] > 1:
+            step = df.time.iloc[1] - df.time.iloc[0]
+            return df.tags.sum() * step
+        return 0
+
     def get_events(self, predictions, tags, options):
         predictions = predictions[["activity", "recording_id", "time"]].copy()
         predictions["events"] = 0
@@ -66,13 +78,9 @@ class CityNetEvaluator(Evaluator):
         )
         auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
 
-        # self.get_precision_recall_curve(predictions, precision, recall)
-
         f1_score = round(2 * precision * recall / (precision + recall), 3)
 
         stats = {
-            # "n_events": events.shape[0],
-            # "n_tags": tags.shape[0],
             "n_true_positives": n_true_positives,
             "n_false_positives": n_false_positives,
             "n_true_negatives": n_true_negatives,
@@ -80,10 +88,6 @@ class CityNetEvaluator(Evaluator):
             "unbalanced_accuracy": unbalanced_accuracy,
             "balanced_accuracy": balanced_accuracy,
             "average_precision": average_precision,
-            # "n_tags_matched": n_tags_matched,
-            # "n_tags_unmatched": n_tags_unmatched,
-            # "true_positives_ratio": true_positives_ratio,
-            # "false_positive_rate": false_positive_rate,
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
