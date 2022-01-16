@@ -1,19 +1,12 @@
 import pandas as pd
-from dlbd.evaluation import EVALUATORS
 from mouffet import common_utils
 from mouffet.evaluation import Evaluator
-from plotnine import (
-    aes,
-    geom_line,
-    ggplot,
-    ggtitle,
-)
-from plotnine.labels import ggtitle
+from pandas_path import path  # pylint: disable=unused-import
+from plotnine import aes, geom_line, ggplot, ggtitle
 from scipy.spatial.distance import euclidean
 from statsmodels.tsa.seasonal import seasonal_decompose
-from pandas_path import path
 
-# matplotlib.use("agg")
+from ...evaluation import EVALUATORS
 
 
 class PhenologyEvaluator(Evaluator):

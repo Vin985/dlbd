@@ -1,12 +1,12 @@
 
-data_config: "/home/vin/Doctorat/dev/dlbd/applications/phenology/evaluation_data_config.yaml"
+data_config: "/home/vin/Doctorat/dev/dlbd/config/examples/phenology/evaluation_data_config.yaml"
 save_results: True #True
 
 ###########
 ## Paths ##
 ###########
-predictions_dir: "/home/vin/Doctorat/dev/dlbd/applications/phenology/results/predictions"
-evaluation_dir: "/home/vin/Doctorat/dev/dlbd/applications/phenology/results/evaluation"
+predictions_dir: "/home/vin/Doctorat/dev/dlbd/examples/phenology/results/predictions"
+evaluation_dir: "/home/vin/Doctorat/dev/dlbd/examples/phenology/results/evaluation"
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False

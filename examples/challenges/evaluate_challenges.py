@@ -5,14 +5,13 @@ from pathlib import Path
 
 import mouffet.utils.file as file_utils
 import pandas as pd
+from dlbd.applications.challenges.bad_challenge_evaluator import BADChallengeEvaluator
 from dlbd.data.audio_data_handler import AudioDataHandler
 from dlbd.evaluation import EVALUATORS
 from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
 from mouffet.training.training_handler import TrainingHandler
-
-from bad_challenge_evaluator import BADChallengeEvaluator
 
 EVALUATORS.register_evaluator("bad_challenge", BADChallengeEvaluator)
 
@@ -21,7 +20,9 @@ tags_file = "tags.csv"
 warblr_dir = Path("/mnt/win/UMoncton/Doctorat/data/dl_training/raw/warblr/test")
 models_dir = Path("/home/vin/Desktop/results/candidates_models")
 
-evaluation_config_path = "applications/challenges/evaluation_config.yaml"
+evaluation_config_path = (
+    "/home/vin/Doctorat/dev/dlbd/config/examples/challenges/evaluation_config.yaml"
+)
 
 evaluation_config = file_utils.load_config(evaluation_config_path)
 

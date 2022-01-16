@@ -1,11 +1,12 @@
 from pathlib import Path
 
 import pandas as pd
-from dlbd.evaluation import EVALUATORS
 from mouffet import common_utils
 from mouffet.evaluation import Evaluator
 from pandas_path import path
 from sklearn import metrics
+
+from ...evaluation import EVALUATORS
 
 
 class BADChallengeEvaluator(Evaluator):

@@ -1,12 +1,12 @@
 
-data_config: "applications/challenges/evaluation_data_config.yaml"
+data_config: "/home/vin/Doctorat/dev/dlbd/config/examples/challenges/evaluation_data_config.yaml"
 save_results: False #True
 
 ###########
 ## Paths ##
 ###########
-predictions_dir: "applications/challenges/results/predictions"
-evaluation_dir: "applications/challenges/results/evaluation"
+predictions_dir: "/home/vin/Doctorat/dev/dlbd/examples/challenges/results/predictions"
+evaluation_dir: "/home/vin/Doctorat/dev/dlbd/examples/challenges/results/evaluation"
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False
