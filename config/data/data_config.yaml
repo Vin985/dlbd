@@ -93,6 +93,14 @@ databases:
       split:
         validation: 0.2
         test: 0.2
+    - name: 'full_summer1'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      data_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      db_types: ["test"]
+      overwrite: False
+      
+      tags:
+        with_data: True
       
 
     
@@ -100,7 +108,7 @@ spectrogram:
   type: "mel"
   n_mels: 32
   n_fft: 2048
-  hop_length: 1024
+  # hop_length: 1024
   #sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
