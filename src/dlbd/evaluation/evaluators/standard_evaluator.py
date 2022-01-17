@@ -34,7 +34,7 @@ class StandardEvaluator(SongDetectorEvaluator):
         "tag": "category",
         # "noise": "int32",
         # "background": "bool",
-        "file_name": "category",
+        # "file_name": "category",
         "tag_id": "int32",
         "tag_index": "int32",
     }

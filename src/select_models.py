@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 results_dir = Path("/home/vin/Desktop/results")
-file_name = "mask_091541_stats.csv"
+file_name = "candidates_185334_stats.csv"
 file_path = results_dir / file_name
 
 

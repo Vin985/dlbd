@@ -41,19 +41,28 @@ scenarios:
     num_dense_units: [64, 128, 256, 512]
     num_dense_units2: [0, 32, 64, 128, 256, 512]
     pixels_per_sec: [100, 200]
+  - name: "DLBDL"
+    id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
+    class: "dlbd.models.dlbd.DLBD"
+    wriggle_room: [3, 5, 10]
+    batch_size: 256 #[256, 128, 64, 32]
+    num_filters: 128 # [64, 128, 32]
+    num_dense_units: [64, 128, 256, 512]
+    num_dense_units2: [0, 32, 64, 128, 256, 512]
+    pixels_per_sec: [100, 200]
   - name: "DLBDL64"
     id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
     class: "dlbd.models.dlbd.DLBD"
-    wriggle_room: 3 #[3, 5, 10]
-    batch_size: 256 #[256, 128, 64, 32]
-    num_filters: 128 # [64, 128, 32]
+    wriggle_room: [3, 5, 10]
+    batch_size: [128, 64, 32]
+    num_filters: [64, 128, 32]
     num_dense_units: 64
     num_dense_units2: 32
-    pixels_per_sec: 100
-    databases_options:
-      spectrogram:
-        n_mels: 64
-        n_fft: 1024
+    # pixels_per_sec: 100
+    # databases_options:
+    #   spectrogram:
+    #     n_mels: 64
+    #     n_fft: 1024
 
 
 

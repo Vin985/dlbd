@@ -1,9 +1,8 @@
 parent_path: "config/runs/run1/parent.yaml"
 
 data_config: "config/data/data_config.yaml"
-model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run1'
 clean_empty_models: True
-skip_trained: False
+skip_trained: True
 
 logs:
   log_dir: "logs/gradient_tape/run1"
@@ -69,20 +68,52 @@ databases_options:
 
 scenarios:
   - name: "DLBD"
+    id: "_dl{dilation_rate}_gt-prop{gt_prop}"
     class: "dlbd.models.dlbd.DLBD"
-    # regularizer:
-    #   type: "l2"
-    #   value: 0.001
     early_stopping: True
-    num_dense_units: 256
+    num_dense_units: 64
     num_dense_units2: 32
-    # time_mask:
-    #   value: 30
-    #   prop: 50
-    # freq_mask:
-    #   value: 70
-    #   prop: 50
+    # gt_prop: [0.10, 0]
+    dilation_rate: [[[1, 2], 1]]
   # - name: "DLBD"
+  #   id: "_dl{dilation_rate}"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD_ma"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   use_ma: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD_swa"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   use_swa: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD2"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD2_swa"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   use_swa: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+
+  # - name: "DLBD2_ma"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   use_ma: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  # # - name: "DLBD"
     # class: "dlbd.models.dlbd_test.DLBD" 
   # - name: "DLBDL_A"
   #   class: "dlbd.models.dlbd.DLBD"
