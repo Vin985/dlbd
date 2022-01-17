@@ -32,8 +32,8 @@ class StandardEvaluator(SongDetectorEvaluator):
     MATCH_TYPES = {
         "recording_id": "category",
         "tag": "category",
-        "noise": "int32",
-        "background": "bool",
+        # "noise": "int32",
+        # "background": "bool",
         "file_name": "category",
         "tag_id": "int32",
         "tag_index": "int32",
