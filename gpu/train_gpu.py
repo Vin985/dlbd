@@ -1,7 +1,7 @@
 import os
 
 import tensorflow as tf
-from mouffet.training.trainer import Trainer
+from mouffet.training.training_handler import TrainingHandler
 
 from dlbd.data.audio_data_handler import AudioDataHandler
 
@@ -9,7 +9,7 @@ from dlbd.data.audio_data_handler import AudioDataHandler
 gpus = tf.config.experimental.list_physical_devices("GPU")
 tf.config.experimental.set_memory_growth(gpus[0], True)
 
-trainer = Trainer(
+trainer = TrainingHandler(
     # opts_path="src/CityNetTF2_Dropout_training_config.yaml",
     opts_path="src/training_config_gpu.yaml",
     dh_class=AudioDataHandler,

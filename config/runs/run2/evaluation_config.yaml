@@ -5,8 +5,8 @@ save_results: True #True
 ###########
 ## Paths ##
 ###########
-predictions_dir: "results/predictions/run1"
-evaluation_dir: "results/evaluation/run1"
+predictions_dir: "results/predictions/run2"
+evaluation_dir: "results/evaluation/run2"
 
 ###############
 ## Detectors ##
@@ -37,11 +37,18 @@ evaluators:
       #     start: 0.02
       #     end: 0.10
       #     step: 0.05
+    # - type: subsampling
+    #   sample_step: 1
+    #   activity_threshold: 0.6
     - type: subsampling
-      sample_step: 1
       activity_threshold: 0.6
-    - type: citynet
-      activity_threshold: 0.5
+      gtc: 0.1
+      scenarios:
+        sample_step: [.5, 1]
+        event_method: ["activity_max", "activity_average", "min_proportion"]
+    # - type: citynet
+    #   activity_threshold: 0.5
+    #   databases: ["citynet"]
 
       # event_method: activity_max
     #   PR_curve:
@@ -64,13 +71,14 @@ evaluators:
 ## Models ##
 ############
 models_options:
-  model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run1'
+  model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run2'
   # id: "{databases_options--spectrogram--n_mels}"
   # id_prefixes:
   #   databases_options--spectrogram--n_mels: "_nmels-"
   inference: True
   spectrogram_overlap: 0.95
-  # reclassify: True
+  reclassify: False
+  batch_size: 64
 
 
   
@@ -86,7 +94,9 @@ models:
 ## Databases ##
 ###############
 
-databases: ["nips4b"]
+databases: 
+  # - name: nips4b
+  - name: citynet
 
 databases_options:
   spectrogram:
@@ -95,8 +105,6 @@ databases_options:
     sample_rate: "original"
 
 
-databases:
-  - name: "nips4b"
   # - name: arctic_complete
   # - name: NABS
   # - name: nips4b
