@@ -164,6 +164,7 @@ class PhenologyEvaluator(Evaluator):
                     ),
                     "distance": eucl_distance,
                     "distance_norm": eucl_distance_norm,
+                    "method": method,
                 },
                 options=options,
             )
