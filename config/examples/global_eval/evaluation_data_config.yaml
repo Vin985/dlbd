@@ -1,0 +1,73 @@
+#* All path can be relative to the root_dir or complete
+# root_dir: other dirs will be relative to this one
+data_dir: 'wavs'
+tags_dir: 'tags'
+training_dir: 'training'
+validation_dir:  'validation'
+test_dir: 'test'
+dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
+save_intermediate: False
+
+print_missing_classes: True
+overwrite: False
+
+subfolders:
+  - type: "spectrogram"
+    options: ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
+
+data_extensions:
+  - ".wav"
+  - ".WAV"
+recursive: True
+
+#* Tags files options
+tags:
+  print_missing_classes: True
+  suffix: "-sceneRect.csv"
+  columns:
+    Label: "tag"
+    Related: "related"
+    LabelStartTime_Seconds: "tag_start"
+    LabelEndTime_Seconds: "tag_end"
+    overlap: "overlap"
+    background: "background"
+    noise: "noise"
+  columns_type:
+    overlap: "str"
+  with_data: False
+
+
+databases:
+  #* All options found in data can be overriden in each iteration. If not found, default values
+  #* from data will be used
+    - name: 'citynet'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/CityNet'
+      # spectrogram:
+      #   sample_rate: 22050
+      split:
+        validation: 0.2
+    - name: 'full_summer1'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      data_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      db_types: ["test"]
+      overwrite: False
+    - name: 'nips4b'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b'
+      split:
+        validation: 0.2
+        test: 0.2
+      tags:
+        type: nips4b
+      
+      tags:
+        with_data: True
+        
+      
+spectrogram:
+  type: "mel"
+  n_mels: 32
+  n_fft: 512
+  sample_rate: "original" # For no resampling: remove option or set to original
+
+class_type: "biotic"
+classes_file: "/home/vin/Doctorat/dev/dlbd/src/classes.csv"

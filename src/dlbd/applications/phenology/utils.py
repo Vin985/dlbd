@@ -2,34 +2,145 @@ import ast
 from pathlib import Path
 
 import pandas as pd
-from mouffet.training.training_handler import TrainingHandler
+from sklearn.preprocessing import MinMaxScaler
 
 
-def load_model_options(opts, updates):
-    model_opt = ast.literal_eval(opts)
-    model_opt.update(updates)
-    return model_opt
+SCORE_METRICS = [
+    "precision",
+    "recall",
+    "recall_sample",
+    "recall_tags",
+    "f1_score",
+    "ap",
+    "auc",
+    "IoU",
+    "eucl_distance_norm",
+    "eucl_distance",
+]
 
 
-def check_models(config, model_opts):
-    # * Get reference
-    models = config.get("models", [])
-    if not models:
-        models_dir = model_opts.get("model_dir")
-        models_stats_path = Path(models_dir / TrainingHandler.MODELS_STATS_FILE_NAME)
-        models_stats = None
-        if models_stats_path.exists():
-            models_stats = pd.read_csv(models_stats_path).drop_duplicates(
-                "opts", keep="last"
-            )
-        if models_stats is not None:
-            model_ids = config.get("model_ids", [])
-            if model_ids:
-                models_stats = models_stats.loc[models_stats.model_id.isin(model_ids)]
-            models = [
-                load_model_options(row.opts, model_opts)
-                for row in models_stats.itertuples()
-            ]
-            config["models"] = models
+def extract_method(x):
+    return ast.literal_eval(x).get("method", "")
 
-    return config
+
+def score_stats(x, metrics, nbins=10):
+    for metric in metrics:
+        if metric in x.columns:
+            if x[metric].notnull().all():
+                scores, bins = pd.qcut(
+                    x[metric], nbins, labels=False, duplicates="drop", retbins=True
+                )
+                scores = scores + 1
+                if len(bins) != nbins + 1:
+                    scaler = MinMaxScaler(feature_range=(1, nbins))
+                    scores = scaler.fit_transform(scores.values[:, None]).ravel()
+                x.loc[:, metric + "_score"] = scores
+    return x
+
+
+def get_phenology_score(df, relative=True):
+    suffix = "_score" if relative else ""
+    return {
+        "fidelity": df["eucl_distance_norm" + suffix].mean(),
+        "accuracy": df["eucl_distance" + suffix].mean(),
+    }
+
+
+def get_accuracy_score(df, target, relative=True):
+    suffix = "_score" if relative else ""
+    if target:
+        df = df.loc[(df.database == "full_summer1")]
+    else:
+        df = df.loc[(df.database != "full_summer1")]
+
+    df = df.loc[df.evaluator != "phenology"]
+    return {
+        "precision": df["precision" + suffix].mean(),
+        "recall": df["recall" + suffix].mean(),
+        "f1": df["f1_score" + suffix].mean(),
+        "auc": df["auc" + suffix].mean(),
+        "ap": df["ap" + suffix].mean(),
+        "IoU": df["IoU" + suffix].mean(),
+        "global": df["f1_score" + suffix].mean()
+        + df["auc" + suffix].mean()
+        + df["IoU" + suffix].mean(),
+    }
+
+
+def get_model_scores(df, relative):
+    phenol_score = get_phenology_score(df, relative)
+    target_accuracy_score = get_accuracy_score(df, target=True, relative=relative)
+    general_accuracy_score = get_accuracy_score(df, target=False, relative=relative)
+    res_summary = {
+        "phenology": round(phenol_score["fidelity"], 2),
+        "target_accuracy": round(target_accuracy_score["global"], 2),
+        "general_accuray": round(general_accuracy_score["global"], 2),
+        "agg_score": round(
+            (target_accuracy_score["global"] + general_accuracy_score["global"])
+            / phenol_score["fidelity"],
+            2,
+        ),
+    }
+    return pd.DataFrame([res_summary])
+
+
+def get_scores(df, relative=True):
+    res = df.groupby(["model"]).apply(get_model_scores, relative)
+    return (
+        res.reset_index()
+        .drop(columns=["level_1"])
+        .sort_values("agg_score", ascending=False)
+    )
+
+
+def score_models(
+    file_name,
+    src_dir,
+    metrics=SCORE_METRICS,
+    df=None,
+    dest_dir=None,
+    use_subsampling_tag_recall=True,
+    save_results=True,
+):
+    if not df:
+        src_dir = Path(src_dir)
+        file_path = src_dir / file_name
+        if not dest_dir:
+            dest_dir = src_dir
+
+        df = pd.read_csv(file_path).reset_index()
+
+    df["model"] += "_" + df["evaluation_id"]
+
+    if not "method" in df.columns:
+        df.loc[:, "method"] = df.options.apply(extract_method)
+    if use_subsampling_tag_recall:
+        df.loc[df.evaluator == "subsampling", "recall"] = df.recall_tags.loc[
+            df.evaluator == "subsampling"
+        ]
+
+    scored_df = (
+        df.groupby(["database", "evaluator", "method"])
+        .apply(score_stats, metrics)
+        .reset_index(drop=True)
+    )
+
+    relative_scores_df_ = get_scores(scored_df)
+    absolute_scores_df = get_scores(scored_df, False)
+
+    if save_results:
+        scored_df.to_csv(
+            dest_dir / (file_path.stem.replace("_stats", "_scored") + ".csv"),
+            index=False,
+        )
+
+        relative_scores_df_.to_csv(
+            dest_dir
+            / (file_path.stem.replace("_stats", "_global_score_relative") + ".csv"),
+            index=False,
+        )
+
+        absolute_scores_df.to_csv(
+            dest_dir / (file_path.stem.replace("_stats", "_global_score_abs") + ".csv"),
+            index=False,
+        )

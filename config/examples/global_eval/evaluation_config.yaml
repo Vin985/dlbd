@@ -1,0 +1,63 @@
+
+data_config: "/home/vin/Doctorat/dev/dlbd/config/examples/global_eval/evaluation_data_config.yaml"
+save_results: True #True
+
+###########
+## Paths ##
+###########
+evaluation_dir: "/home/vin/Doctorat/dev/dlbd/examples/global_eval/results/evaluation"
+models_options:
+  spectrogram_overlap: 0.95
+  reclassify: False
+
+evaluators_options:
+  draw_plots: False
+  plots: ["distances"]
+  phenology_databases: ["full_summer1"]
+
+evaluators:
+  - type: "phenology"
+    method: "standard"
+    activity_threshold: 0.9
+    min_duration: 0.1
+    end_threshold: 0.3
+    dtc_threshold: 0.3
+    gtc_threshold: 0.1
+  - type: "standard"
+    activity_threshold: 0.9
+    min_duration: 0.1
+    end_threshold: 0.3
+    dtc_threshold: 0.3
+    gtc_threshold: 0.1
+  # - type: "phenology"
+  #   method: "citynet"
+  #   sample_step: 1
+  #   event_method: "activity_average"
+  #   activity_threshold: 0.6
+  - type: subsampling
+    sample_step: 1
+    event_method: "activity_max"
+    activity_threshold: 0.6
+  # - type: citynet
+  #   activity_threshold: 0.5
+
+databases_options:
+  class_type: "biotic"
+  spectrogram:
+    n_mels: 32
+    n_fft: 512
+    sample_rate: "original"
+
+
+databases:
+  # - name: citynet_small
+    # scenarios:
+    #     spectrogram:
+    #       sample_rate: ["original", 22050]
+  # - name: arctic
+  - name: full_summer1
+  - name: citynet
+  # - name: nips4b
+    # scenarios:
+    #     spectrogram:
+    #       sample_rate: ["original", 22050]

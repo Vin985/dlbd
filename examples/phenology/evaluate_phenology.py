@@ -10,7 +10,7 @@ from dlbd.evaluation.song_detector_evaluation_handler import (
 )
 
 from dlbd.applications.phenology.phenology_evaluator import PhenologyEvaluator
-from dlbd.applications.phenology.utils import check_models
+from dlbd.utils import get_models_conf
 
 EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
 
@@ -28,7 +28,7 @@ evaluation_config = file_utils.load_config(evaluation_config_path)
 
 model_opts = {"model_dir": models_dir}
 
-evaluation_config = check_models(evaluation_config, model_opts)
+evaluation_config = get_models_conf(evaluation_config, model_opts)
 
 
 evaluator = SongDetectorEvaluationHandler(
