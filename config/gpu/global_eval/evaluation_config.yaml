@@ -1,6 +1,8 @@
 data_config: "config/gpu/global_eval/data_config.yaml"
 parent_path: "config/gpu/global_eval/evaluation_parent.yaml"
 
+evaluation_dir: "/home/sylvain/data/results/global_eval/evaluation"
+
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False
