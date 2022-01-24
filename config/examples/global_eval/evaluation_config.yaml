@@ -61,3 +61,5 @@ databases:
     # scenarios:
     #     spectrogram:
     #       sample_rate: ["original", 22050]
+
+models: []
