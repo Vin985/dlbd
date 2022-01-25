@@ -3,6 +3,8 @@ data_config: "/home/vin/Doctorat/dev/dlbd/config/examples/global_eval/evaluation
 save_results: True #True
 overwrite_results: False
 
+scores_n_bins: 20
+
 ###########
 ## Paths ##
 ###########

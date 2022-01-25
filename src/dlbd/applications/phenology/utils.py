@@ -23,22 +23,24 @@ def extract_method(x):
     return ast.literal_eval(x).get("method", "")
 
 
-def score_stats(x, metrics, nbins=10):
+def score_stats(x, metrics, opts=None):
+    opts = opts if opts else {}
+    n_bins = opts.get("scores_n_bins", 10)
     for metric in metrics:
         if metric in x.columns:
             if x[metric].notnull().all():
                 scores, bins = pd.qcut(
-                    x[metric], nbins, labels=False, duplicates="drop", retbins=True
+                    x[metric], n_bins, labels=False, duplicates="drop", retbins=True
                 )
                 scores = scores + 1
-                if len(bins) != nbins + 1:
-                    scaler = MinMaxScaler(feature_range=(1, nbins))
+                if len(bins) != n_bins + 1:
+                    scaler = MinMaxScaler(feature_range=(1, n_bins))
                     scores = scaler.fit_transform(scores.values[:, None]).ravel()
                 x.loc[:, metric + "_score"] = scores
     return x
 
 
-def get_phenology_score(df, relative=True):
+def get_phenology_score(df, relative=True, opts=None):
     suffix = "_score" if relative else ""
     return {
         "fidelity": df["eucl_distance_norm" + suffix].mean(),
@@ -46,7 +48,7 @@ def get_phenology_score(df, relative=True):
     }
 
 
-def get_accuracy_score(df, target, relative=True):
+def get_accuracy_score(df, target, relative=True, opts=None):
     suffix = "_score" if relative else ""
     if target:
         df = df.loc[(df.database == "full_summer1")]
@@ -67,10 +69,14 @@ def get_accuracy_score(df, target, relative=True):
     }
 
 
-def get_model_scores(df, relative):
+def get_model_scores(df, relative, opts):
     phenol_score = get_phenology_score(df, relative)
-    target_accuracy_score = get_accuracy_score(df, target=True, relative=relative)
-    general_accuracy_score = get_accuracy_score(df, target=False, relative=relative)
+    target_accuracy_score = get_accuracy_score(
+        df, target=True, relative=relative, opts=opts
+    )
+    general_accuracy_score = get_accuracy_score(
+        df, target=False, relative=relative, opts=opts
+    )
     res_summary = {
         "phenology": round(phenol_score["fidelity"], 2),
         "target_accuracy": round(target_accuracy_score["global"], 2),
@@ -84,8 +90,8 @@ def get_model_scores(df, relative):
     return pd.DataFrame([res_summary])
 
 
-def get_scores(df, relative=True):
-    res = df.groupby(["model"]).apply(get_model_scores, relative)
+def get_scores(df, relative=True, opts=None):
+    res = df.groupby(["model"]).apply(get_model_scores, relative, opts)
     return (
         res.reset_index()
         .drop(columns=["level_1"])
@@ -96,6 +102,7 @@ def get_scores(df, relative=True):
 def score_models(
     file_name,
     src_dir,
+    opts=None,
     metrics=SCORE_METRICS,
     df=None,
     dest_dir=None,
@@ -121,12 +128,12 @@ def score_models(
 
     scored_df = (
         df.groupby(["database", "evaluator", "method"])
-        .apply(score_stats, metrics)
+        .apply(score_stats, metrics, opts=opts)
         .reset_index(drop=True)
     )
 
-    relative_scores_df_ = get_scores(scored_df)
-    absolute_scores_df = get_scores(scored_df, False)
+    relative_scores_df_ = get_scores(scored_df, opts=opts)
+    absolute_scores_df = get_scores(scored_df, False, opts=opts)
 
     if save_results:
         scored_df.to_csv(
