@@ -69,4 +69,4 @@ if not global_res_path.exists() or overwrite:
     global_res_filename = filenames["stats"]
 
 # TODO : Matches consolidation does not work
-score_models(global_res_filename, res_dir)
+score_models(global_res_filename, res_dir, evaluation_config)
