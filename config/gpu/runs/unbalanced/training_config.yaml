@@ -11,7 +11,7 @@ pixels_per_sec: 200
 num_filters: 64
 wiggle_room: 10
 early_stopping:
-  patience: 8
+  patience: 3
   min_delta: 0.002
   restore_best_weights: False
 spectrogram_overlap: 0.75
@@ -24,6 +24,15 @@ dilation_rate: [[1, 2], 1]
 training_balanced: False
 
 scenarios:
+  - name: "DLBD"
+    id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
+    class: "dlbd.models.dlbd.DLBD"
+    wriggle_room: 3 #[3, 5, 10]
+    batch_size: 256 #[256, 128, 64, 32]
+    num_filters: 128
+    num_dense_units: 512
+    num_dense_units2: 128
+    pixels_per_sec: 100
   - name: "DLBD"
     id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
     class: "dlbd.models.dlbd.DLBD"
