@@ -37,21 +37,23 @@ class CityNetEvaluator(Evaluator):
 
     def get_recording_events(self, predictions, tags, options=None):
         options = options or {}
-        tags = tags[tags.recording_id == predictions.name]
+        if tags is not None and not tags.empty:
+            tags = tags[tags.recording_id == predictions.name]
         threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
         predictions.loc[predictions.activity > threshold, "events"] = 2
         dur = max(predictions.time)
         if not predictions.empty:
             step = predictions.time.values[1] - predictions.time.values[0]
-            for tag in tags.itertuples():
-                start = max(
-                    0, math.ceil((tag.tag_start - self.DEFAULT_TIME_BUFFER) / step)
-                )
-                end = min(
-                    math.ceil(dur / step),
-                    math.ceil((tag.tag_end + self.DEFAULT_TIME_BUFFER) / step),
-                )
-                predictions.tags.iloc[start:end] = 1
+            if tags is not None and not tags.empty:
+                for tag in tags.itertuples():
+                    start = max(
+                        0, math.ceil((tag.tag_start - self.DEFAULT_TIME_BUFFER) / step)
+                    )
+                    end = min(
+                        math.ceil(dur / step),
+                        math.ceil((tag.tag_end + self.DEFAULT_TIME_BUFFER) / step),
+                    )
+                    predictions.tags.iloc[start:end] = 1
         return predictions
 
     def get_stats(self, predictions, options):
