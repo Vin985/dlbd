@@ -3,11 +3,12 @@ from time import time
 import numpy as np
 
 from mouffet.models import DLModel
-from mouffet import common_utils
+from mouffet import common_utils, file_utils
 from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
 from ..data.audio_utils import resize_spectrogram
+from pysoundviewer import image
 
 
 class AudioDLModel(DLModel):
@@ -53,6 +54,7 @@ class AudioDLModel(DLModel):
             for i, spec in enumerate(data["spectrograms"]):
                 infos = data["infos"][i]
                 spec_opts = infos["spec_opts"]
+                infos["duration"] = infos["length"] / infos["sample_rate"]
                 resize_width = self.get_resize_width(infos)
 
                 if (
@@ -88,7 +90,7 @@ class AudioDLModel(DLModel):
     def get_resize_width(self, infos):
         resize_width = -1
         pix_in_sec = self.opts.get("pixels_per_sec", 20)
-        resize_width = int(pix_in_sec * infos["length"] / infos["sample_rate"])
+        resize_width = int(pix_in_sec * infos["duration"])
         return resize_width
 
     def classify_spectrogram(self, spectrogram, spec_sampler):
@@ -96,7 +98,18 @@ class AudioDLModel(DLModel):
         tic = time()
         labels = np.zeros(spectrogram.shape[1])
         preds = []
+        # count = 0
+        # ig = image.ImageGenerator(image_options=image.ImageOptions())
         for data, _ in tqdm(spec_sampler([spectrogram], [labels])):
+            # for i in range(0, data.shape[0]):
+            #     count += 1
+            #     img = ig.spec2img(data[i], size=None, is_array=True)
+            #     img.save(
+            #         file_utils.ensure_path_exists(
+            #             "test/specs2/test_spectrogram_{}.png".format(count),
+            #             is_file=True,
+            #         )
+            #     )
             pred = self.predict(data)
             preds.append(pred)
         print("Classified {0} in {1}".format("spectrogram", time() - tic))
@@ -105,4 +118,9 @@ class AudioDLModel(DLModel):
     def classify(self, data, sampler):
         spectrogram, infos = data
         spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
+
+        # ig = image.ImageGenerator(image_options=image.ImageOptions())
+        # img = ig.spec2img(spectrogram[:, 0:500], size=None, is_array=True)
+        # img.save("test_spectrogram.png")
+
         return self.classify_spectrogram(spectrogram, sampler)
