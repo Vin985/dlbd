@@ -105,12 +105,16 @@ class BADChallengeEvaluator(Evaluator):
 
         print("Stats for options {0}:".format(options))
         common_utils.print_warning(
-            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; mAP: {}".format(
+            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; mAP: {}; True neg: {}, False neg: {}, False pos: {}; True pos: {}".format(
                 stats["precision"],
                 stats["recall"],
                 stats["f1_score"],
                 stats["auc"],
                 stats["ap"],
+                stats["n_true_negatives"],
+                stats["n_false_negatives"],
+                stats["n_false_positives"],
+                stats["n_true_positives"],
             )
         )
         return pd.DataFrame([stats])
