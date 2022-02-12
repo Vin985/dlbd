@@ -28,7 +28,7 @@ class NormalizeSpectrograms(tf.keras.layers.Layer):
             )
             four = tf.math.divide_no_nan(x, tf.math.reduce_max(x))
             spec = tf.stack([one, two, three, four])
-        if self.do_augmentation:
+        if training and self.do_augmentation:
 
             if self.learn_log:
                 mult = 1.0 + np.random.randn(1, 1, 1) * 0.1
