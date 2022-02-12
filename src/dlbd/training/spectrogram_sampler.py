@@ -29,7 +29,6 @@ class SpectrogramSampler:
 
     def load_options(self, opts):
         self.opts = {}
-        self.opts["do_augmentation"] = opts.get("do_augmentation", False)
         self.opts["learn_log"] = opts.get("learn_log", False)
         # Half-width window for spectrograms
         self.opts["hww_spec"] = opts.get("hww_spec", math.ceil(opts["input_width"] / 2))
@@ -149,10 +148,11 @@ class SpectrogramSampler:
 
     def __len__(self):
         if len(self.tmp_idxs):
+            class_size = "smallest" if self.opts["balanced"] else "largest"
             return int(
                 np.ceil(
                     float(
-                        mbg.get_class_size(self.labels[self.tmp_idxs], "smallest")
+                        mbg.get_class_size(self.labels[self.tmp_idxs], class_size)
                         * np.unique(self.labels[self.tmp_idxs]).shape[0]
                     )
                     / float(self.opts["batch_size"])
