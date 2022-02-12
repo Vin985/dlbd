@@ -23,6 +23,27 @@ class PhenologyEvaluator(Evaluator):
         # * Returns mean activity duration in a day
         return df["event_duration"].mean()
 
+    def extract_recording_info_dlbd(self, df, options):
+        df[
+            ["site", "plot", "date", "time", "to_drop"]
+        ] = df.recording_id.path.stem.str.split("_", expand=True)
+        df = df.assign(
+            full_date=[str(x) + "_" + y for x, y in zip(df["date"], df["time"])]
+        )
+        df["full_date"] = pd.to_datetime(df["full_date"], format="%Y-%m-%d_%H%M%S")
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+        df = df.drop(columns=["to_drop", "recording_id"])
+        return df
+
+    def extract_recording_info_audiomoth2019(self, df, options):
+        df[["date", "time"]] = df.recording_id.path.stem.str.split("_", expand=True)
+        df = df.assign(
+            full_date=[str(x) + "_" + y for x, y in zip(df["date"], df["time"])]
+        )
+        df["full_date"] = pd.to_datetime(df["full_date"], format="%Y%m%d_%H%M%S")
+        df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+        return df
+
     def get_daily_activity(self, df, options, df_type="event"):
         res = {}
         # * Get total duration per file
@@ -34,24 +55,9 @@ class PhenologyEvaluator(Evaluator):
             .reset_index()
             .rename(columns={0: "total_duration"})
         )
-        file_song_duration[
-            ["site", "plot", "date", "time", "to_drop"]
-        ] = file_song_duration.recording_id.path.stem.str.split("_", expand=True)
-        file_song_duration = file_song_duration.assign(
-            full_date=[
-                str(x) + "_" + y
-                for x, y in zip(file_song_duration["date"], file_song_duration["time"])
-            ]
-        )
-        file_song_duration["full_date"] = pd.to_datetime(
-            file_song_duration["full_date"], format="%Y-%m-%d_%H%M%S"
-        )
-        file_song_duration["date"] = pd.to_datetime(
-            file_song_duration["date"], format="%Y-%m-%d"
-        )
-        file_song_duration = file_song_duration.drop(
-            columns=["to_drop", "recording_id"]
-        )
+        file_song_duration = getattr(
+            self, "extract_recording_info_" + options.get("recording_info_type", "dlbd")
+        )(file_song_duration, options=options)
         res["file_duration"] = file_song_duration
 
         # * Get mean duration per day
@@ -79,8 +85,10 @@ class PhenologyEvaluator(Evaluator):
 
         if df_type == "tag":
             daily_duration["type"] = "ground_truth"
-        else:
+        elif options.get("scenario_info"):
             daily_duration["type"] = options["scenario_info"]["model"]
+        else:
+            daily_duration["type"] = options.get("plot", "unknown_plot")
 
         res["daily_duration"] = daily_duration
 
