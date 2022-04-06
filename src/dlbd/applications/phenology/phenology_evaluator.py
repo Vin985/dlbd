@@ -1,8 +1,9 @@
 import pandas as pd
+from ...utils.plot_utils import format_date_short
 from mouffet import common_utils
 from mouffet.evaluation import Evaluator
 from pandas_path import path  # pylint: disable=unused-import
-from plotnine import aes, geom_line, ggplot, ggtitle
+from plotnine import *
 from scipy.spatial.distance import euclidean
 from statsmodels.tsa.seasonal import seasonal_decompose
 
@@ -96,25 +97,49 @@ class PhenologyEvaluator(Evaluator):
 
     def plot_distances(self, data, options):
         plt_df = data["df"]
-        tmp_plt = (
-            ggplot(
-                data=plt_df,
-                mapping=aes("date", "trend", color="type"),
+        res = []
+        if options.get("plot_real_distance", True):
+            tmp_plt = (
+                ggplot(
+                    data=plt_df,
+                    mapping=aes("date", "trend", color="type"),
+                )
+                + geom_line()
+                + ggtitle(
+                    "Daily mean activity per recording.\n"
+                    + " Euclidean distance to reference: {}".format(data["distance"])
+                )
+                + xlab("Date")
+                + ylab("Daily mean activity per recording (s)")
+                + scale_color_discrete(labels=["Model", "Reference"])
+                + scale_x_datetime(labels=format_date_short)
+                + theme_classic()
+                + theme(axis_text_x=element_text(angle=45))
             )
-            + geom_line()
-            + ggtitle("Distance: {}".format(data["distance"]))
-        )
-
-        tmp_plt_norm = (
-            ggplot(
-                data=plt_df,
-                mapping=aes("date", "trend_norm", color="type"),
+            res.append(tmp_plt)
+        if options.get("plot_norm_distance", True):
+            tmp_plt_norm = (
+                ggplot(
+                    data=plt_df,
+                    mapping=aes("date", "trend_norm", color="type"),
+                )
+                + geom_line()
+                + ggtitle(
+                    "Normalized daily mean activity per recording.\n"
+                    + " Euclidean distance to reference: {}".format(
+                        data["distance_norm"]
+                    )
+                )
+                + xlab("Date")
+                + ylab("Normalized daily mean activity per recording")
+                + scale_color_discrete(labels=["Model", "Reference"])
+                + scale_x_datetime(labels=format_date_short)
+                + theme_classic()
+                + theme(axis_text_x=element_text(angle=45))
             )
-            + geom_line()
-            + ggtitle("Distance normalisee: {}".format(data["distance_norm"]))
-        )
+            res.append(tmp_plt_norm)
 
-        return [tmp_plt, tmp_plt_norm]
+        return res
 
     def evaluate(self, predictions, tags, options):
         if options["scenario_info"]["database"] not in options.get(
