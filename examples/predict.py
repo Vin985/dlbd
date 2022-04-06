@@ -26,6 +26,10 @@ from dlbd.evaluation import predictions
 
 plots = [
     {
+        "src_path": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Ny-Aalesund/2021/LYT1_EC29",
+        "name": "LYT1_EC29",
+    },
+    {
         "src_path": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Ny-Aalesund/2021/LYT12_EC20",
         "name": "LYT12_EC20",
     },
@@ -36,6 +40,18 @@ plots = [
     {
         "src_path": "/media/vin/BigMama/Sylvain/AL58",
         "name": "2021_BARW_8_AL58",
+    },
+    {
+        "src_path": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Ny-Aalesund/2021/LYT2_EC09",
+        "name": "LYT2_EC09",
+    },
+    {
+        "src_path": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Ny-Aalesund/2021/LYT8_EC06",
+        "name": "LYT8_EC06",
+    },
+    {
+        "src_path": "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Ny-Aalesund/2021/LYT9_AL47",
+        "name": "LYT9_AL47",
     },
 ]
 
@@ -55,7 +71,7 @@ model_opts = ModelOptions(
 )
 
 model = ModelHandler.load_model(model_opts)
-overwrite = True
+overwrite = False
 
 spec_opts = {"n_fft": 512, "n_mels": 32, "sample_rate": "original", "to_db": False}
 

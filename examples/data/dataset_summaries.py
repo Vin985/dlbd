@@ -1,62 +1,38 @@
 #%%
 
 from pathlib import Path
-
-import pandas as pd
-
 import mouffet.utils.file as file_utils
 
 from dlbd.data.audio_data_handler import AudioDataHandler
 
+summaries_root = Path("/home/vin/Doctorat/dev/dlbd/results/summaries")
 
-opts_path = Path("examples/training_data_config.yaml")
+opts_path = Path("examples/data_config.yaml")
+# opts_path = Path("../data_config.yaml")
 
 opts = file_utils.load_config(opts_path)
 
+db = "full_summer1"
+
 dh = AudioDataHandler(opts)
-dh.check_datasets()
-res = dh.get_summaries()
+# dh.check_datasets(databases=[db])
+res = dh.get_db_tags_summary(db)
 
 #%%
 
-# print(res)
+all_tags = []
 
-agg_databases = []
-agg_classes = []
-classes_list = {}
-all_classes = []
-for key, val in res.items():
-    classes_list[key] = []
-    for key2, val2 in val.items():
-        classes = val2.pop("classes_summary")
-        classes["database"] = key
-        classes["type"] = key2
-        agg_classes.append(classes)
+for key, value in res.items():
+    file_path = file_utils.ensure_path_exists(
+        summaries_root / ("tag_summary_" + db + "_" + key + ".csv"), is_file=True
+    )
+    value["summary"].to_csv(file_path)
 
-        val2["database"] = key
-        val2["type"] = key2
-        agg_databases.append(val2)
-        classes_list[key] += val2["classes_list"]
-        all_classes += val2["classes_list"]
+# all_df = pd.concat(all_tags)
+# summary = dh.compute_summary(all_df)
 
-    classes_list[key] = list(set(classes_list[key]))
-
-all_classes = list(set(all_classes))
-all_classes.sort()
-
-print(all_classes)
-
-pd.DataFrame({"class_type": ["biotic"] * len(all_classes), "tag": all_classes}).to_csv(
-    "generated_classes.csv", index=False
-)
-
-
-classes_df = pd.concat(agg_classes)
-databases_df = pd.DataFrame(agg_databases)
-
-
-# print(classes_df)
-# print(databases_df)
-
-
-# print(classes_df.tag.unique())
+# summary.to_csv(
+#     file_utils.ensure_path_exists(
+#         summaries_root / ("tag_summary_" + db + "_all.csv"), is_file=True
+#     )
+# )

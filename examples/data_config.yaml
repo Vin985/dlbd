@@ -9,6 +9,9 @@ dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
 save_intermediate: False
 
 use_subfolders: ["spectrogram"]
+subfolders:
+  - type: spectrogram
+    options: ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
 
 data_extensions:
   - ".wav"
@@ -30,6 +33,7 @@ tags:
   columns_type:
     overlap: "str"
   with_data: False
+  print_missing_classes: True
 
 
 databases:
@@ -42,16 +46,26 @@ databases:
       split:
         validation: 0.2
     - name: 'arctic'
-      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
-      data_dir: "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Complete"
-      db_types: ["training", "validation"]
-      tags:
-        with_data: True
-      split:
-        validation: 0.3
+      root_dir: "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Tommy"
+      data_dir: "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Tommy"
       tags:
         with_data: True
       # overwrite: False
+      # generate_file_lists: True
+      #* split: Defines proportion of data to set aside for test and validation datasets.
+      #* If provided, first the test dataset is set aside, then the remaining data is split into
+      #* training and validation datasets.
+      #* Overrides training_dir/validation_dir. Set to false or 0 to avoid using it in a database
+      split:
+        test: 0.2
+        validation: 0.2
+
+    - name: 'arctic_complete'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic_complete'
+      data_dir: "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Complete"
+      tags:
+        with_data: True
+      overwrite: False
       # generate_file_lists: True
       #* split: Defines proportion of data to set aside for test and validation datasets.
       #* If provided, first the test dataset is set aside, then the remaining data is split into
@@ -69,7 +83,7 @@ databases:
         type: nips4b
     - name: 'NABS'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/NABS'
-      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS'
+      data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS/2'
       tags:
         with_data: True
         suffix: "_tags.csv"
@@ -77,9 +91,15 @@ databases:
           tag: "tag"
           start: "tag_start"
           end: "tag_end"
-    - name: 'arctic_complete'
-      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic_complete'
-      data_dir: "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Complete"
+      split:
+        validation: 0.2
+        test: 0.2
+    - name: 'full_summer1'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      data_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      db_types: ["test"]
+      overwrite: False
+      
       tags:
         with_data: True
       
@@ -89,8 +109,8 @@ spectrogram:
   type: "mel"
   n_mels: 32
   n_fft: 2048
-  hop_length: 1024
+  # hop_length: 1024
   #sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "src/classes.csv"
+classes_file: "src/generated_classes.csv"
