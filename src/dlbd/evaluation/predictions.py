@@ -1,5 +1,6 @@
 import math
 import time
+import traceback
 from pathlib import Path
 
 import numpy as np
@@ -32,56 +33,60 @@ def classify_elements(elements, model, spec_opts=None):
 
     start = time.time()
 
-    for element in elements:
-        start_file = time.time()
-        if isinstance(element, Path) or isinstance(element, str):
-            if not spec_opts:
-                raise AttributeError(
-                    (
-                        "Error trying to classify {}: spec_opts arguments "
-                        + "is missing. Please specify a spec_opts arguments "
-                        + "while classifying elements from a file path."
-                    ).format(element)
-                )
-            (
-                spec,
-                info,
-            ) = audio_utils.load_audio_data(element, spec_opts)
-        else:
-            spec, info = element
-
-        duration = info["length"] / info["sample_rate"]
-        total_audio_duration += duration
-        if duration < min_duration:
-            if to_classify is None:
-                to_classify = np.zeros((spec.shape[0], 0))
-                lengths = [spec.shape[1]]
-                dur = 0
+    for i, element in enumerate(elements):
+        print("Classifying element {}/{}".format(i, len(elements)))
+        try:
+            start_file = time.time()
+            if isinstance(element, Path) or isinstance(element, str):
+                if not spec_opts:
+                    raise AttributeError(
+                        (
+                            "Error trying to classify {}: spec_opts arguments "
+                            + "is missing. Please specify a spec_opts arguments "
+                            + "while classifying elements from a file path."
+                        ).format(element)
+                    )
+                (
+                    spec,
+                    info,
+                ) = audio_utils.load_audio_data(element, spec_opts)
             else:
-                lengths.append(duration)
-            padding = np.zeros(
-                (spec.shape[0], math.ceil(spec.shape[1] / duration) * 3), np.float32
-            )
-            to_classify = np.hstack([to_classify, spec, padding])
-            dur += duration + 3
-            if dur < min_duration:
-                continue
-            info["duration"] = dur
-        else:
-            info["duration"] = duration
-            to_classify = spec
-            # info["duration"] = 30
-            # idx = math.ceil(spec.shape[1] / duration * 30)
-            # to_classify = spec[:, 0:idx]
+                spec, info = element
 
-        res_df = classify_element(model, (to_classify, info), test_sampler)
-        # plt = res_df.plot("time", "activity")
-        # fig = plt.get_figure()
-        # fig.savefig("output.png")
-        to_classify = None
-        res.append(res_df)
-        end_file = time.time()
-        print("File done in {}".format(end_file - start_file))
+            duration = info["length"] / info["sample_rate"]
+            total_audio_duration += duration
+            if duration < min_duration:
+                if to_classify is None:
+                    to_classify = np.zeros((spec.shape[0], 0))
+                    lengths = [spec.shape[1]]
+                    dur = 0
+                else:
+                    lengths.append(duration)
+                padding = np.zeros(
+                    (spec.shape[0], math.ceil(spec.shape[1] / duration) * 3), np.float32
+                )
+                to_classify = np.hstack([to_classify, spec, padding])
+                dur += duration + 3
+                if dur < min_duration:
+                    continue
+                info["duration"] = dur
+            else:
+                info["duration"] = duration
+                to_classify = spec
+                # info["duration"] = 30
+                # idx = math.ceil(spec.shape[1] / duration * 30)
+                # to_classify = spec[:, 0:idx]
+
+            res_df = classify_element(model, (to_classify, info), test_sampler)
+            # plt = res_df.plot("time", "activity")
+            # fig = plt.get_figure()
+            # fig.savefig("output.png")
+            to_classify = None
+            res.append(res_df)
+            end_file = time.time()
+            print("File done in {}".format(end_file - start_file))
+        except Exception:
+            common_utils.print_error(traceback.format_exc())
 
     end = time.time()
 
