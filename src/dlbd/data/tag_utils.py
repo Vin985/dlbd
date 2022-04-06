@@ -26,8 +26,7 @@ DEFAULT_OPTIONS = {
 
 def load_tags(tags_dir, opts, audio_info, spec_len):
     tag_opts = opts["tags"]
-    tag_df = get_tag_df(audio_info, tags_dir, tag_opts)
-
+    tag_df = get_tag_df(audio_info["file_path"], tags_dir, tag_opts)
     tmp_tags = filter_classes(tag_df, opts)
     tag_presence = get_tag_presence(tmp_tags, audio_info, tag_opts)
     factor = float(spec_len) / tag_presence.shape[0]
@@ -66,7 +65,7 @@ def filter_classes(tag_df, opts):
         pandas.Dataframe: filtered and possibly altered dataframe with 'tag' values only in list
     """
     classes = opts["classes"]
-    if tag_df.empty:
+    if tag_df.empty or not opts["tags"].get("filter_classes", True):
         return tag_df
     tag_df = tag_df.dropna(subset=["tag"])
     if "related" not in tag_df.columns:
@@ -82,6 +81,12 @@ def filter_classes(tag_df, opts):
         if tag in classes:
             found = True
         else:
+            if not found and opts["tags"].get("print_tag_not_found", False):
+                common_utils.print_warning(
+                    "Tag {} not found in accepted classes, searching in related tags".format(
+                        tag
+                    )
+                )
             related_tags = related.lower().split(",")
             for c in classes:
                 if c in related_tags:
@@ -99,13 +104,11 @@ def filter_classes(tag_df, opts):
     return tag_df[res]
 
 
-def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
+def get_audiotagger_tag_df(audio_file_path, labels_dir, tag_opts):
     defaults = DEFAULT_OPTIONS["audiotagger"]
     columns = tag_opts["columns"] or defaults["columns_name"]
     columns_type = tag_opts["columns_type"] or defaults["columns_type"]
     suffix = tag_opts.get("suffix", defaults["suffix"])
-
-    audio_file_path = audio_info["file_path"]
 
     if tag_opts.get("with_data", False):
         csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
@@ -129,8 +132,7 @@ def get_audiotagger_tag_df(audio_info, labels_dir, tag_opts):
         return pd.DataFrame()
 
 
-def get_nips4b_tag_df(audio_info, labels_dir, tag_opts):
-    audio_file_path = audio_info["file_path"]
+def get_nips4b_tag_df(audio_file_path, labels_dir, tag_opts):
     file_id = audio_file_path.stem[-3:]
     tag_path = labels_dir / ("annotation_train" + file_id + ".csv")
     if tag_path.exists():
@@ -157,7 +159,7 @@ def get_bad_challenge_tag_df(tags_dir):
         raise ValueError("Error - no annotations file found %s" % str(tag_path))
 
 
-def get_tag_df(audio_info, labels_dir, tag_opts):
+def get_tag_df(audio_file_path, labels_dir, tag_opts):
     tag_type = tag_opts.get("type", "audiotagger")
 
     tag_func_name = "get_" + tag_type + "_tag_df"
@@ -166,9 +168,9 @@ def get_tag_df(audio_info, labels_dir, tag_opts):
     possibles.update(locals())
     func = possibles.get(tag_func_name)
 
-    tag_df = func(audio_info, labels_dir, tag_opts)
+    tag_df = func(audio_file_path, labels_dir, tag_opts)
     if not tag_df.empty:
-        tag_df.loc[:, "recording_path"] = str(audio_info["file_path"])
+        tag_df.loc[:, "recording_path"] = str(audio_file_path)
     return tag_df
 
 
@@ -242,7 +244,7 @@ def flatten_tags(tags_df):
     return res
 
 
-def summary(tags, opts=None):
+def plot_summary(tags, opts=None):
     from plotnine import (
         aes,
         element_text,

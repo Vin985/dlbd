@@ -4,7 +4,7 @@ from mouffet.data import DataHandler, DataStructure
 from mouffet.data.split import split_folder
 
 from ..options import AudioDatabaseOptions
-from . import audio_utils
+from . import audio_utils, tag_utils
 from .loaders import AudioDataLoader, BADChallengeDataLoader
 from .split import citynet_split
 
@@ -66,19 +66,26 @@ class AudioDataHandler(DataHandler):
         merged["tags_df"] = pd.concat(merged["tags_df"])
         return merged
 
-    def get_summary(self, dataset):
-        df = dataset["tags_df"]
+    @staticmethod
+    def summarize_tags(df):
         df["duration"] = df["tag_end"] - df["tag_start"]
-
-        # TODO: FINISH IT!
+        df["all_tags"] = df.tag + "," + df.related
         summary = df.groupby("tag").agg(
-            {"duration": ["sum", "mean", "std", "min", "max"], "tag": "size"}
+            {
+                "duration": ["sum", "mean", "std", "min", "max"],
+                "tag": "size",
+                "all_tags": "first",
+            }
         )
         summary.columns = pd.Index(
             common_utils.join_tuple(i, "_") for i in summary.columns
         )
         summary = summary.reset_index()
-        df.all_tags = df.tag + "," + df.related
+        return df, summary
+
+    def summarize_dataset(self, dataset):
+        df, summary = self.summarize_tags(dataset["tags_df"])
+
         classes_list = list(filter(None, set(df.all_tags.str.split(",").sum())))
 
         tmp_res = {
@@ -86,5 +93,52 @@ class AudioDataHandler(DataHandler):
             "n_classes": len(df.tag.unique()),
             "classes_summary": summary,
             "classes_list": classes_list,
+            "raw_df": df,
         }
         return tmp_res
+
+    def get_db_tags_summary(self, database, db_types=None, filter_classes=False):
+        res = {}
+        if isinstance(database, str):
+            database = self.databases[database]
+        db_types = db_types or database.db_types
+
+        paths = self.get_database_paths(database)
+        file_lists = self.check_file_lists(database, paths, db_types)
+
+        print("Generating tags summary for database: {}".format(database["name"]))
+
+        res = {}
+        tmp_all = []
+        # * Only load data if the give db_type is in the database definition
+        for db_type in db_types:
+            if not db_type in database.db_types:
+                continue
+
+            tmp_tags = []
+            tags_dir = paths["tags"][db_type]
+            for file_path in file_lists[db_type]:
+                tmp_df = tag_utils.get_tag_df(file_path, tags_dir, database.tags)
+                if filter_classes:
+                    tmp_df = tag_utils.filter_classes(tmp_df, database)
+
+                tmp_tags.append(tmp_df)
+
+            tmp_df = pd.concat(tmp_tags)
+            tmp_df, tmp_summary = self.summarize_tags(tmp_df)
+            res[db_type] = {"raw": tmp_df, "summary": tmp_summary}
+            tmp_all.append(tmp_df)
+
+        all_df = pd.concat(tmp_all)
+        all_df, all_summary = self.summarize_tags(all_df)
+        res["all"] = {"raw": all_df, "summary": all_summary}
+
+        return res
+
+    def get_databases_summary(self, databases, *args, **kwargs):
+        res = {}
+        databases = databases or self.databases.values()
+        # * Iterate over databases
+        for database in databases:
+            res[database["name"]] = self.get_db_tags_summary(database, *args, **kwargs)
+        return res
