@@ -187,7 +187,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
         res["step"] = step
         return res
 
-    def get_events(self, predictions, options=None, tags=None, *args, **kwargs):
+    def filter_predictions(self, predictions, options=None, tags=None):
         options = options or {}
         preds = predictions.copy()
         preds.loc[:, "event"] = 0
@@ -357,9 +357,10 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
 
         return pd.DataFrame([stats])
 
-    def evaluate(self, predictions, tags, options):
+    def evaluate(self, data, options, infos):
+        predictions, tags = data
         tags = tags["tags_df"]
-        events = self.get_events(predictions, options, tags)
+        events = self.filter_predictions(predictions, options, tags)
         stats = self.get_stats(events, tags, options)
         return {"stats": stats, "matches": events}
 

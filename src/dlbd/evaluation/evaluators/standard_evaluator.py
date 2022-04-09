@@ -107,7 +107,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             events = pd.DataFrame(columns=["recording_id", "start", "end"])
         return events
 
-    def get_events(self, predictions, options, *args, **kwargs):
+    def filter_predictions(self, predictions, options, *args, **kwargs):
         predictions = predictions[["activity", "recording_id", "time"]]
         events = predictions.groupby("recording_id", as_index=False, observed=True)
         events = (
@@ -598,9 +598,10 @@ class StandardEvaluator(SongDetectorEvaluator):
 
         return pd.DataFrame([stats])
 
-    def evaluate(self, predictions, tags, options):
+    def evaluate(self, data, options, infos):
+        predictions, tags = data
         tags = tags["tags_df"]
-        events = self.get_events(predictions, options)
+        events = self.filter_predictions(predictions, options)
         events, tags, matches = self.get_matches(events, tags, options)
         stats = self.get_stats(events, tags, matches, options)
 

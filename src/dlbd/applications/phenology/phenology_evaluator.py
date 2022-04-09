@@ -141,10 +141,8 @@ class PhenologyEvaluator(Evaluator):
 
         return res
 
-    def evaluate(self, predictions, tags, options):
-        if options["scenario_info"]["database"] not in options.get(
-            "phenology_databases", []
-        ):
+    def evaluate(self, data, options, infos):
+        if infos["database"] not in options.get("phenology_databases", []):
             common_utils.print_info(
                 (
                     "Database {} is not part of the accepted databases for the 'Phenology' "
@@ -153,7 +151,7 @@ class PhenologyEvaluator(Evaluator):
             )
             return {}
         method = options["method"]
-        stats = EVALUATORS[method].evaluate(predictions, tags, options)
+        stats = EVALUATORS[method].evaluate(data, options, infos)
 
         matches = stats["matches"]
 

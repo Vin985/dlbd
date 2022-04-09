@@ -27,7 +27,7 @@ class CityNetEvaluator(Evaluator):
             return df.tags.sum() * step
         return 0
 
-    def get_events(self, predictions, tags, options):
+    def filter_predictions(self, predictions, options, tags=None):
         predictions = predictions[["activity", "recording_id", "time"]].copy()
         predictions["events"] = 0
         predictions["tags"] = 0
@@ -124,9 +124,10 @@ class CityNetEvaluator(Evaluator):
         plt.draw()
         plt.savefig("pr_curve.pdf")
 
-    def evaluate(self, predictions, tags, options):
+    def evaluate(self, data, options, infos):
+        predictions, tags = data
         tags = tags["tags_df"]
-        events = self.get_events(predictions, tags, options)
+        events = self.filter_predictions(predictions, options, tags)
         stats = self.get_stats(events, options)
         res = {"stats": stats, "matches": events}
         if options.get("draw_plots", False):
