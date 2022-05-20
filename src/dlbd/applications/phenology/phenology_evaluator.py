@@ -106,7 +106,9 @@ class PhenologyEvaluator(Evaluator):
                 )
                 + geom_line()
                 + ggtitle(
-                    "Daily mean activity per recording.\n"
+                    "Daily mean activity per recording with method {}.\n".format(
+                        options["method"]
+                    )
                     + " Euclidean distance to reference: {}".format(data["distance"])
                 )
                 + xlab("Date")
@@ -125,7 +127,9 @@ class PhenologyEvaluator(Evaluator):
                 )
                 + geom_line()
                 + ggtitle(
-                    "Normalized daily mean activity per recording.\n"
+                    "Normalized daily mean activity per recording with method {}.\n".format(
+                        options["method"]
+                    )
                     + " Euclidean distance to reference: {}".format(
                         data["distance_norm"]
                     )
