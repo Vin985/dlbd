@@ -58,8 +58,9 @@ if not global_res_path.exists() or overwrite:
                 conf["predictions_dir"] = preds_dir
                 conf["id"] = path.name
                 print(model_dir)
-                model_opts = {"model_dir": model_dir}
-                conf = get_models_conf(conf, model_opts, append=True)
+                conf["models_list_dir"] = model_dir
+                conf["add_models_from_list"] = True
+                conf = get_models_conf(conf)
                 evaluator = SongDetectorEvaluationHandler(
                     opts=conf, dh_class=AudioDataHandler
                 )
