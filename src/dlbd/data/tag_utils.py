@@ -128,7 +128,10 @@ def get_audiotagger_tag_df(audio_file_path, labels_dir, tag_opts):
 
         return tag_df
     else:
-        print("Warning - no annotations found for %s" % str(audio_file_path))
+        print(
+            "Warning - no annotations found for %s, file %s does not exist"
+            % (str(audio_file_path), str(csv_file_path))
+        )
         return pd.DataFrame()
 
 
@@ -145,7 +148,10 @@ def get_nips4b_tag_df(audio_file_path, labels_dir, tag_opts):
         ] = "UNKN"
         return tag_df
     else:
-        print("Warning - no annotations found for %s" % str(audio_file_path))
+        print(
+            "Warning - no annotations found for %s, file %s does not exist"
+            % (str(audio_file_path), str(tag_path))
+        )
         return pd.DataFrame()
 
 
@@ -186,15 +192,16 @@ def get_tag_presence(tag_df, audio_info, tag_opts):
 
 
 def prepare_tags(tags):
-    tags = tags.astype({"recording_path": "category"})
-    tags["tag_duration"] = tags["tag_end"] - tags["tag_start"]
-    tags.reset_index(inplace=True)
-    tags.rename(
-        columns={"index": "tag_index", "recording_path": "recording_id"},
-        inplace=True,
-    )
-    tags.reset_index(inplace=True)
-    tags.rename(columns={"index": "id"}, inplace=True)
+    if tags is not None and not tags.empty:
+        tags = tags.astype({"recording_path": "category"})
+        tags["tag_duration"] = tags["tag_end"] - tags["tag_start"]
+        tags.reset_index(inplace=True)
+        tags.rename(
+            columns={"index": "tag_index", "recording_path": "recording_id"},
+            inplace=True,
+        )
+        tags.reset_index(inplace=True)
+        tags.rename(columns={"index": "id"}, inplace=True)
     return tags
 
 
