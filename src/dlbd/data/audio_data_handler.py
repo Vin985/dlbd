@@ -69,7 +69,9 @@ class AudioDataHandler(DataHandler):
     @staticmethod
     def summarize_tags(df):
         df["duration"] = df["tag_end"] - df["tag_start"]
-        df["all_tags"] = df.tag + "," + df.related
+        df["all_tags"] = df.tag
+        if "related" in df.columns:
+            df["all_tags"] += "," + df.related
         summary = df.groupby("tag").agg(
             {
                 "duration": ["sum", "mean", "std", "min", "max"],
