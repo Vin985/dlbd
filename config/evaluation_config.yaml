@@ -1,0 +1,44 @@
+
+data_config: "/home/vin/Doctorat/dev/dlbd/config/data_config.yaml"
+save_results: True #True
+
+###########
+## Paths ##
+###########
+predictions_dir: "/home/vin/Doctorat/dev/dlbd/results/example/predictions"
+evaluation_dir: "/home/vin/Doctorat/dev/dlbd/results/example/evaluation"
+models_options:
+  inference: True
+  spectrogram_overlap: 0.95
+  reclassify: False
+
+evaluators_options:
+  draw_plots: False
+  plots: ["distances"]
+  phenology_databases: ["full_summer1"]
+
+evaluators:
+  - type: citynet
+    activity_threshold: 0.5
+
+
+models_options:
+  model_dir: "/home/vin/Desktop/results/candidates_models"
+
+
+# model_ids:
+#   - "DLBDL_wr3_fil64_d1-512_d2-256_pps100_bs256"
+
+
+databases_options:
+  spectrogram:
+    win_length: 512
+    n_mels: 32
+    sample_rate: "original"
+
+
+databases:
+  - name: nips4b
+
+models:
+  - model_id : "DLBDL_wr3_fil64_d1-512_d2-256_pps100_bs256"
