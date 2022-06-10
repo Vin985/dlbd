@@ -135,10 +135,10 @@ class AudioDetector(TF2Model, AudioDLModel):
             self.opts,
             randomise=True,
             balanced=self.opts.get("training_balanced", True),
-        )(self.get_raw_data(training_data), self.get_ground_truth(training_data))
+        )(training_data.get_raw_data(), training_data.get_ground_truth())
         validation_sampler = SpectrogramSampler(
             self.opts, randomise=False, balanced=True
-        )(self.get_raw_data(validation_data), self.get_ground_truth(validation_data))
+        )(validation_data.get_raw_data(), validation_data.get_ground_truth())
         return train_sampler, validation_sampler
 
     def init_optimizer(self, learning_rate=0.01):

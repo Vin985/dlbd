@@ -3,12 +3,11 @@ from time import time
 import numpy as np
 
 from mouffet.models import DLModel
-from mouffet import common_utils, file_utils
+from mouffet import common_utils
 from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
 
 from ..data.audio_utils import resize_spectrogram
-from pysoundviewer import image
 
 
 class AudioDLModel(DLModel):
@@ -35,63 +34,63 @@ class AudioDLModel(DLModel):
         opts.add_option("input_width", input_width)
         super().__init__(opts)
 
-    def get_ground_truth(self, data):
-        return data["tags_linear_presence"]
+    # def get_ground_truth(self, data):
+    #     return data["tags_linear_presence"]
 
-    def get_raw_data(self, data):
-        return data["spectrograms"]
+    # def get_raw_data(self, data):
+    #     return data["spectrograms"]
 
-    def modify_spectrogram(self, spec, resize_width, to_db=False):
-        if not to_db:
-            spec = np.log(self.opts["A"] + self.opts["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        if resize_width > 0:
-            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
-        return spec
+    # def modify_spectrogram(self, spec, resize_width, to_db=False):
+    #     if not to_db:
+    #         spec = np.log(self.opts["A"] + self.opts["B"] * spec)
+    #     spec = spec - np.median(spec, axis=1, keepdims=True)
+    #     if resize_width > 0:
+    #         spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
+    #     return spec
 
-    def prepare_data(self, data):
-        if not self.opts["learn_log"]:
-            for i, spec in enumerate(data["spectrograms"]):
-                infos = data["infos"][i]
-                spec_opts = infos["spec_opts"]
-                infos["duration"] = infos["length"] / infos["sample_rate"]
-                resize_width = self.get_resize_width(infos)
+    # def prepare_data(self, dataset):
+    #     if not self.opts["learn_log"]:
+    #         for i, spec in enumerate(dataset.data["spectrograms"]):
+    #             infos = dataset.data["infos"][i]
+    #             spec_opts = infos["spec_opts"]
+    #             infos["duration"] = infos["length"] / infos["sample_rate"]
+    #             resize_width = self.get_resize_width(infos)
 
-                if (
-                    spec_opts["type"] == "mel"
-                    and self.opts.get("input_height", -1) != spec_opts["n_mels"]
-                ):
-                    self.opts.add_option("input_height", spec_opts["n_mels"])
+    #             if (
+    #                 spec_opts["type"] == "mel"
+    #                 and self.opts.get("input_height", -1) != spec_opts["n_mels"]
+    #             ):
+    #                 self.opts.add_option("input_height", spec_opts["n_mels"])
 
-                # * Issue a warning if the number of pixels desired is too far from the original size
-                original_pps = infos["sample_rate"] / spec_opts["hop_length"]
-                new_pps = self.opts["pixels_per_sec"]
-                if self.opts.get("verbose", False) and (
-                    new_pps / original_pps > 2 or new_pps / original_pps < 0.5
-                ):
-                    common_utils.print_warning(
-                        (
-                            "WARNING: The number of pixels per seconds when resizing -{}-"
-                            + " is far from the original resolution -{}-. Consider changing the pixels_per_sec"
-                            + " option or the hop_length of the spectrogram so the two values can be closer"
-                        ).format(new_pps, original_pps)
-                    )
-                data["spectrograms"][i] = self.modify_spectrogram(
-                    spec, resize_width, to_db=spec_opts["to_db"]
-                )
-                if resize_width > 0:
-                    data["tags_linear_presence"][i] = zoom(
-                        data["tags_linear_presence"][i],
-                        float(resize_width) / spec.shape[1],
-                        order=1,
-                    ).astype(int)
-        return data
+    #             # * Issue a warning if the number of pixels desired is too far from the original size
+    #             original_pps = infos["sample_rate"] / spec_opts["hop_length"]
+    #             new_pps = self.opts["pixels_per_sec"]
+    #             if self.opts.get("verbose", False) and (
+    #                 new_pps / original_pps > 2 or new_pps / original_pps < 0.5
+    #             ):
+    #                 common_utils.print_warning(
+    #                     (
+    #                         "WARNING: The number of pixels per seconds when resizing -{}-"
+    #                         + " is far from the original resolution -{}-. Consider changing the pixels_per_sec"
+    #                         + " option or the hop_length of the spectrogram so the two values can be closer"
+    #                     ).format(new_pps, original_pps)
+    #                 )
+    #             dataset.data["spectrograms"][i] = self.modify_spectrogram(
+    #                 spec, resize_width, to_db=spec_opts["to_db"]
+    #             )
+    #             if resize_width > 0:
+    #                 dataset.data["tags_linear_presence"][i] = zoom(
+    #                     dataset.data["tags_linear_presence"][i],
+    #                     float(resize_width) / spec.shape[1],
+    #                     order=1,
+    #                 ).astype(int)
+    #     return dataset
 
-    def get_resize_width(self, infos):
-        resize_width = -1
-        pix_in_sec = self.opts.get("pixels_per_sec", 20)
-        resize_width = int(pix_in_sec * infos["duration"])
-        return resize_width
+    # def get_resize_width(self, infos):
+    #     resize_width = -1
+    #     pix_in_sec = self.opts.get("pixels_per_sec", 20)
+    #     resize_width = int(pix_in_sec * infos["duration"])
+    #     return resize_width
 
     def classify_spectrogram(self, spectrogram, spec_sampler):
         """Apply the classifier"""

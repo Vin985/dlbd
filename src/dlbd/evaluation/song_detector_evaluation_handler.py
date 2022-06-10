@@ -11,9 +11,11 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
     def classify_database(self, model, database, db_type="test"):
 
         db = self.data_handler.load_dataset(
-            database,
             db_type,
+            database,
             load_opts={"file_types": ["spectrograms", "infos"]},
+            prepare=True,
+            prepare_func=self.data_handler.prepare_spectrograms,
         )
         data = list(zip(db["spectrograms"], db["infos"]))
 
@@ -24,7 +26,9 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
 
     def get_predictions_dir(self, model_opts, database):
         preds_dir = super().get_predictions_dir(model_opts, database)
-        preds_dir /= self.data_handler.get_spectrogram_subfolder_path(database)
+        preds_dir /= self.data_handler.DATASET(
+            "test", database
+        ).get_spectrogram_subfolder_path()
         return preds_dir
 
     def on_get_predictions_end(self, preds):

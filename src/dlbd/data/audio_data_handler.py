@@ -1,69 +1,132 @@
+import numpy as np
 import pandas as pd
+from .audio_database import AudioDatabase
+from .audio_dataset import AudioDataset
 from mouffet import common_utils
-from mouffet.data import DataHandler, DataStructure
+from mouffet.data import DataHandler
 from mouffet.data.split import split_folder
+from scipy.ndimage.interpolation import zoom
 
+from ..data.audio_utils import resize_spectrogram
 from ..options import AudioDatabaseOptions
-from . import audio_utils, tag_utils
-from .loaders import AudioDataLoader, BADChallengeDataLoader
+from . import tag_utils
 from .split import citynet_split
 
-
-class AudioDataStructure(DataStructure):
-    STRUCTURE = {
-        "spectrograms": {"type": "data", "data_type": []},
-        "tags_df": {"type": "tags"},
-        "tags_linear_presence": {"type": "tags"},
-        "infos": {"type": "data"},
-    }
+# class AudioDataStructure(DataStructure):
+#     STRUCTURE = {
+#         "spectrograms": {"type": "data", "data_type": []},
+#         "tags_df": {"type": "tags"},
+#         "tags_linear_presence": {"type": "tags"},
+#         "infos": {"type": "data"},
+#     }
 
 
 class AudioDataHandler(DataHandler):
 
     OPTIONS_CLASS = AudioDatabaseOptions
 
-    DATA_STRUCTURE = AudioDataStructure()
+    DATASET = AudioDataset
 
-    DATA_LOADERS = {"default": AudioDataLoader, "bad_challenge": BADChallengeDataLoader}
+    DATABASE_CLASS = AudioDatabase
+
+    # DATA_STRUCTURE = AudioDataStructure()
+
+    # DATA_LOADERS = {"default": AudioDataLoader, "bad_challenge": BADChallengeDataLoader}
 
     SPLIT_FUNCS = {"arctic": split_folder, "citynet": citynet_split}
 
     def __init__(self, opts):
         super().__init__(opts)
 
-    def get_spectrogram_subfolder_path(self, database, folder_opts=None):
-        if folder_opts is None:
-            folder_opts = self.get_subfolder_options(database, "spectrogram")
-        return self.get_spec_subfolder(database.spectrogram, folder_opts)
+    def modify_spectrogram(self, spec, resize_width, opts, to_db=False):
+        if not to_db:
+            spec = np.log(opts["A"] + opts["B"] * spec)
+        spec = spec - np.median(spec, axis=1, keepdims=True)
+        if resize_width > 0:
+            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
+        return spec
 
-    @staticmethod
-    def get_subfolder_option_value(opt, opts, default, prefixes):
-        return prefixes.get(opt, "") + str(opts.get(opt, default[opt]))
+    def prepare_spectrogram(self, spec, infos, opts):
+        spec = self.modify_spectrogram(spec, self.get_resize_width(infos, opts), opts)
+        return spec
 
-    def get_spec_subfolder(self, spec_opts, folder_opts):
+    def prepare_dataset(self, dataset, opts):
+        if not opts["learn_log"]:
+            for i, spec in enumerate(dataset.data["spectrograms"]):
+                infos = dataset.data["infos"][i]
+                spec_opts = infos["spec_opts"]
+                infos["duration"] = infos["length"] / infos["sample_rate"]
+                resize_width = self.get_resize_width(infos, opts)
 
-        opts = folder_opts.get(
-            "options", ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
-        )
-        prefixes = folder_opts.get("prefixes", {})
-        tmp = []
-        for opt in opts:
-            prefix = str(prefixes.get(opt, ""))
-            value = str(spec_opts.get(opt, audio_utils.DEFAULT_SPEC_OPTS[opt]))
-            if opt == "type":
-                if value == "mel":
-                    value += str(
-                        spec_opts.get("n_mels", audio_utils.DEFAULT_SPEC_OPTS[opt])
+                if (
+                    spec_opts["type"] == "mel"
+                    and opts.get("input_height", -1) != spec_opts["n_mels"]
+                ):
+                    opts.add_option("input_height", spec_opts["n_mels"])
+
+                # * Issue a warning if the number of pixels desired is too far from the original size
+                original_pps = infos["sample_rate"] / spec_opts["hop_length"]
+                new_pps = opts["pixels_per_sec"]
+                if opts.get("verbose", False) and (
+                    new_pps / original_pps > 2 or new_pps / original_pps < 0.5
+                ):
+                    common_utils.print_warning(
+                        (
+                            "WARNING: The number of pixels per seconds when resizing -{}-"
+                            + " is far from the original resolution -{}-. Consider changing the pixels_per_sec"
+                            + " option or the hop_length of the spectrogram so the two values can be closer"
+                        ).format(new_pps, original_pps)
                     )
+                dataset.data["spectrograms"][i] = self.modify_spectrogram(
+                    spec, resize_width, opts, to_db=spec_opts["to_db"]
+                )
+                if resize_width > 0:
+                    dataset.data["tags_linear_presence"][i] = zoom(
+                        dataset.data["tags_linear_presence"][i],
+                        float(resize_width) / spec.shape[1],
+                        order=1,
+                    ).astype(int)
+        return dataset
 
-            tmp.append(prefix + value)
+    def get_resize_width(self, infos, opts):
+        resize_width = -1
+        pix_in_sec = opts.get("pixels_per_sec", 20)
+        resize_width = int(pix_in_sec * infos["duration"])
+        return resize_width
 
-        spec_folder = "_".join(tmp)
-        return spec_folder
+    # def get_spectrogram_subfolder_path(self, database, folder_opts=None):
+    #     if folder_opts is None:
+    #         folder_opts = self.get_subfolder_options(database, "spectrogram")
+    #     return self.get_spec_subfolder(database.spectrogram, folder_opts)
+
+    # @staticmethod
+    # def get_subfolder_option_value(opt, opts, default, prefixes):
+    #     return prefixes.get(opt, "") + str(opts.get(opt, default[opt]))
+
+    # def get_spec_subfolder(self, spec_opts, folder_opts):
+
+    #     opts = folder_opts.get(
+    #         "options", ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
+    #     )
+    #     prefixes = folder_opts.get("prefixes", {})
+    #     tmp = []
+    #     for opt in opts:
+    #         prefix = str(prefixes.get(opt, ""))
+    #         value = str(spec_opts.get(opt, audio_utils.DEFAULT_SPEC_OPTS[opt]))
+    #         if opt == "type":
+    #             if value == "mel":
+    #                 value += str(
+    #                     spec_opts.get("n_mels", audio_utils.DEFAULT_SPEC_OPTS[opt])
+    #                 )
+
+    #         tmp.append(prefix + value)
+
+    #     spec_folder = "_".join(tmp)
+    #     return spec_folder
 
     def merge_datasets(self, datasets):
         merged = super().merge_datasets(datasets)
-        merged["tags_df"] = pd.concat(merged["tags_df"])
+        merged.data["tags_df"] = pd.concat(merged.data["tags_df"])
         return merged
 
     @staticmethod
