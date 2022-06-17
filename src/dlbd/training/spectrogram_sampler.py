@@ -2,7 +2,7 @@ import math
 from random import randint
 
 import numpy as np
-from mouffet.training import minibatch_generators as mbg
+from . import minibatch_generators as mbg
 
 
 class SpectrogramSampler:

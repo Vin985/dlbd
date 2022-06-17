@@ -1,10 +1,10 @@
 import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow_addons as tfa
-from mouffet.models import TF2Model
 from tensorflow.keras import regularizers
 
 from ..training import SpectrogramSampler
+from . import TF2Model
 from .audio_dlmodel import AudioDLModel
 from .layers import MaskSpectrograms, NormalizeSpectrograms
 
