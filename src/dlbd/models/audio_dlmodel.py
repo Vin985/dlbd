@@ -4,10 +4,7 @@ import numpy as np
 
 from mouffet.models import DLModel
 from mouffet import common_utils
-from scipy.ndimage.interpolation import zoom
 from tqdm import tqdm
-
-from ..data.audio_utils import resize_spectrogram
 
 
 class AudioDLModel(DLModel):
@@ -116,7 +113,7 @@ class AudioDLModel(DLModel):
 
     def classify(self, data, sampler):
         spectrogram, infos = data
-        spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
+        # spectrogram = self.modify_spectrogram(spectrogram, self.get_resize_width(infos))
 
         # ig = image.ImageGenerator(image_options=image.ImageOptions())
         # img = ig.spec2img(spectrogram[:, 0:500], size=None, is_array=True)
