@@ -1,6 +1,6 @@
 parent_path: "config/runs/run1/parent.yaml"
 
-data_config: "config/data/data_config.yaml"
+data_config: "config/data_config.yaml"
 model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run1'
 clean_empty_models: True
 skip_trained: True
@@ -12,8 +12,8 @@ logs:
 # name : MODEL_NAME
 
 
-id: "{databases_options--spectrogram--n_mels}_{n_epochs}"
-id_prefixes:
+suffix: "{databases_options--spectrogram--n_mels}_{n_epochs}"
+suffix_prepend:
   databases_options--spectrogram--n_mels: "_nmels-"
 
 
@@ -69,7 +69,7 @@ databases_options:
 
 scenarios:
   - name: "DLBD"
-    id: "_dl{dilation_rate}_gt-prop{gt_prop}"
+    suffix: "_dl{dilation_rate}_gt-prop{gt_prop}"
     class: "dlbd.models.dlbd.DLBD"
     early_stopping: True
     num_dense_units: 64
@@ -77,7 +77,7 @@ scenarios:
     # gt_prop: [0.10, 0]
     dilation_rate: [[[1, 2], 1]]
   # - name: "DLBD"
-  #   id: "_dl{dilation_rate}"
+  #   suffix: "_dl{dilation_rate}"
   #   class: "dlbd.models.dlbd.DLBD"
   #   early_stopping: True
   #   num_dense_units: 128

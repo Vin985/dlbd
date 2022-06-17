@@ -5,8 +5,8 @@ skip_trained: True
 
 databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
 
-id: "_{learning_rate}_{n_epochs}"
-id_prefixes:
+suffix: "_{learning_rate}_{n_epochs}"
+suffix_prepend:
   learning_rate: "lr-"
   n_epochs: "epochs-"
 
@@ -33,19 +33,19 @@ num_dense_units2: 32
 
 scenarios:
   - name: "DLBD_conv2_3x3"
-    id: "_d1-{num_dense_units}_d2-{num_dense_units2}"
+    suffix: "_d1-{num_dense_units}_d2-{num_dense_units2}"
     class: "dlbd.models.dlbd.DLBD"
     conv2_filter_width: 3
     conv2_filter_height: 3
   - name: "DLBD_dil"
-    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    suffix: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[1,2], [1,3]]
     regularizer:
       type: "l2"
       value: 0.001
   - name: "DLBD_3x3"
-    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    suffix: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
     spectrogram_overlap: 0.75
     random_start: True
@@ -62,7 +62,7 @@ scenarios:
     num_dense_units: 64
     num_dense_units2: 32
   - name: "DLBD_3x3x2_dil"
-    id: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
+    suffix: "_d1-{num_dense_units}_d2-{num_dense_units2}_dil-{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
     spectrogram_overlap: 0.75
     random_start: True
@@ -81,7 +81,7 @@ scenarios:
     num_dense_units: 64
     num_dense_units2: 32
   - name: "DLBD"
-    id: "_d1-{num_dense_units}_d2-{num_dense_units2}"
+    suffix: "_d1-{num_dense_units}_d2-{num_dense_units2}"
     class: "dlbd.models.dlbd.DLBD"
     num_dense_units: [32, 64, 128, 256]
     num_dense_units2: [0, 32, 64, 128]

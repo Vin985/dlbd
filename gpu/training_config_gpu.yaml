@@ -2,8 +2,8 @@
 
 data_config: "src/training_data_config_gpu.yaml"
 
-id: "{databases_options--spectrogram--n_mels}"
-id_prefixes:
+suffix: "{databases_options--spectrogram--n_mels}"
+suffix_prepend:
   databases_options--spectrogram--n_mels: "_nmels-"
 
 databases: ['citynet', "arctic"]

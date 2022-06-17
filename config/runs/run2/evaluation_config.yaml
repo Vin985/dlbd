@@ -1,5 +1,5 @@
 
-data_config: "config/data/data_config.yaml"
+data_config: "config/data_config.yaml"
 save_results: True #True
 
 ###########
@@ -72,8 +72,8 @@ evaluators:
 ############
 models_options:
   model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/local/run2'
-  # id: "{databases_options--spectrogram--n_mels}"
-  # id_prefixes:
+  # suffix: "{databases_options--spectrogram--n_mels}"
+  # suffix_prepend:
   #   databases_options--spectrogram--n_mels: "_nmels-"
   inference: True
   spectrogram_overlap: 0.95

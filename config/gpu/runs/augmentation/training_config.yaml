@@ -5,8 +5,8 @@ skip_trained: True
 
 databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
 
-id: "_{learning_rate}_{n_epochs}"
-id_prefixes:
+suffix: "_{learning_rate}_{n_epochs}"
+suffix_prepend:
   learning_rate: "lr-"
   n_epochs: "epochs-"
 
@@ -22,20 +22,20 @@ early_stopping:
 
 scenarios:
   - name: "DLBDL_control_dense128_filt64_pps200_lr01_wr10"
-    # id: "_pps{pixels_per_sec}"
+    # suffix: "_pps{pixels_per_sec}"
     class: "dlbd.models.dlbd.DLBD"
     time_mask: False
     freq_mask: False
   - name: "DLBDL_random_overlap"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_{spectrogram_overlap}"
+    suffix: "_{spectrogram_overlap}"
     random_start: True
     time_mask: False
     freq_mask: False
     spectrogram_overlap: [0.75, 0.8, 0.85, 0.95]
   - name: "DLBDL_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_type{regularizer--type}_value{regularizer--value}"
+    suffix: "_type{regularizer--type}_value{regularizer--value}"
     time_mask: False
     freq_mask: False
     spectrogram_overlap: 0.75
@@ -47,13 +47,13 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_type{regularizer--type}"
+    suffix: "_type{regularizer--type}"
     regularizer:
       type: "l2"
       value: 0.001
   - name: "DLBDL_mask_reg"
     class: "dlbd.models.dlbd.DLBD"
-    id: "_type{regularizer--type}_overlap{spectrogram_overlap}_tm{time_mask--value}_fm{freq_mask--value}"
+    suffix: "_type{regularizer--type}_overlap{spectrogram_overlap}_tm{time_mask--value}_fm{freq_mask--value}"
     regularizer:
       type: "l2"
       value: 0.001

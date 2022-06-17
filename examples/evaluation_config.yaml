@@ -73,14 +73,14 @@ models:
     class: "dlbd.models.CityNetTF2Dropout2.CityNetTF2Dropout"
     version: 19
     scenarios:
-      # id: "{model--from_epoch}"
-      # id: "_mel64_hop_512"
-      id_prefixes:
+      # suffix: "{model--from_epoch}"
+      # suffix: "_mel64_hop_512"
+      suffix_prepend:
         model--from_epoch: "_fe-"
       model:
         from_epoch: [10]
   # - name: "CityNetTF2"
-  #   id: "resize_spec_bicubic"
+  #   suffix: "resize_spec_bicubic"
   #   package: "dlbd.audio.models.CityNetTF2"
   #   options:
   #     versions: [1]
@@ -89,7 +89,7 @@ models:
   #       pixels_in_sec: 20
   #       rezise_method: bicubic
   # - name: "CityNetTF2"
-  #   id: "resize_spec_bilinear"
+  #   suffix: "resize_spec_bilinear"
   #   package: "dlbd.audio.models.CityNetTF2"
   #   options:
   #     model:
@@ -98,7 +98,7 @@ models:
   #       pixels_in_sec: 20
   #       rezise_method: bilinear
   # - name: "CityNetTF2"
-  #   id: "resize_spec_25pis"
+  #   suffix: "resize_spec_25pis"
   #   package: "dlbd.audio.models.CityNetTF2"
   #   versions: [1]
   #   options:

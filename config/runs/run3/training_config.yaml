@@ -11,8 +11,8 @@ logs:
 # name : MODEL_NAME
 
 
-id: "{databases_options--spectrogram--n_mels}_{n_epochs}"
-id_prefixes:
+suffix: "{databases_options--spectrogram--n_mels}_{n_epochs}"
+suffix_prepend:
   databases_options--spectrogram--n_mels: "_nmels-"
 
 
@@ -37,9 +37,6 @@ input_height: 32
 
 batch_size: 64
 do_batch_norm: 1
-# input_width: 25
-# hww_spec: 20
-# hww_gt: 10
 channels: 4
 num_filters: 128
 num_dense_units: 128
@@ -47,11 +44,16 @@ conv_filter_width: 4
 wiggle_room: 5
 dropout: 0.5
 
-# use_weights:
-#   version:
-#   path:
-#   name:
+early_stopping:
+  patience: 5
+  min_delta: 0.002
+  restore_best_weights: False
 
+spectrogram_overlap: 0.75
+random_start: True
+
+time_mask: True
+freq_mask: True
 
 ##
 ## Databases
@@ -67,16 +69,30 @@ databases_options:
     # to_db: True
 
 scenarios:
-  - name: "DLBD"
-    id: "_dl{dilation_rate}_gt-prop{gt_prop}"
+  - name: "DLBD_nobal"
     class: "dlbd.models.dlbd.DLBD"
-    early_stopping: True
+    training_balanced: False
     num_dense_units: 64
     num_dense_units2: 32
     # gt_prop: [0.10, 0]
     dilation_rate: [[[1, 2], 1]]
+  - name: "DLBD"
+    class: "dlbd.models.dlbd.DLBD"
+    num_dense_units: 64
+    num_dense_units2: 32
+    # gt_prop: [0.10, 0]
+    dilation_rate: [[[1, 2], 1]]
+  - name: "DLBD_512_nobal"
+    class: "dlbd.models.dlbd.DLBD"
+    training_balanced: False
+    num_dense_units: 512
+    num_dense_units2: 256
+    pixels_per_sec: 50
+    # gt_prop: [0.10, 0]
+    dilation_rate: [[[1, 2], 1]]
+
   # - name: "DLBD"
-  #   id: "_dl{dilation_rate}"
+  #   suffix: "_dl{dilation_rate}"
   #   class: "dlbd.models.dlbd.DLBD"
   #   early_stopping: True
   #   num_dense_units: 128

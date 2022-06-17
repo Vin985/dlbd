@@ -24,7 +24,7 @@ dilation_rate: [[1, 2], 1]
 
 scenarios:
   - name: "DLBDL"
-    id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
+    suffix: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
     class: "dlbd.models.dlbd.DLBD"
     wriggle_room: 3 #[3, 5, 10]
     batch_size: 256 #[256, 128, 64, 32]
@@ -33,7 +33,7 @@ scenarios:
     num_dense_units2: [0, 32, 64, 128, 256, 512]
     pixels_per_sec: [50, 100, 200]
   - name: "DLBDL"
-    id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
+    suffix: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
     class: "dlbd.models.dlbd.DLBD"
     wriggle_room: 3 #[3, 5, 10]
     batch_size: 256 #[256, 128, 64, 32]
@@ -42,7 +42,7 @@ scenarios:
     num_dense_units2: [0, 32, 64, 128, 256, 512]
     pixels_per_sec: [100, 200]
   # - name: "DLBDL64"
-  #   id: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
+  #   suffix: "_wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}"
   #   class: "dlbd.models.dlbd.DLBD"
   #   wriggle_room: 3 #[3, 5, 10]
   #   batch_size: 256 #[256, 128, 64, 32]

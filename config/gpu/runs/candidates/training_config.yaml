@@ -5,8 +5,8 @@ skip_trained: True
 
 databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete2"]
 
-id: "_{learning_rate}_{n_epochs}"
-id_prefixes:
+suffix: "_{learning_rate}_{n_epochs}"
+suffix_prepend:
   learning_rate: "lr-"
   n_epochs: "epochs-"
 
@@ -34,13 +34,13 @@ freq_mask: True
 
 scenarios:
   - name: "DLBDL"
-    id: "_pat{early_stopping--patience}_delta{early_stopping--min_delta}"
+    suffix: "_pat{early_stopping--patience}_delta{early_stopping--min_delta}"
     class: "dlbd.models.dlbd.DLBD"
     early_stopping:
       patience: [5, 8, 10]
       min_delta: [0, 0.001, 0.002]
   - name: "DLBDL"
-    id: "_dl{dilation_rate}"
+    suffix: "_dl{dilation_rate}"
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[1, [1,2]], [[1,2], 1], [[1,2], [1,2]]]
   - name: "DLBDL_original"
@@ -52,7 +52,7 @@ scenarios:
       patience: 5
       min_delta: 0
   - name: "DLBDL_dl1-2_1"
-    id: "_pat{early_stopping--patience}_restore{early_stopping--restore_best_weights}"
+    suffix: "_pat{early_stopping--patience}_restore{early_stopping--restore_best_weights}"
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[[1,2], 1]]
     early_stopping:
@@ -60,7 +60,7 @@ scenarios:
       min_delta: 0.001
       restore_best_weights: [True, False]
   - name: "DLBDL_dl1-2_1"
-    id: "_pat{early_stopping--patience}_restore{early_stopping--restore_best_weights}_delta{early_stopping--min_delta}"
+    suffix: "_pat{early_stopping--patience}_restore{early_stopping--restore_best_weights}_delta{early_stopping--min_delta}"
     class: "dlbd.models.dlbd.DLBD"
     dilation_rate: [[[1,2], 1]]
     early_stopping:
