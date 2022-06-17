@@ -15,7 +15,7 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
             database,
             load_opts={"file_types": ["spectrograms", "infos"]},
             prepare=True,
-            prepare_func=self.data_handler.prepare_spectrograms,
+            prepare_opts=model.opts.opts,
         )
         data = list(zip(db["spectrograms"], db["infos"]))
 
