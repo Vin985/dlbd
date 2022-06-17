@@ -50,12 +50,23 @@ class AudioDataHandler(DataHandler):
         spec = self.modify_spectrogram(spec, self.get_resize_width(infos, opts), opts)
         return spec
 
+    def prepare_test_dataset(self, dataset, opts):
+        if not opts["learn_log"]:
+            for i, spec in enumerate(dataset.data["spectrograms"]):
+                infos = dataset.data["infos"][i]
+                spec_opts = infos["spec_opts"]
+                resize_width = self.get_resize_width(infos, opts)
+
+                dataset.data["spectrograms"][i] = self.modify_spectrogram(
+                    spec, resize_width, opts, to_db=spec_opts["to_db"]
+                )
+        return dataset
+
     def prepare_dataset(self, dataset, opts):
         if not opts["learn_log"]:
             for i, spec in enumerate(dataset.data["spectrograms"]):
                 infos = dataset.data["infos"][i]
                 spec_opts = infos["spec_opts"]
-                infos["duration"] = infos["length"] / infos["sample_rate"]
                 resize_width = self.get_resize_width(infos, opts)
 
                 if (
@@ -91,6 +102,7 @@ class AudioDataHandler(DataHandler):
     def get_resize_width(self, infos, opts):
         resize_width = -1
         pix_in_sec = opts.get("pixels_per_sec", 20)
+        infos["duration"] = infos["length"] / infos["sample_rate"]
         resize_width = int(pix_in_sec * infos["duration"])
         return resize_width
 
