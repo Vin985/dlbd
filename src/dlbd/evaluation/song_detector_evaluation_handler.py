@@ -8,7 +8,7 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
 
     DATA_HANDLER_CLASS = AudioDataHandler
 
-    def classify_database(self, model, database, db_type="test"):
+    def predict_database(self, model, database, db_type="test"):
 
         db = self.data_handler.load_dataset(
             db_type,
