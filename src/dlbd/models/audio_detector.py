@@ -1,15 +1,20 @@
+from time import time
+
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 import tensorflow_addons as tfa
+from mouffet import common_utils
 from tensorflow.keras import regularizers
+from tqdm import tqdm
 
 from ..training import SpectrogramSampler
 from . import TF2Model
-from .audio_dlmodel import AudioDLModel
 from .layers import MaskSpectrograms, NormalizeSpectrograms
+from .TF2Model import TF2Model
 
 
-class AudioDetector(TF2Model, AudioDLModel):
+class AudioDetector(TF2Model):
     NAME = "AudioDetector"
 
     CALLBACKS_DEFAULTS = {
@@ -19,6 +24,27 @@ class AudioDetector(TF2Model, AudioDLModel):
             "restore_best_weights": True,
         }
     }
+
+    def __init__(self, opts=None):
+        input_width = opts.get("input_width", opts["pixels_per_sec"])
+        if input_width % 2:
+            common_utils.print_warning(
+                (
+                    "Network input size is odd. For performance reasons,"
+                    + " input_width should be even. {} will be used as input size instead of {}."
+                    + " Consider changing the pixel_per_sec or input_width options in the configuration file"
+                ).format(input_width + 1, input_width)
+            )
+            if input_width == opts["pixels_per_sec"]:
+                common_utils.print_warning(
+                    (
+                        "Input size and pixels per seconds were identical, using {} pixels per seconds as well"
+                    ).format(input_width + 1)
+                )
+            input_width += 1
+            opts.add_option("pixels_per_sec", input_width)
+        opts.add_option("input_width", input_width)
+        super().__init__(opts)
 
     def get_regularizer(self):
         regularizer = None
@@ -169,3 +195,15 @@ class AudioDetector(TF2Model, AudioDLModel):
             count += 1
 
         return count
+
+    def predict_spectrogram(self, data):
+        spectrogram, spec_sampler = data
+        """Apply the classifier"""
+        tic = time()
+        labels = np.zeros(spectrogram.shape[1])
+        preds = []
+        for x, _ in tqdm(spec_sampler([spectrogram], [labels])):
+            pred = self.predict(x)
+            preds.append(pred)
+        print("Classified {0} in {1}".format("spectrogram", time() - tic))
+        return np.vstack(preds)[:, 1]
