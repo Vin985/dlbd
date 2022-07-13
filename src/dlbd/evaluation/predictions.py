@@ -106,8 +106,8 @@ def classify_elements(elements, model, spec_opts=None):
 
 
 def classify_element(model, data, sampler):
-    _, info = data
-    preds = model.classify(data, sampler)
+    spectrogram, info = data
+    preds = model.predict_spectrogram((spectrogram, sampler))
     len_in_s = info["duration"]
     timeseq = np.linspace(0, len_in_s, preds.shape[0])
     res_df = pd.DataFrame(
