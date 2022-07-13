@@ -5,8 +5,8 @@ import tensorflow as tf
 import tf_slim as slim
 from tqdm import tqdm
 
-from ..training.spectrogram_sampler import SpectrogramSampler
-from .audio_dlmodel import AudioDLModel
+from ...training.spectrogram_sampler import SpectrogramSampler
+from ...models.audio_dlmodel import AudioDLModel
 
 
 class CityNetOriginal(AudioDLModel):
@@ -54,7 +54,9 @@ class CityNetOriginal(AudioDLModel):
 
         W = net["conv1_2"].shape[2]
         net["pool2"] = slim.max_pool2d(
-            net["conv1_2"], kernel_size=(1, W), stride=(1, 1),
+            net["conv1_2"],
+            kernel_size=(1, W),
+            stride=(1, 1),
         )
 
         net["pool2"] = tf.transpose(net["pool2"], (0, 3, 2, 1))
@@ -197,4 +199,3 @@ class CityNetOriginal(AudioDLModel):
         return self.session.run(
             self.model["output"], feed_dict={self.model["input"]: x}
         )
-

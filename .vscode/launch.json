@@ -21,6 +21,14 @@
             "cwd": "${workspaceFolder}/src" //"/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/"
         },
         {
+            "name": "Python: dlbd example",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/examples" //"/mnt/win/UMoncton/Doctorat/dev/ecosongs/src/"
+        },
+        {
             "name": "Launch run",
             "type": "python",
             "request": "launch",

@@ -1,0 +1,61 @@
+A: 0.001
+B: 10.0
+batch_size: 256
+channels: 4
+class: dlbd.models.dlbd.DLBD
+clean_empty_models: true
+conv_filter_width: 4
+data_config: config/gpu/runs/summary/data_config.yaml
+databases:
+- citynet2
+- nips4b2
+- NABS2
+- arctic_complete3
+databases_options:
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+dilation_rate:
+- - 1
+  - 2
+- 1
+do_augmentation: 1
+do_batch_norm: 1
+dropout: 0.5
+early_stopping:
+  min_delta: 0.002
+  patience: 8
+  restore_best_weights: false
+ensemble_members: 1
+epoch_save_step: 3
+freq_mask: true
+id: _wr{wriggle_room}_fil{num_filters}_d1-{num_dense_units}_d2-{num_dense_units2}_pps{pixels_per_sec}_bs{batch_size}
+id_prefixes:
+  databases_options--spectrogram--n_fft: fft-
+  databases_options--spectrogram--n_mels: _nmels-
+input_height: 32
+input_width: 100
+learn_log: 0
+learning_rate: 0.01
+logs:
+  log_dir: /home/sylvain/logs/gradient_tape/runs/summary
+  use_version: true
+model_dir: /home/sylvain/data/results/runs/summary/models
+n_epochs: 50
+name: DLBDL
+num_dense_units: 512
+num_dense_units2: 256
+num_filters: 64
+parent_path: config/gpu/runs/training_parent.yaml
+pixels_per_sec: 100
+random_start: true
+resize_spectrogram: true
+skip_trained: true
+spectrogram_overlap: 0.75
+time_mask: true
+training: true
+training_balanced: true
+wiggle_room: 10
+wriggle_room: 3

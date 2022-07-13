@@ -1,0 +1,199 @@
+- !!python/object:dlbd.options.audio_database_options.AudioDatabaseOptions
+  class_type: biotic
+  classes_file: src/classes.csv
+  data_dir: wavs
+  data_extensions:
+  - .wav
+  - .WAV
+  dest_dir: /home/sylvain/data/datasets
+  name: citynet2
+  overwrite: false
+  recursive: true
+  root_dir: /home/sylvain/data/raw/CityNet
+  save_intermediate: false
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+    type: mel
+  split:
+    validation: 0.3
+  subfolders:
+  - options:
+    - sample_rate
+    - type
+    - n_fft
+    - win_length
+    - hop_length
+    type: spectrogram
+  tags:
+    columns:
+      Filename: file_name
+      Label: tag
+      LabelEndTime_Seconds: tag_end
+      LabelStartTime_Seconds: tag_start
+      Related: related
+      background: background
+      noise: noise
+      overlap: overlap
+    columns_type:
+      overlap: str
+    suffix: -sceneRect.csv
+    with_data: false
+  tags_dir: annotations
+  test_dir: test
+  training_dir: training
+  validation_dir: validation
+- !!python/object:dlbd.options.audio_database_options.AudioDatabaseOptions
+  class_type: biotic
+  classes_file: src/classes.csv
+  data_dir: /home/sylvain/data/raw/nips4b/wavs
+  data_extensions:
+  - .wav
+  - .WAV
+  dest_dir: /home/sylvain/data/datasets
+  name: nips4b2
+  overwrite: false
+  recursive: true
+  root_dir: /home/sylvain/data/raw/nips4b/
+  save_intermediate: false
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+    type: mel
+  split:
+    test: 0.2
+    validation: 0.3
+  subfolders:
+  - options:
+    - sample_rate
+    - type
+    - n_fft
+    - win_length
+    - hop_length
+    type: spectrogram
+  tags:
+    columns:
+      Filename: file_name
+      Label: tag
+      LabelEndTime_Seconds: tag_end
+      LabelStartTime_Seconds: tag_start
+      Related: related
+      background: background
+      noise: noise
+      overlap: overlap
+    columns_type:
+      overlap: str
+    suffix: -sceneRect.csv
+    type: nips4b
+    with_data: false
+  tags_dir: /home/sylvain/data/raw/nips4b/tags
+  test_dir: test
+  training_dir: training
+  validation_dir: validation
+- !!python/object:dlbd.options.audio_database_options.AudioDatabaseOptions
+  class_type: biotic
+  classes_file: src/classes.csv
+  data_dir: /home/sylvain/data/raw/NABS2
+  data_extensions:
+  - .wav
+  - .WAV
+  db_types:
+  - validation
+  - training
+  dest_dir: /home/sylvain/data/datasets
+  name: NABS2
+  overwrite: false
+  recursive: true
+  root_dir: /home/sylvain/data/raw/NABS2
+  save_intermediate: false
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+    type: mel
+  split:
+    validation: 0.3
+  subfolders:
+  - options:
+    - sample_rate
+    - type
+    - n_fft
+    - win_length
+    - hop_length
+    type: spectrogram
+  tags:
+    columns:
+      Filename: file_name
+      Label: tag
+      LabelEndTime_Seconds: tag_end
+      LabelStartTime_Seconds: tag_start
+      Related: related
+      background: background
+      end: tag_end
+      noise: noise
+      overlap: overlap
+      start: tag_start
+      tag: tag
+    columns_type:
+      overlap: str
+    suffix: _tags.csv
+    with_data: true
+  tags_dir: annotations
+  test_dir: test
+  training_dir: training
+  validation_dir: validation
+- !!python/object:dlbd.options.audio_database_options.AudioDatabaseOptions
+  class_type: biotic
+  classes_file: src/classes.csv
+  data_dir: /home/sylvain/data/raw/Arctic_complete
+  data_extensions:
+  - .wav
+  - .WAV
+  db_types:
+  - training
+  - validation
+  dest_dir: /home/sylvain/data/datasets
+  name: arctic_complete3
+  overwrite: false
+  recursive: true
+  root_dir: /home/sylvain/data/raw/Arctic_complete
+  save_intermediate: false
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+    type: mel
+  split:
+    validation: 0.3
+  subfolders:
+  - options:
+    - sample_rate
+    - type
+    - n_fft
+    - win_length
+    - hop_length
+    type: spectrogram
+  tags:
+    columns:
+      Filename: file_name
+      Label: tag
+      LabelEndTime_Seconds: tag_end
+      LabelStartTime_Seconds: tag_start
+      Related: related
+      background: background
+      noise: noise
+      overlap: overlap
+    columns_type:
+      overlap: str
+    suffix: -sceneRect.csv
+    with_data: true
+  tags_dir: annotations
+  test_dir: test
+  training_dir: training
+  validation_dir: validation

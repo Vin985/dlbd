@@ -1,7 +1,7 @@
 
 data_config: "/home/vin/Doctorat/dev/dlbd/config/examples/global_eval/evaluation_data_config.yaml"
 save_results: True #True
-overwrite_results: False
+overwrite_results: True
 
 scores_n_bins: 20
 
@@ -65,4 +65,3 @@ databases:
     #     spectrogram:
     #       sample_rate: ["original", 22050]
 
-models: []

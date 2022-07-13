@@ -131,4 +131,4 @@ spectrogram:
   # sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "src/generated_classes.csv"
+classes_file: "config/generated_classes.csv"

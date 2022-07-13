@@ -1,0 +1,2 @@
+model_checkpoint_path: "DLBDL_wr3_fil64_d1-512_d2-256_pps100_bs256"
+all_model_checkpoint_paths: "DLBDL_wr3_fil64_d1-512_d2-256_pps100_bs256"

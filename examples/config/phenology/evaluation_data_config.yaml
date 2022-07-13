@@ -63,4 +63,4 @@ spectrogram:
   sample_rate: "original" # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "/home/vin/Doctorat/dev/dlbd/src/classes.csv"
+classes_file: "/home/vin/Doctorat/dev/dlbd/config/classes.csv"

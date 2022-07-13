@@ -17,18 +17,18 @@ EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
 
 #%%
 
-models_dir = Path("/home/vin/Desktop/results/candidates_models")
+models_dir = "resources/models"
 
-evaluation_config_path = (
-    "/home/vin/Doctorat/dev/dlbd/config/examples/phenology/evaluation_config.yaml"
-)
+evaluation_config_path = "config/phenology/evaluation_config.yaml"
 
 evaluation_config = file_utils.load_config(evaluation_config_path)
 
 
-model_opts = {"model_dir": models_dir}
+# evaluation_config["models_list_dir"] = models_dir
 
-evaluation_config = get_models_conf(evaluation_config, model_opts)
+evaluation_config = get_models_conf(
+    evaluation_config, updates={"model_dir": "resources/models"}
+)
 
 
 evaluator = SongDetectorEvaluationHandler(

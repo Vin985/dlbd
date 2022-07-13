@@ -41,8 +41,6 @@ databases:
   #* from data will be used
     - name: 'citynet'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/CityNet'
-      # spectrogram:
-      #   sample_rate: 22050
       split:
         validation: 0.2
     - name: 'arctic'
@@ -76,11 +74,13 @@ databases:
         validation: 0.2
     - name: 'nips4b'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b'
+      data_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/wavs"
+      tags_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/tags"
       split:
         validation: 0.2
         test: 0.2
       tags:
-        type: nips4b
+        type: "nips4b"
     - name: 'NABS'
       root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/NABS'
       data_dir: '/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/generated/NABS/2'
@@ -113,4 +113,4 @@ spectrogram:
   #sample_rate: 22050 # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "src/generated_classes.csv"
+classes_file: "config/generated_classes.csv"

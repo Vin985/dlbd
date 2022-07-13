@@ -4,16 +4,16 @@ data_config: "src/training_data_config.yaml"
 
 model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/'
 
-id: "{databases_options--spectrogram--n_mels}"
-id_prefixes:
+suffix: "{databases_options--spectrogram--n_mels}"
+suffix_prepend:
   databases_options--spectrogram--n_mels: _nmels-
 
 
 # name: "DLBDL"
 # class: dlbd.models.DLBD_lite.DLBDLite
-# id: "{version}"
+# suffix: "{version}"
 
-# # id_prefixes:
+# # suffix_prepend:
 # #   default: ""
 # #   version: "_v"
 
@@ -78,8 +78,8 @@ scenarios:
 #         hop_length: [512, 1024]
 
 # scenarios:
-#   - id: "{model--max_epochs}"
-#     id_prefixes:
+#   - suffix: "{model--max_epochs}"
+#     suffix_prepend:
 #       model--max_epochs: _nepoch-
 #     databases_options:
 #       spectrogram:
