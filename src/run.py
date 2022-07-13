@@ -1,7 +1,7 @@
 import logging
 
 import pandas as pd
-from mouffet.runs import RunArgumentParser, launch_runs
+from mouffet.runs import RunHandler
 from mouffet.training.training_handler import TrainingHandler
 
 from dlbd.applications.phenology import PhenologyEvaluator
@@ -15,21 +15,19 @@ logging.basicConfig(level=logging.DEBUG)
 pd.options.mode.chained_assignment = "raise"
 
 EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
+
 # import tensorflow as tf
-
-
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"cd
 # gpus = tf.config.experimental.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(gpus[0], True)
 
-parser = RunArgumentParser()
-args = parser.parse_args()
 
-launch_runs(
-    args,
+run_handler = RunHandler(
     handler_classes={
         "training": TrainingHandler,
         "data": AudioDataHandler,
         "evaluation": SongDetectorEvaluationHandler,
     },
 )
+
+run_handler.launch_runs()
