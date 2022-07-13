@@ -132,7 +132,6 @@ class CityNetEvaluator(Evaluator):
         res = {"stats": stats, "matches": events}
         if options.get("draw_plots", False):
             res["plots"] = self.draw_plots(
-                data={"events": events, "tags": tags},
-                options=options,
+                data={"events": events, "tags": tags}, options=options, infos=infos
             )
         return res

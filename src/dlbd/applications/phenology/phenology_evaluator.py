@@ -202,6 +202,7 @@ class PhenologyEvaluator(Evaluator):
                     "method": method,
                 },
                 options=options,
+                infos=infos,
             )
 
         return stats

@@ -613,6 +613,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             res["plots"] = self.draw_plots(
                 data={"events": events, "tags": tags, "matches": matches},
                 options=options,
+                infos=infos,
             )
         return res
 
