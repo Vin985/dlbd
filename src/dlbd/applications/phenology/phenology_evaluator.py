@@ -95,7 +95,7 @@ class PhenologyEvaluator(Evaluator):
 
         return res
 
-    def plot_distances(self, data, options):
+    def plot_distances(self, data, options, infos):
         plt_df = data["df"]
         res = []
         if options.get("plot_real_distance", True):
