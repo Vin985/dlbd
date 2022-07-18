@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from mouffet.training.training_handler import TrainingHandler
+from mouffet.utils import common_utils
 
 
 def load_model_options(opts, updates={}):
@@ -11,7 +12,7 @@ def load_model_options(opts, updates={}):
     return model_opt
 
 
-def get_models_conf(config):
+def get_models_conf(config, updates=None):
     """Get configuration from multiple models based on model list saved at training
 
     Args:
@@ -25,18 +26,22 @@ def get_models_conf(config):
     append = config.get("add_models_from_list", False)
     if not models or append:
         models_dir = config.get("models_list_dir")
-        models_stats_path = Path(models_dir / TrainingHandler.MODELS_STATS_FILE_NAME)
+        models_stats_path = Path(models_dir) / TrainingHandler.MODELS_STATS_FILE_NAME
         models_stats = None
         if models_stats_path.exists():
             models_stats = pd.read_csv(models_stats_path).drop_duplicates(
                 "opts", keep="last"
             )
         if models_stats is not None:
+            list_opts = config.get("models_list_options", {})
+            if updates:
+                list_opts = common_utils.deep_dict_update(list_opts, updates, copy=True)
             model_ids = config.get("model_ids", [])
             if model_ids:
                 models_stats = models_stats.loc[models_stats.model_id.isin(model_ids)]
             models += [
-                load_model_options(row.opts) for row in models_stats.itertuples()
+                load_model_options(row.opts, list_opts)
+                for row in models_stats.itertuples()
             ]
             config["models"] = models
 
