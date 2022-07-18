@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -104,6 +105,18 @@ def filter_classes(tag_df, opts):
     return tag_df[res]
 
 
+def read_df_from_ext(file_path, *args, **kwargs):
+    if not isinstance(file_path, Path):
+        file_path = Path(file_path)
+    ext = file_path.suffix.lower()
+    if ext == ".csv":
+        df = pd.read_csv(file_path, *args, **kwargs)
+    elif ext == ".txt":
+        df = pd.read_table(file_path, *args, **kwargs)
+
+    return df
+
+
 def get_audiotagger_tag_df(audio_file_path, labels_dir, tag_opts):
     defaults = DEFAULT_OPTIONS["audiotagger"]
     columns = tag_opts["columns"] or defaults["columns_name"]
@@ -111,13 +124,13 @@ def get_audiotagger_tag_df(audio_file_path, labels_dir, tag_opts):
     suffix = tag_opts.get("suffix", defaults["suffix"])
 
     if tag_opts.get("with_data", False):
-        csv_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
+        tag_file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
     else:
-        csv_file_path = labels_dir / (audio_file_path.stem + suffix)
-    print("Trying to load tag file: " + str(csv_file_path))
-    if os.path.exists(csv_file_path):
-        pd_annots = pd.read_csv(
-            csv_file_path, skip_blank_lines=True, dtype=columns_type
+        tag_file_path = labels_dir / (audio_file_path.stem + suffix)
+    print("Trying to load tag file: " + str(tag_file_path))
+    if os.path.exists(tag_file_path):
+        pd_annots = read_df_from_ext(
+            tag_file_path, skip_blank_lines=True, dtype=columns_type
         )
         # * loop over each annotation...
         # tag_df = pd_annots.loc[~pd_annots.Filename.isna()]..copy()
@@ -130,7 +143,7 @@ def get_audiotagger_tag_df(audio_file_path, labels_dir, tag_opts):
     else:
         print(
             "Warning - no annotations found for %s, file %s does not exist"
-            % (str(audio_file_path), str(csv_file_path))
+            % (str(audio_file_path), str(tag_file_path))
         )
         return pd.DataFrame()
 
@@ -153,6 +166,17 @@ def get_nips4b_tag_df(audio_file_path, labels_dir, tag_opts):
             % (str(audio_file_path), str(tag_path))
         )
         return pd.DataFrame()
+
+
+def get_enab_tag_df(audio_file_path, labels_dir, tag_opts):
+    defaults = DEFAULT_OPTIONS["audiotagger"]
+    suffix = tag_opts.get("suffix", defaults["suffix"])
+    if tag_opts.get("with_data", False):
+        file_path = audio_file_path.parent / (audio_file_path.stem + suffix)
+    else:
+        file_path = labels_dir / (audio_file_path.stem + suffix)
+    if os.path.exists(file_path):
+        pd_annots = pd.read_csv(file_path, skip_blank_lines=True)
 
 
 def get_bad_challenge_tag_df(tags_dir):
