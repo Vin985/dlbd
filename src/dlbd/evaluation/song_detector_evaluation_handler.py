@@ -35,6 +35,18 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         preds = preds.rename(columns={"recording_path": "recording_id"})
         return preds
 
+    def get_predictions_file_name(self, model_opts, database):
+        return (
+            database.name
+            + "_"
+            + model_opts.model_id
+            + "_v"
+            + str(model_opts.load_version)
+            + "_overlap"
+            + str(model_opts.spectrogram_overlap)
+            + ".feather"
+        )
+
     # def perform_evaluation(
     #     self, evaluator, evaluation_data, scenario_infos, scenario_opts
     # ):
