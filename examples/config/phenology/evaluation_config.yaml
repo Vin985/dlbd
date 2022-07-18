@@ -5,8 +5,8 @@ save_results: True #True
 ###########
 ## Paths ##
 ###########
-predictions_dir: "results/predictions"
-evaluation_dir: "results/evaluation"
+predictions_dir: "results/phenology/predictions"
+evaluation_dir: "results/phenology/evaluation"
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False
@@ -18,22 +18,17 @@ evaluators_options:
   phenology_databases: ["full_summer1"]
 
 evaluators:
-  - type: "phenology"
-    method: "standard"
-    activity_threshold: 0.9
-  #   min_duration: 0.1
-  #   end_threshold: 0.3
-  #   dtc_threshold: 0.3
-  #   gtc_threshold: 0.1
+  - type: "standard"
+    activity_threshold: 0.92
+    min_duration: 0.4
+    end_threshold: 0.15
+    dtc_threshold: 0
+    gtc_threshold: 0
   - type: "phenology"
     method: "citynet"
     event_threshold: 0.6
-  - type: subsampling
-    sample_step: 1
-  #   event_method: "activity_max"
-  #   activity_threshold: 0.6
-  # - type: citynet
-  #   activity_threshold: 0.5
+  - type: citynet
+    activity_threshold: 0.6
 
 databases_options:
   class_type: "biotic"
@@ -43,6 +38,13 @@ databases_options:
     sample_rate: "original"
 
 models_list_dir: "resources/models"
+
+models_list_options:
+  model_dir: "resources/models"
+  ignore_parent_path: True
+  batch_size: 32
+  scenarios:
+    spectrogram_overlap: [0, 0.5, 0.75]
 
 model_ids:
   # - "DLBDL_dl1-2_1_pat8_restoreFalse"
@@ -64,14 +66,7 @@ model_ids:
 
 
 databases:
-  # - name: citynet_small
-    # scenarios:
-    #     spectrogram:
-    #       sample_rate: ["original", 22050]
-  # - name: arctic
   - name: full_summer1
-  # - name: citynet
-  # - name: nips4b
-    # scenarios:
-    #     spectrogram:
-    #       sample_rate: ["original", 22050]
+  - name: ENAB
+  - name: citynet
+  - name: nips4b

@@ -1,0 +1,251 @@
+class_type,tag
+other,rain
+other,unknown sound
+other,electrical disturbance
+other,vegetation
+other,wind
+other,unknown
+other,metalic sound
+other,dripping water
+other,shower
+other,metalic
+other,rubbish bag
+other,water dripping
+other,water splashing
+other,rainfall on vegetation
+biotic,bird
+biotic,wing beats
+biotic,bat
+biotic,fox
+biotic,grey squirrel
+biotic,invertebrate
+biotic,insect
+biotic,animal
+biotic,wings beating
+biotic,russling leaves (animal)
+biotic,amphibian
+biotic,squirrel
+biotic,russling vegetation (animal)
+biotic,amgp_1(tu-tit)
+biotic,amgp_2(tuuut)
+biotic,amgp_3(other)
+biotic,bran
+biotic,cago
+biotic,dunl(descending trill)
+biotic,dunl(rising trill)
+biotic,goose
+biotic,gull
+biotic,hegu
+biotic,kiei
+biotic,lalo(chirp)
+biotic,lalo(song)
+biotic,loon
+biotic,ltdu
+biotic,ltdu(yodel)
+biotic,passerine(chirp)
+biotic,passerine(song)
+biotic,pesa(hoohoohoo)
+biotic,plover
+biotic,pusa(tututu)
+biotic,pusa(kreeekreeekreee)
+biotic,reph(chirp)
+biotic,rtlo
+biotic,rtlo(duet)
+biotic,sagu
+biotic,sand(chirp)
+biotic,sand(trill)
+biotic,sesa_2(motorboat)
+biotic,sesa_3(titutu)
+biotic,shorebird(chirp)
+biotic,shorebird(song)
+biotic,snbu(chirp)
+biotic,snbu(song)
+biotic,sngo
+biotic,tusw
+biotic,unkn
+biotic,wrsa_1(boingboingboing)
+birds,SESA
+birds,AMGP
+birds,Shorebird
+birds,Passerine
+anthropic,mix traffic
+anthropic,braking
+anthropic,voices
+anthropic,electrical
+anthropic,anthropogenic unknown
+anthropic,airplane
+anthropic,beep
+anthropic,metal
+anthropic,bus emitting
+anthropic,footsteps
+anthropic,mower
+anthropic,whistle
+anthropic,siren
+anthropic,coughing
+anthropic,music
+anthropic,horn
+anthropic,startthecar
+anthropic,bells
+anthropic,applause
+anthropic,dog bark
+anthropic,road traffic
+anthropic,braking vehicle (road or rail)
+anthropic,human voices
+anthropic,mechanical
+anthropic,vehicle horn (road or rail)
+anthropic,air traffic
+anthropic,vehicle alarm
+anthropic,human voice
+anthropic,machinery
+anthropic,church bell
+anthropic,breaking vehicle
+anthropic,deck lowering
+anthropic,car horn
+anthropic,rail traffic
+anthropic,alarm
+anthropic,vehicle horn
+anthropic,building ventilation system
+anthropic,car alarm
+anthropic,rock
+anthropic,church bells
+anthropic,train horn
+anthropic,mobile phone
+anthropic,train station announcement
+anthropic,hammering
+anthropic,door opening
+anthropic,dog barking
+anthropic,vehicle breaking
+anthropic,cat
+anthropic,glass into bins
+anthropic,barking dog
+anthropic,television
+anthropic,sweeping broom
+anthropic,ball bouncing
+anthropic,bat hitting ball
+anthropic,laughing
+anthropic,clapping
+anthropic,camera
+anthropic,train doors (beeping)
+anthropic,lawnmower
+biotic2,Plover
+biotic2,Sandpiper
+biotic2,Passerine
+biotic2,bird
+biotic2,wing beats
+biotic2,bat
+biotic2,fox
+biotic2,grey squirrel
+biotic2,invertebrate
+biotic2,insect
+biotic2,animal
+biotic2,wings beating
+biotic2,russling leaves (animal)
+biotic2,amphibian
+biotic2,squirrel
+biotic2,russling vegetation (animal)
+biotic3,Plover
+biotic3,Sandpiper
+biotic3,Passerine
+biotic,Aegcau_call
+biotic,Alaarv_song
+biotic,Anttri_song
+biotic,Butbut_call
+biotic,Carcan_call
+biotic,Carcan_song
+biotic,Carcar_call
+biotic,Carcar_song
+biotic,Cerbra_call
+biotic,Cerbra_song
+biotic,Cetcet_song
+biotic,Chlchl_call
+biotic,Cicatr_song
+biotic,Cicorn_song
+biotic,Cisjun_song
+biotic,Colpal_song
+biotic,Corcor_call
+biotic,Denmaj_call
+biotic,Denmaj_drum
+biotic,Embcir_call
+biotic,Embcir_song
+biotic,Erirub_call
+biotic,Erirub_song
+biotic,Fricoe_call
+biotic,Fricoe_song
+biotic,Galcri_call
+biotic,Galcri_song
+biotic,Galthe_call
+biotic,Galthe_song
+biotic,Gargla_call
+biotic,Hirrus_call
+biotic,Jyntor_song
+biotic,Lopcri_call
+biotic,Loxcur_call
+biotic,Lularb_song
+biotic,Lusmeg_call
+biotic,Lusmeg_song
+biotic,Lyrple_song
+biotic,Motcin_call
+biotic,Musstr_call
+biotic,Oriori_call
+biotic,Oriori_song
+biotic,Parate_call
+biotic,Parate_song
+biotic,Parcae_call
+biotic,Parcae_song
+biotic,Parmaj_call
+biotic,Parmaj_song
+biotic,Pasdom_call
+biotic,Pelgra_call
+biotic,Petpet_call
+biotic,Petpet_song
+biotic,Phofem_song
+biotic,Phycol_call
+biotic,Phycol_song
+biotic,Picpic_call
+biotic,Plaaff_song
+biotic,Plasab_song
+biotic,Poepal_call
+biotic,Poepal_song
+biotic,Prumod_song
+biotic,Ptehey_song
+biotic,Pyrpyr_call
+biotic,Regign_call
+biotic,Regign_song
+biotic,Serser_call
+biotic,Serser_song
+biotic,Siteur_call
+biotic,Siteur_song
+biotic,Strdec_song
+biotic,Strtur_song
+biotic,Stuvul_call
+biotic,Sylatr_call
+biotic,Sylatr_song
+biotic,Sylcan_call
+biotic,Sylcan_song
+biotic,Sylmel_call
+biotic,Sylmel_song
+biotic,Sylund_call
+biotic,Sylund_song
+biotic,Tetpyg_song
+biotic,Tibtom_song
+biotic,Trotro_song
+biotic,Turmer_call
+biotic,Turmer_song
+biotic,Turphi_call
+biotic,Turphi_song
+biotic,AMCR
+biotic,BLJA
+biotic,CEWA
+biotic,CHSP
+biotic,COYE
+biotic,GBHE
+biotic,HOFI
+biotic,INBU
+biotic,MAWR
+biotic,SOSP
+biotic,YEWA
+biotic,SNBU
+biotic,Passerine
+biotic,LALO
+biotic,dunl(titutu)
+biotic,btgo(chirp)

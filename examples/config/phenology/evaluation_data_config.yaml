@@ -51,9 +51,32 @@ databases:
       data_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
       db_types: ["test"]
       overwrite: False
-      
       tags:
         with_data: True
+    - name: 'nips4b'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b'
+      data_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/wavs"
+      tags_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/tags"
+      split:
+        validation: 0.2
+        test: 0.2
+      tags:
+        type: "nips4b"
+    - name: 'ENAB'
+      root_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      data_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      db_types: ["test"]
+      overwrite: False
+      tags:
+        print_missing_classes: True
+        filter_classes: False
+        with_data: True
+        suffix: ".Table.1.selections.txt"
+        columns:
+          Species: "tag"
+          "Begin Time (s)": "tag_start"
+          "End Time (s)": "tag_end"
+
         
       
 spectrogram:
@@ -63,4 +86,4 @@ spectrogram:
   sample_rate: "original" # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "/home/vin/Doctorat/dev/dlbd/config/classes.csv"
+classes_file: "resources/classes.csv"

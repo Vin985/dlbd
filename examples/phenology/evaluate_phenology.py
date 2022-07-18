@@ -27,7 +27,13 @@ evaluation_config = file_utils.load_config(evaluation_config_path)
 # evaluation_config["models_list_dir"] = models_dir
 
 evaluation_config = get_models_conf(
-    evaluation_config, updates={"model_dir": "resources/models"}
+    evaluation_config,
+    # updates={
+    #     "model_dir": "resources/models",
+    #     # "ignore_parent_path": True,
+    #     "spectrogram_overlap": 0.5,
+    #     # "reclassify": True,
+    # },
 )
 
 

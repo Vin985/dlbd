@@ -102,15 +102,27 @@ databases:
       
       tags:
         with_data: True
+    - name: 'ENAB'
+      root_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      data_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      db_types: ["test"]
+      overwrite: False
+      tags:
+        print_missing_classes: True
+        filter_classes: False
+        with_data: True
+        suffix: ".Table.1.selections.txt"
+        columns:
+          Species: "tag"
+          "Begin Time (s)": "tag_start"
+          "End Time (s)": "tag_end"
       
 
-    
 spectrogram:
   type: "mel"
   n_mels: 32
-  n_fft: 2048
-  # hop_length: 1024
-  #sample_rate: 22050 # For no resampling: remove option or set to original
+  n_fft: 512
+  sample_rate: "original" # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "config/generated_classes.csv"
+classes_file: "resources/classes.csv"
