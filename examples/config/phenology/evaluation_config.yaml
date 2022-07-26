@@ -14,19 +14,20 @@ models_options:
 
 evaluators_options:
   draw_plots: True
-  plots: ["distances"]
+  plots: ["distances", "roc"]
   phenology_databases: ["full_summer1"]
 
 evaluators:
-  - type: "standard"
-    activity_threshold: 0.92
-    min_duration: 0.4
-    end_threshold: 0.15
-    dtc_threshold: 0
-    gtc_threshold: 0
+  # - type: "standard"
+  #   activity_threshold: 0.92
+  #   min_duration: 0.4
+  #   end_threshold: 0.15
+  #   dtc_threshold: 0
+  #   gtc_threshold: 0
   - type: "phenology"
     method: "citynet"
     event_threshold: 0.6
+    plots: ["distances"]
   - type: citynet
     activity_threshold: 0.6
 
@@ -44,7 +45,7 @@ models_list_options:
   ignore_parent_path: True
   batch_size: 32
   scenarios:
-    spectrogram_overlap: [0, 0.5, 0.75]
+    spectrogram_overlap: 0.5
 
 model_ids:
   # - "DLBDL_dl1-2_1_pat8_restoreFalse"
