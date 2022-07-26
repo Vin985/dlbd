@@ -6,9 +6,10 @@ from .evaluators import (
 )
 
 EVALUATORS.register_evaluators(
-    {
-        "standard": StandardEvaluator,
-        "subsampling": SubsamplingEvaluator,
-        "citynet": CityNetEvaluator,
-    }
+    # {
+    #     "standard": StandardEvaluator,
+    #     "subsampling": SubsamplingEvaluator,
+    #     "citynet": CityNetEvaluator,
+    # }
+    [StandardEvaluator, SubsamplingEvaluator, CityNetEvaluator]
 )
