@@ -12,7 +12,7 @@ from dlbd.evaluation.song_detector_evaluation_handler import (
 from dlbd.applications.phenology.phenology_evaluator import PhenologyEvaluator
 from dlbd.utils import get_models_conf
 
-EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
+EVALUATORS.register_evaluator(PhenologyEvaluator)
 
 
 #%%

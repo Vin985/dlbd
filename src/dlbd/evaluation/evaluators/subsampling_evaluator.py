@@ -14,6 +14,8 @@ from . import SongDetectorEvaluator
 
 class SubsamplingEvaluator(SongDetectorEvaluator):
 
+    NAME = "subsampling"
+
     REQUIRES = ["tags_df"]
 
     DEFAULT_ISOLATE_EVENTS = True

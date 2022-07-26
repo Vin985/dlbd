@@ -11,7 +11,7 @@ from plotnine import *
 
 from dlbd.utils.plot_utils import format_date_short
 
-EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
+EVALUATORS.register_evaluator(PhenologyEvaluator)
 preds_root = Path("/home/vin/Doctorat/dev/dlbd/results/predict")
 
 plots = [

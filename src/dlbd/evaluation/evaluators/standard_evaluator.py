@@ -22,6 +22,8 @@ from ...data.tag_utils import flatten_tags
 
 class StandardEvaluator(SongDetectorEvaluator):
 
+    NAME = "standard"
+
     REQUIRES = ["tags_df"]
 
     DEFAULT_MIN_DURATION = 0.1

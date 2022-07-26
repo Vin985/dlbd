@@ -6,8 +6,25 @@ from mouffet import common_utils
 from mouffet.evaluation import Evaluator
 from sklearn import metrics
 
+from plotnine import (
+    aes,
+    element_text,
+    xlim,
+    ylim,
+    annotate,
+    geom_line,
+    ggplot,
+    ggtitle,
+    theme,
+    theme_classic,
+    xlab,
+    ylab,
+)
+
 
 class CityNetEvaluator(Evaluator):
+
+    NAME = "citynet"
 
     REQUIRES = ["tags_df"]
 
@@ -124,6 +141,45 @@ class CityNetEvaluator(Evaluator):
         plt.draw()
         plt.savefig("pr_curve.pdf")
 
+    def plot_roc(self, data, options, infos):
+        events = data["events"]
+        fpr, tpr, _ = metrics.roc_curve(events.tags, events.activity)
+        plt_data = pd.DataFrame({"fpr": fpr, "tpr": tpr})
+        plt = (
+            ggplot(
+                data=plt_data,
+                mapping=aes(
+                    x="fpr",  # "factor(species, ordered=False)",
+                    y="tpr",
+                ),
+            )
+            + geom_line()
+            + xlim([0, 1])
+            + ylim([0, 1])
+            + xlab("False positive rate")
+            + ylab("True positive rate")
+            + annotate(
+                "text",
+                x=0.75,
+                y=0.75,
+                label="AUC: {}".format(data["stats"]["auc"].iloc[0]),
+            )
+            + theme_classic()
+            + theme(
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                ("Precision recall curve for database {}").format(
+                    options["scenario_info"]["database"],
+                )
+            )
+        )
+
+        return plt
+
     def evaluate(self, data, options, infos):
         predictions, tags = data
         tags = tags["tags_df"]
@@ -132,6 +188,8 @@ class CityNetEvaluator(Evaluator):
         res = {"stats": stats, "matches": events}
         if options.get("draw_plots", False):
             res["plots"] = self.draw_plots(
-                data={"events": events, "tags": tags}, options=options, infos=infos
+                data={"events": events, "tags": tags, "stats": stats},
+                options=options,
+                infos=infos,
             )
         return res

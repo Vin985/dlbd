@@ -12,6 +12,8 @@ from ...evaluation import EVALUATORS
 
 class PhenologyEvaluator(Evaluator):
 
+    NAME = "phenology"
+
     REQUIRES = ["tags_df"]
 
     def file_event_duration(self, df, method):
@@ -146,14 +148,16 @@ class PhenologyEvaluator(Evaluator):
         return res
 
     def evaluate(self, data, options, infos):
-        if infos["database"] not in options.get("phenology_databases", []):
-            common_utils.print_info(
-                (
-                    "Database {} is not part of the accepted databases for the 'Phenology' "
-                    + "evaluator described in the 'phenology_databases' option. Skipping."
-                ).format(options["scenario_info"]["database"])
-            )
+        if not self.check_database(data, options, infos):
             return {}
+        # if infos["database"] not in options.get("phenology_databases", []):
+        #     common_utils.print_info(
+        #         (
+        #             "Database {} is not part of the accepted databases for the 'Phenology' "
+        #             + "evaluator described in the 'phenology_databases' option. Skipping."
+        #         ).format(options["scenario_info"]["database"])
+        #     )
+        #     return {}
         method = options["method"]
         stats = EVALUATORS[method].evaluate(data, options, infos)
 
@@ -189,7 +193,7 @@ class PhenologyEvaluator(Evaluator):
         stats["events_duration"] = daily_events_duration
 
         if options.get("draw_plots", False):
-            stats["plots"] = self.draw_plots(
+            plts = self.draw_plots(
                 data={
                     "df": pd.concat(
                         [
@@ -204,5 +208,9 @@ class PhenologyEvaluator(Evaluator):
                 options=options,
                 infos=infos,
             )
+            if "plots" in stats:
+                stats["plots"].update(plts)
+            else:
+                stats["plots"] = plts
 
         return stats
