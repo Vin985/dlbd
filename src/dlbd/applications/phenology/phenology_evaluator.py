@@ -10,6 +10,7 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 
 from ...evaluation import EVALUATORS
 from ...utils.plot_utils import format_date_short
+from ...data.tag_utils import flatten_tags
 
 
 class PhenologyEvaluator(Evaluator):
@@ -21,8 +22,9 @@ class PhenologyEvaluator(Evaluator):
     def file_event_duration(self, df, method):
         return EVALUATORS[method].file_event_duration(df)
 
-    def file_tag_duration(self, df, method):
-        return EVALUATORS[method].file_tag_duration(df)
+    def file_tag_duration(self, df, method=None):
+        flattened = flatten_tags(df)
+        return flattened.tag_duration.sum()
 
     def daily_mean_activity(self, df):
         # * Returns mean activity duration in a day
@@ -37,6 +39,9 @@ class PhenologyEvaluator(Evaluator):
         )
         df["full_date"] = pd.to_datetime(df["full_date"], format="%Y-%m-%d_%H%M%S")
         df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d")
+        df["date_hour"] = pd.to_datetime(
+            df["full_date"].dt.strftime("%Y%m%d_%H"), format="%Y%m%d_%H"
+        )
         df = df.drop(columns=["to_drop", "recording_id"])
         return df
 
@@ -47,13 +52,20 @@ class PhenologyEvaluator(Evaluator):
         )
         df["full_date"] = pd.to_datetime(df["full_date"], format="%Y%m%d_%H%M%S")
         df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+        df["date_hour"] = pd.to_datetime(
+            df["full_date"].dt.strftime("%Y%m%d_%H"), format="%Y%m%d_%H"
+        )
         return df
 
     def extract_recording_info_audiomoth2018(self, df, options):
         df["full_date"] = df.recording_id.path.stem.apply(
             lambda x: datetime.fromtimestamp(int(x, 16))
         )
+
         df["date"] = pd.to_datetime(df["full_date"].dt.strftime("%Y%m%d"))
+        df["date_hour"] = pd.to_datetime(
+            df["full_date"].dt.strftime("%Y%m%d_%H"), format="%Y%m%d_%H"
+        )
         return df
 
     def get_daily_activity(self, df, options, df_type="event"):
@@ -70,16 +82,38 @@ class PhenologyEvaluator(Evaluator):
         file_song_duration = getattr(
             self, "extract_recording_info_" + options.get("recording_info_type", "dlbd")
         )(file_song_duration, options=options)
+
+        if "depl_start" in options:
+            file_song_duration = file_song_duration.loc[
+                file_song_duration.date_hour >= options["depl_start"]
+            ]
+        if "depl_end" in options:
+            file_song_duration = file_song_duration.loc[
+                file_song_duration.date_hour <= options["depl_end"]
+            ]
+
         res["file_duration"] = file_song_duration
 
-        # * Get mean duration per day
-        daily_duration = (
-            file_song_duration[["date", "total_duration"]]
-            .groupby("date")
+        by_hour = (
+            file_song_duration[["date_hour", "total_duration"]]
+            .groupby("date_hour")
             .agg("mean")
-            .dropna()
         )
+        by_hour = by_hour.asfreq("H", fill_value=0)
 
+        daily_duration = by_hour.resample("D").agg("mean")
+        daily_duration.index.name = "date"
+
+        # # * Get mean duration per day
+        # daily_duration = (
+        #     file_song_duration[["date", "total_duration"]]
+        #     .groupby("date")
+        #     .agg("mean")
+        #     .dropna()
+        # )
+        # idx = pd.date_range(daily_duration.index.min(), daily_duration.index.max())
+        # idx.name = "date"
+        # daily_duration = daily_duration.reindex(idx, fill_value=0)
         trend = (
             seasonal_decompose(
                 daily_duration,
@@ -219,7 +253,9 @@ class PhenologyEvaluator(Evaluator):
 
         matches = stats["matches"]
 
-        daily_tags_duration = self.get_daily_activity(matches, options, "tag")
+        daily_tags_duration = self.get_daily_activity(
+            data[1]["tags_df"], options, "tag"
+        )
         daily_events_duration = self.get_daily_activity(matches, options, "event")
 
         eucl_distance = round(
