@@ -1,5 +1,6 @@
+from datetime import datetime
+
 import pandas as pd
-from ...utils.plot_utils import format_date_short
 from mouffet import common_utils
 from mouffet.evaluation import Evaluator
 from pandas_path import path  # pylint: disable=unused-import
@@ -8,6 +9,7 @@ from scipy.spatial.distance import euclidean
 from statsmodels.tsa.seasonal import seasonal_decompose
 
 from ...evaluation import EVALUATORS
+from ...utils.plot_utils import format_date_short
 
 
 class PhenologyEvaluator(Evaluator):
@@ -45,6 +47,13 @@ class PhenologyEvaluator(Evaluator):
         )
         df["full_date"] = pd.to_datetime(df["full_date"], format="%Y%m%d_%H%M%S")
         df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
+        return df
+
+    def extract_recording_info_audiomoth2018(self, df, options):
+        df["full_date"] = df.recording_id.path.stem.apply(
+            lambda x: datetime.fromtimestamp(int(x, 16))
+        )
+        df["date"] = pd.to_datetime(df["full_date"].dt.strftime("%Y%m%d"))
         return df
 
     def get_daily_activity(self, df, options, df_type="event"):
@@ -144,6 +153,53 @@ class PhenologyEvaluator(Evaluator):
                 + theme(axis_text_x=element_text(angle=45))
             )
             res.append(tmp_plt_norm)
+
+        return res
+
+    def plot_separate_distances(self, data, options, infos):
+        plt_df = data["df"]
+        res = []
+        y_range = max(plt_df.trend_norm) - min(plt_df.trend_norm)
+        ylims = [
+            min(plt_df.trend_norm) - 0.1 * y_range,
+            max(plt_df.trend_norm) + 0.1 * y_range,
+        ]
+        plt_gt_norm = (
+            ggplot(
+                data=plt_df.loc[plt_df.type == "ground_truth"],
+                mapping=aes("date", "trend_norm", color="type"),
+            )
+            + geom_line(color="blue")
+            + ggtitle(
+                "Normalized daily mean activity per recording. \n"
+                + " Euclidean distance to reference: {}".format(data["distance_norm"])
+            )
+            + xlab("Date")
+            + ylab("Normalized daily mean activity per recording")
+            + ylim(ylims)
+            + scale_color_discrete(labels=["Reference"])
+            + scale_x_datetime(labels=format_date_short)
+            + theme_classic()
+            + theme(axis_text_x=element_text(angle=45))
+        )
+
+        plt_norm = (
+            ggplot(
+                data=plt_df.loc[plt_df.type == "DLBD"],
+                mapping=aes("date", "trend_norm", color=["red"]),
+            )
+            + geom_line()
+            + ylim(ylims)
+            + scale_color_discrete(labels=["Model"], color=["red"])
+            + theme_classic()
+            + theme(
+                axis_title=element_blank(),
+                axis_ticks_major=element_blank(),
+                axis_text=element_blank(),
+            )
+        )
+        res.append(plt_gt_norm)
+        res.append(plt_norm)
 
         return res
 
