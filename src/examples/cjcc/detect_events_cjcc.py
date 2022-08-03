@@ -129,7 +129,7 @@ sub_path = src_root / "sub_events_500_50_avg03.feather"
 if not sub_path.exists():
     sub_opts = {
         "sample_step": 0.5,
-        "event_threshold": 0.5,
+        "activity_threshold": 0.5,
         "method": "average",
         "gtc": 0.3,
     }
@@ -167,4 +167,3 @@ print(sub_df)
 sub_df.to_feather(src_root / "sub_events_500_50_avg03_aggregate.feather")
 
 #%%
-

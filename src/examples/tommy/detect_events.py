@@ -128,7 +128,7 @@ sub_detector = SubsamplingDetector()
 sub_path = src_root / "sub_events_1_95.feather"
 
 if not sub_path.exists():
-    sub_opts = {"sample_step": 1, "event_threshold": 0.95}
+    sub_opts = {"sample_step": 1, "activity_threshold": 0.95}
     ss_df = sub_detector.get_events(preds, options=sub_opts)
     ss_df = ss_df.drop(columns=["level_1"])
     ss_df.to_feather(sub_path)
@@ -163,4 +163,3 @@ print(sub_df)
 sub_df.to_feather(src_root / "sub_events_1_95_aggregate.feather")
 
 #%%
-
