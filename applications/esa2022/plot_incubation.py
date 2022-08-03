@@ -29,13 +29,13 @@ from plotnine import (
 
 EVALUATORS.register_evaluator(PhenologyEvaluator)
 
-plot = "BARW_0"
+plot_name = "IGLO_B"
 
 dest_root_dir = Path("/mnt/win/UMoncton/Doctorat/dev/dlbd/applications/esa2022/results")
 events_dest_dir = dest_root_dir / "events"
 plots_dest_dir = dest_root_dir / "plots"
 
-predictions_path = dest_root_dir / plot / "predictions.feather"
+predictions_path = dest_root_dir / "predictions" / plot_name / "predictions.feather"
 preds = pd.read_feather(predictions_path)
 
 
@@ -46,39 +46,39 @@ preds = preds.rename(columns={"recording_path": "recording_id"})
 
 #%%
 
+site_data = pd.read_excel(
+    "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/sites_deployment_2018.xlsx"
+)
+
+
 opts = {
-    "event_threshold": 0.5,
-    # "method": "citynet",
     "method": "standard",
-    "activity_threshold": 0.9,
+    "activity_threshold": 0.92,
     "min_duration": 0.1,
     "end_threshold": 0.3,
     "gtc_threshold": 0,
     "dtc_threshold": 0,
     "recording_info_type": "audiomoth2018",
+    "depl_start": site_data.loc[site_data["plot"] == plot_name, "depl_start"].iloc[0],
+    "depl_end": site_data.loc[site_data["plot"] == plot_name, "depl_end"].iloc[0],
 }
 
 
-events_file_prefix = "event_{}_{}_{}_{}".format(
-    opts["method"],
-    opts["activity_threshold"],
-    opts["end_threshold"],
-    opts["min_duration"],
-)
-events_path = events_dest_dir / (events_file_prefix + ".feather")
+events_file_prefix = "{}_{}".format(opts["method"], opts["activity_threshold"])
+events_path = events_dest_dir / ("event_" + events_file_prefix + ".feather")
 
 
-if not events_path.exists():
-    events_df = EVALUATORS[opts["method"]].filter_predictions(preds, None, opts)
-    events_df.to_feather(file_utils.ensure_path_exists(events_path, is_file=True))
-else:
-    events_df = pd.read_feather(events_path)
+events_df = EVALUATORS[opts["method"]].filter_predictions(preds, opts)
+events_df.to_feather(file_utils.ensure_path_exists(events_path, is_file=True))
+
 
 if not events_df.empty:
     daily_activity = EVALUATORS["phenology"].get_daily_activity(
         events_df, opts, "event"
     )
     df = daily_activity["daily_duration"]
+
+    df.plot("date", "trend")
 
 #%%
 
@@ -286,25 +286,21 @@ def incubation_plot(
 #%%
 
 
-save_info = {
-    "path": plots_dest_dir,
-    "height": 10,
-    "width": 16,
-    "dpi": 150,
-    "filename": "cjcc2021_songevents.png",
-}
-
-site_data = pd.read_excel(
-    "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/sites_deployment_2018.xlsx"
-)
+# save_info = {
+#     "path": plots_dest_dir,
+#     "height": 10,
+#     "width": 16,
+#     "dpi": 150,
+#     "filename": "cjcc2021_songevents.png",
+# }
 
 
 (barw_se, barw_inc) = incubation_plot(
     df,
-    "Barrow",
+    plot_name,
     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Nest Monitoring/2018/BARW/BARW_nest_2018.xlsx",
     # save=False,
-    prefix="esa2022",
+    prefix="esa2022_" + events_file_prefix,
     dest_dir=plots_dest_dir,
 )
 

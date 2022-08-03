@@ -47,10 +47,14 @@ plots = [
         "src_path": "/media/vin/Backup/PhD/Acoustics/2018/Barrow/BARW_0",
         "name": "BARW_0",
     },
+    {
+        "src_path": "/media/vin/Backup/PhD/Acoustics/2018/Igloolik/IGLO_B",
+        "name": "IGLO_B",
+    },
 ]
 
 dest_root = pathlib.Path(
-    "/mnt/win/UMoncton/Doctorat/dev/dlbd/examples/results/predict_multiple"
+    "/mnt/win/UMoncton/Doctorat/dev/dlbd/applications/esa2022/results/predictions"
 )
 
 
