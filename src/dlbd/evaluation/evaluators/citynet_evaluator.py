@@ -28,7 +28,7 @@ class CityNetEvaluator(Evaluator):
 
     REQUIRES = ["tags_df"]
 
-    DEFAULT_EVENT_THRESHOLD = 0.5
+    DEFAULT_ACTIVITY_THRESHOLD = 0.5
 
     DEFAULT_TIME_BUFFER = 0.5
 
@@ -56,7 +56,7 @@ class CityNetEvaluator(Evaluator):
         options = options or {}
         if tags is not None and not tags.empty:
             tags = tags[tags.recording_id == predictions.name]
-        threshold = options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
+        threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
         predictions.loc[predictions.activity > threshold, "events"] = 2
         dur = max(predictions.time)
         if not predictions.empty:

@@ -19,7 +19,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
     REQUIRES = ["tags_df"]
 
     DEFAULT_ISOLATE_EVENTS = True
-    DEFAULT_EVENT_THRESHOLD = 0.5
+    DEFAULT_ACTIVITY_THRESHOLD = 0.5
     DEFAULT_SAMPLE_STEP = 1
 
     DEFAULT_EVENT_METHOD = "activity_max"
@@ -43,7 +43,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
 
     def has_event(self, x, options):
         method = options.get("event_method", self.DEFAULT_EVENT_METHOD)
-        threshold = options.get("activity_threshold", self.DEFAULT_EVENT_THRESHOLD)
+        threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
         if method == "presence":
             if max(x) >= threshold:
                 return 2
@@ -240,7 +240,7 @@ class SubsamplingEvaluator(SongDetectorEvaluator):
             + geom_line(color="blue")
             + geom_line(
                 mapping=aes(
-                    y=options.get("event_threshold", self.DEFAULT_EVENT_THRESHOLD)
+                    y=options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
                 ),
                 color="red",
             )
