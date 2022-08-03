@@ -50,8 +50,8 @@ def get_reference_tags_duration(dest_path, evaluator, overwrite=False):
         evaluator.data_handler.check_datasets()
 
         tags = evaluator.data_handler.load_dataset(
-            evaluator.data_handler.get_database_options("full_summer1"),
-            "test",
+            database=evaluator.data_handler.get_database("full_summer1"),
+            db_type="test",
             load_opts={"file_types": "tags_df"},
         )["tags_df"]
 
