@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-from .audio_database import AudioDatabase
-from .audio_dataset import AudioDataset
 from mouffet import common_utils
 from mouffet.data import DataHandler
 from mouffet.data.split import split_folder
@@ -10,6 +8,8 @@ from scipy.ndimage.interpolation import zoom
 from ..data.audio_utils import resize_spectrogram
 from ..options import AudioDatabaseOptions
 from . import tag_utils
+from .audio_database import AudioDatabase
+from .audio_dataset import AudioDataset
 from .split import citynet_split
 
 # class AudioDataStructure(DataStructure):
@@ -174,48 +174,48 @@ class AudioDataHandler(DataHandler):
         }
         return tmp_res
 
-    def get_db_tags_summary(self, database, db_types=None, filter_classes=False):
-        res = {}
-        if isinstance(database, str):
-            database = self.databases[database]
-        db_types = db_types or database.db_types
+    # def get_db_tags_summary(self, database, db_types=None, filter_classes=False):
+    #     res = {}
+    #     if isinstance(database, str):
+    #         database = self.databases[database]
+    #     db_types = db_types or database.db_types
 
-        paths = self.get_database_paths(database)
-        file_lists = self.check_file_lists(database, paths, db_types)
+    #     paths = self.get_database_paths(database)
+    #     file_lists = self.check_file_lists(database, paths, db_types)
 
-        print("Generating tags summary for database: {}".format(database["name"]))
+    #     print("Generating tags summary for database: {}".format(database["name"]))
 
-        res = {}
-        tmp_all = []
-        # * Only load data if the give db_type is in the database definition
-        for db_type in db_types:
-            if not db_type in database.db_types:
-                continue
+    #     res = {}
+    #     tmp_all = []
+    #     # * Only load data if the give db_type is in the database definition
+    #     for db_type in db_types:
+    #         if not db_type in database.db_types:
+    #             continue
 
-            tmp_tags = []
-            tags_dir = paths["tags"][db_type]
-            for file_path in file_lists[db_type]:
-                tmp_df = tag_utils.get_tag_df(file_path, tags_dir, database.tags)
-                if filter_classes:
-                    tmp_df = tag_utils.filter_classes(tmp_df, database)
+    #         tmp_tags = []
+    #         tags_dir = paths["tags"][db_type]
+    #         for file_path in file_lists[db_type]:
+    #             tmp_df = tag_utils.get_tag_df(file_path, tags_dir, database.tags)
+    #             if filter_classes:
+    #                 tmp_df = tag_utils.filter_classes(tmp_df, database)
 
-                tmp_tags.append(tmp_df)
+    #             tmp_tags.append(tmp_df)
 
-            tmp_df = pd.concat(tmp_tags)
-            tmp_df, tmp_summary = self.summarize_tags(tmp_df)
-            res[db_type] = {"raw": tmp_df, "summary": tmp_summary}
-            tmp_all.append(tmp_df)
+    #         tmp_df = pd.concat(tmp_tags)
+    #         tmp_df, tmp_summary = self.summarize_tags(tmp_df)
+    #         res[db_type] = {"raw": tmp_df, "summary": tmp_summary}
+    #         tmp_all.append(tmp_df)
 
-        all_df = pd.concat(tmp_all)
-        all_df, all_summary = self.summarize_tags(all_df)
-        res["all"] = {"raw": all_df, "summary": all_summary}
+    #     all_df = pd.concat(tmp_all)
+    #     all_df, all_summary = self.summarize_tags(all_df)
+    #     res["all"] = {"raw": all_df, "summary": all_summary}
 
-        return res
+    #     return res
 
-    def get_databases_summary(self, databases, *args, **kwargs):
-        res = {}
-        databases = databases or self.databases.values()
-        # * Iterate over databases
-        for database in databases:
-            res[database["name"]] = self.get_db_tags_summary(database, *args, **kwargs)
-        return res
+    # def get_databases_summary(self, databases, *args, **kwargs):
+    #     res = {}
+    #     databases = databases or self.databases.values()
+    #     # * Iterate over databases
+    #     for database in databases:
+    #         res[database["name"]] = self.get_db_tags_summary(database, *args, **kwargs)
+    #     return res
