@@ -10,16 +10,13 @@ class AudioDataset(Dataset):
 
     STRUCTURE = {
         "spectrograms": {"type": "data", "data_type": []},
+        "spec_opts": {"type": "data"},
         "tags_df": {"type": "tags"},
         "tags_linear_presence": {"type": "tags"},
-        "infos": {"type": "data"},
+        "metadata": {"type": "data"},
     }
 
     LOADERS = {"default": AudioDataLoader, "bad_challenge": BADChallengeDataLoader}
-
-    # @staticmethod
-    # def get_subfolder_option_value(opt, opts, default, prefixes):
-    #     return prefixes.get(opt, "") + str(opts.get(opt, default[opt]))
 
     def get_spec_subfolder(self, spec_opts, folder_opts):
 
@@ -41,6 +38,19 @@ class AudioDataset(Dataset):
 
         spec_folder = "_".join(tmp)
         return spec_folder
+
+    def tags_file_name(self, key, db_type, database):
+        filter_classes = database.get("tags", {}).get("filter_classes", True)
+        if filter_classes and not database.class_type:
+            filter_classes = False
+        class_type = database.class_type if filter_classes else "no_filter"
+        return db_type + "_" + key + "_" + class_type + "." + self.get_extension(key)
+
+    def metadata_subfolders(self, key):
+        return ""
+
+    def tags_df_subfolders(self, key):
+        return ""
 
     def get_spectrogram_subfolder_path(self, folder_opts=None):
         if folder_opts is None:
@@ -66,57 +76,27 @@ class AudioDataset(Dataset):
         summary = summary.reset_index()
         return df, summary
 
-    def summarize_dataset(self, dataset):
-        df, summary = self.summarize_tags(dataset["tags_df"])
+    def summarize(self):
+        df, summary = self.summarize_tags(self.data["tags_df"])
 
         classes_list = list(filter(None, set(df.all_tags.str.split(",").sum())))
 
+        durations = [info["duration"] for info in self.data["metadata"]]
+        flattened = (
+            df.groupby("recording_id").apply(tag_utils.flatten_tags).reset_index()
+        )
+
         tmp_res = {
-            "n_files": len(dataset["spectrograms"]),
+            "n_files": len(self.data["metadata"]),
+            "total_audio_duration": int(sum(durations)),
+            "total_time_active": int(flattened.tag_duration.sum()),
+            "n_annotations": df.shape[0],
             "n_classes": len(df.tag.unique()),
             "classes_summary": summary,
             "classes_list": classes_list,
             "raw_df": df,
         }
         return tmp_res
-
-    # def get_db_tags_summary(self, database, db_types=None, filter_classes=False):
-    #     res = {}
-    #     if isinstance(database, str):
-    #         database = self.databases[database]
-    #     db_types = db_types or database.db_types
-
-    #     paths = self.get_database_paths(database)
-    #     file_lists = self.check_file_lists(database, paths, db_types)
-
-    #     print("Generating tags summary for database: {}".format(database["name"]))
-
-    #     res = {}
-    #     tmp_all = []
-    #     # * Only load data if the give db_type is in the database definition
-    #     for db_type in db_types:
-    #         if not db_type in database.db_types:
-    #             continue
-
-    #         tmp_tags = []
-    #         tags_dir = paths["tags"][db_type]
-    #         for file_path in file_lists[db_type]:
-    #             tmp_df = tag_utils.get_tag_df(file_path, tags_dir, database.tags)
-    #             if filter_classes:
-    #                 tmp_df = tag_utils.filter_classes(tmp_df, database)
-
-    #             tmp_tags.append(tmp_df)
-
-    #         tmp_df = pd.concat(tmp_tags)
-    #         tmp_df, tmp_summary = self.summarize_tags(tmp_df)
-    #         res[db_type] = {"raw": tmp_df, "summary": tmp_summary}
-    #         tmp_all.append(tmp_df)
-
-    #     all_df = pd.concat(tmp_all)
-    #     all_df, all_summary = self.summarize_tags(all_df)
-    #     res["all"] = {"raw": all_df, "summary": all_summary}
-
-    #     return res
 
     def get_ground_truth(self):
         return self.data["tags_linear_presence"]
