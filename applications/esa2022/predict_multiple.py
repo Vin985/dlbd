@@ -64,7 +64,7 @@ model_opts = ModelOptions(
         "name": "DLBD",
         "class": DLBD,
         "batch_size": 64,
-        "spectrogram_overlap": 0.5,
+        "spectrogram_overlap": 0.75,
         "inference": True,
         "random_start": False,
         "ignore_parent_path": True,
@@ -78,7 +78,13 @@ spec_opts = {"n_fft": 512, "n_mels": 32, "sample_rate": "original", "to_db": Fal
 
 infos_res = []
 for plot in plots:
-    dest_path = pathlib.Path(dest_root) / plot["name"] / "predictions.feather"
+    dest_path = (
+        pathlib.Path(dest_root)
+        / plot["name"]
+        / "predictions_overlap{}.feather".format(
+            model_opts.get("spectrogram_overlap", 0.5)
+        )
+    )
     if not dest_path.exists() or overwrite:
         preds, infos = predictions.classify_elements(
             list(pathlib.Path(plot["src_path"]).glob("*.WAV")), model, spec_opts

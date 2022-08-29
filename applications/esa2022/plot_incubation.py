@@ -15,6 +15,7 @@ from plotnine import (
     annotate,
     element_blank,
     geom_line,
+    geom_point,
     geom_smooth,
     ggplot,
     scale_x_continuous,
@@ -29,13 +30,19 @@ from plotnine import (
 
 EVALUATORS.register_evaluator(PhenologyEvaluator)
 
-plot_name = "IGLO_B"
+plot_name = "BARW_0"
+overlap = 0.75
 
 dest_root_dir = Path("/mnt/win/UMoncton/Doctorat/dev/dlbd/applications/esa2022/results")
 events_dest_dir = dest_root_dir / "events"
 plots_dest_dir = dest_root_dir / "plots"
 
-predictions_path = dest_root_dir / "predictions" / plot_name / "predictions.feather"
+predictions_path = (
+    dest_root_dir
+    / "predictions"
+    / plot_name
+    / "predictions_overlap{}.feather".format(overlap)
+)
 preds = pd.read_feather(predictions_path)
 
 
@@ -54,17 +61,20 @@ site_data = pd.read_excel(
 opts = {
     "method": "standard",
     "activity_threshold": 0.92,
-    "min_duration": 0.1,
-    "end_threshold": 0.3,
+    "min_duration": 0.2,
+    "end_threshold": 0.5,
     "gtc_threshold": 0,
     "dtc_threshold": 0,
     "recording_info_type": "audiomoth2018",
     "depl_start": site_data.loc[site_data["plot"] == plot_name, "depl_start"].iloc[0],
     "depl_end": site_data.loc[site_data["plot"] == plot_name, "depl_end"].iloc[0],
+    "period": 7,
 }
 
 
-events_file_prefix = "{}_{}".format(opts["method"], opts["activity_threshold"])
+events_file_prefix = "{}_{}_period{}".format(
+    opts["method"], opts["activity_threshold"], opts.get("period", 7)
+)
 events_path = events_dest_dir / ("event_" + events_file_prefix + ".feather")
 
 
@@ -187,15 +197,16 @@ def incubation_plot(
     xmax = min(stages["hatch"]["end"] + 2, data.julian.max() + 2)
 
     yrange = data[y].max() - data[y].min()
-    bufmin = 0.1 * yrange
-    bufmax = 0.15 * yrange
-    ymin = data[y].min() - bufmin
-    ymax = data[y].max() + bufmax
+    bufmin = 0.05 * yrange
+    bufmax = 0.1 * yrange
+    ymin = 0  # data["total_duration"].min()  # - bufmin
+    ymax = 300  # data["total_duration"].max()  # + bufmax
 
     se_plot = (
         ggplot(data=data, mapping=aes(x="julian", y=y, colour="site"))
         + xlab(lbls["songs"]["xlab"])
         + ylab(lbls["songs"]["ylab"])
+        + geom_point(aes(y="total_duration"))
         + geom_line()
         + theme_classic()
         + theme(legend_position="none")
@@ -273,26 +284,17 @@ def incubation_plot(
             width=8,
             dpi=150,
         ),
-        inc_name = create_file_name("incubation", site, prefix, suffix)
-        inc_plot.save(
-            file_utils.ensure_path_exists(dest_dir / (inc_name + ext), is_file=True),
-            height=8,
-            width=8,
-            dpi=150,
-        )
+        # inc_name = create_file_name("incubation", site, prefix, suffix)
+        # inc_plot.save(
+        #     file_utils.ensure_path_exists(dest_dir / (inc_name + ext), is_file=True),
+        #     height=8,
+        #     width=8,
+        #     dpi=150,
+        # )
     return (se_plot, inc_plot)
 
 
 #%%
-
-
-# save_info = {
-#     "path": plots_dest_dir,
-#     "height": 10,
-#     "width": 16,
-#     "dpi": 150,
-#     "filename": "cjcc2021_songevents.png",
-# }
 
 
 (barw_se, barw_inc) = incubation_plot(
@@ -300,25 +302,8 @@ def incubation_plot(
     plot_name,
     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Nest Monitoring/2018/BARW/BARW_nest_2018.xlsx",
     # save=False,
-    prefix="esa2022_" + events_file_prefix,
+    prefix=datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    + "_esa2022_"
+    + events_file_prefix,
     dest_dir=plots_dest_dir,
 )
-
-# (barw_se, barw_inc) = incubation_plot(
-#     plt_sub.plot_data,
-#     "Barrow",
-#     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Nest Monitoring/2018/BARW/BARW_nest_2018.xlsx",
-#     # save=False,
-#     prefix="cjcc2021_subsampling_fr",
-#     dest_dir=dest_dir,
-#     labels={
-#         "songs": {
-#             "xlab": "Jour",
-#             "ylab": "Nombre moyen de secondes actives par enregistrement (secondes)",
-#             "periods": ["Initiation de l'incubation", "Éclosion"],
-#         },
-#         "nesting": {
-#             "xlab": "Jour",
-#             "ylab": "Nombre d'initiations d'incubation / Éclosions",
-#         },
-#     },
