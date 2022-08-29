@@ -1,3 +1,4 @@
+from cmath import nan
 import math
 
 import matplotlib.pyplot as plt
@@ -75,6 +76,8 @@ class CityNetEvaluator(Evaluator):
 
     def get_stats(self, predictions, options):
 
+        predictions.activity = predictions.activity.fillna(0)
+
         res = predictions.tags + predictions.events
 
         n_true_positives = len(res[res == 3])
@@ -92,12 +95,12 @@ class CityNetEvaluator(Evaluator):
 
         precision = round(n_true_positives / (n_true_positives + n_false_positives), 3)
         recall = round(n_true_positives / (n_true_positives + n_false_negatives), 3)
+        f1_score = round(2 * precision * recall / (precision + recall), 3)
+
         average_precision = round(
             metrics.average_precision_score(predictions.tags, predictions.activity), 3
         )
         auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
-
-        f1_score = round(2 * precision * recall / (precision + recall), 3)
 
         stats = {
             "n_true_positives": n_true_positives,
@@ -126,20 +129,47 @@ class CityNetEvaluator(Evaluator):
         )
         return pd.DataFrame([stats])
 
-    def get_precision_recall_curve(self, predictions, prec, rec):
-
+    def plot_pr_curve(self, data, options, infos):
+        events = data["events"]
         precision, recall, _ = metrics.precision_recall_curve(
-            predictions.tags, predictions.activity
+            events.tags, events.activity
         )
-        plt.plot(recall, precision)
-        plt.plot(rec, prec, "ob", ms=6)
-        plt.xlim(0, 1.05)
-        plt.ylim(0, 1.05)
-        plt.ylabel("Precision")
-        plt.xlabel("Recall")
-        plt.gca().set_aspect("equal", adjustable="box")
-        plt.draw()
-        plt.savefig("pr_curve.pdf")
+        plt_data = pd.DataFrame({"precision": precision, "recall": recall})
+        plt = (
+            ggplot(
+                data=plt_data,
+                mapping=aes(
+                    x="precision",  # "factor(species, ordered=False)",
+                    y="recall",
+                ),
+            )
+            + geom_line()
+            + xlim([0, 1])
+            + ylim([0, 1])
+            + xlab("Precision")
+            + ylab("Recall")
+            + annotate(
+                "text",
+                x=0.75,
+                y=0.75,
+                label="Average Precision: {}".format(data["stats"]["ap"].iloc[0]),
+            )
+            + theme_classic()
+            + theme(
+                plot_title=element_text(
+                    weight="bold", size=14, margin={"t": 10, "b": 10}
+                ),
+                text=element_text(size=12, weight="bold"),
+            )
+            + ggtitle(
+                ("Precision-Recall curve for model {} on database {}").format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                )
+            )
+        )
+
+        return plt
 
     def plot_roc(self, data, options, infos):
         events = data["events"]
@@ -172,7 +202,10 @@ class CityNetEvaluator(Evaluator):
                 text=element_text(size=12, weight="bold"),
             )
             + ggtitle(
-                ("Precision recall curve for database {}").format(
+                (
+                    "Receiving operator characteristic curve for model {} on database {}"
+                ).format(
+                    options["scenario_info"]["model"],
                     options["scenario_info"]["database"],
                 )
             )
