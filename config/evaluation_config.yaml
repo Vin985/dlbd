@@ -7,10 +7,6 @@ save_results: True #True
 ###########
 predictions_dir: "/home/vin/Doctorat/dev/dlbd/results/example/predictions"
 evaluation_dir: "/home/vin/Doctorat/dev/dlbd/results/example/evaluation"
-models_options:
-  inference: True
-  spectrogram_overlap: 0.95
-  reclassify: False
 
 evaluators_options:
   draw_plots: False
@@ -24,6 +20,9 @@ evaluators:
 
 models_options:
   model_dir: "/home/vin/Desktop/results/candidates_models"
+  inference: True
+  # spectrogram_overlap: 0.95
+  reclassify: True
 
 
 # model_ids:
