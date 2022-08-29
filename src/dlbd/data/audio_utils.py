@@ -93,10 +93,10 @@ def load_audio_data(file_path, spec_opts):
     wav, sample_rate = librosa.load(str(file_path), sr=sr)
     # * NOTE: sp_opts can contain options not defined in spec_opts
     spec, sp_opts = generate_spectrogram(wav, sample_rate, spec_opts)
-    audio_info = {
+    metadata = {
         "file_path": file_path,
         "sample_rate": sample_rate,
         "length": len(wav),
-        "spec_opts": sp_opts,
+        "duration": round(len(wav) / sample_rate, 1),
     }
-    return spec, audio_info
+    return spec, metadata, sp_opts
