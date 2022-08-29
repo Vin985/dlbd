@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from mouffet.data import DataLoader
+from mouffet import common_utils
 
 from . import audio_utils, tag_utils
 
@@ -16,20 +17,54 @@ class AudioDataLoader(DataLoader):
         opts["tags"] = database.tags
         opts["spectrogram"] = database.spectrogram
         opts["classes"] = self.load_classes(database)
+        opts["reference_classes"] = self.load_reference_classes(database)
         return opts
 
-    def load_file_data(self, file_path, tags_dir, opts):
-        spec, audio_info = audio_utils.load_audio_data(file_path, opts["spectrogram"])
-        tags_df, tags_linear = tag_utils.load_tags(
-            tags_dir, opts, audio_info, spec.shape[1]
+    def load_file_data(self, file_path, tags_dir, opts, missing=None):
+        load_audio = common_utils.any_in_list(
+            missing, ["spectrograms", "metadata", "spec_opts", "tags_linear_presence"]
         )
-        self.data["spectrograms"].append(spec)
-        self.data["infos"].append(audio_info)
-        self.data["tags_df"].append(tags_df)
-        self.data["tags_linear_presence"].append(tags_linear)
+        load_tags = common_utils.any_in_list(missing, ["tags_df"])
+
+        if load_audio:
+            spec, metadata, spec_opts = audio_utils.load_audio_data(
+                file_path, opts["spectrogram"]
+            )
+            self.data["spectrograms"].append(spec)
+            self.data["metadata"].append(metadata)
+            self.data["spec_opts"].append(spec_opts)
+        if load_tags:
+            tags_df = tag_utils.load_tags_df(tags_dir, opts, metadata)
+
+            self.data["tags_df"].append(tags_df)
+            if load_audio:
+                tags_linear = tag_utils.load_tags_presence(
+                    tags_df, opts, metadata, spec.shape[1]
+                )
+                self.data["tags_linear_presence"].append(tags_linear)
 
     def finalize_dataset(self):
         self.data["tags_df"] = pd.concat(self.data["tags_df"])
+
+    def load_classes(self, database):
+        class_type = database.class_type
+        classes_file = database.classes_file
+
+        classes_df = pd.read_csv(classes_file, skip_blank_lines=True)
+        classes = (
+            classes_df.loc[
+                classes_df["class_type"]  # pylint: disable=unsubscriptable-object
+                == class_type
+            ]
+            .tag.str.lower()
+            .values
+        )
+        return classes
+
+    def load_reference_classes(self, database):
+        ref_classes_file = database.reference_classes_file
+        classes_df = pd.read_csv(ref_classes_file, skip_blank_lines=True)
+        return classes_df
 
 
 class BADChallengeDataLoader(AudioDataLoader):

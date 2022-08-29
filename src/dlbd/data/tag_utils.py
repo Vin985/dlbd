@@ -25,14 +25,40 @@ DEFAULT_OPTIONS = {
 }
 
 
+def load_tags_df(tags_dir, opts, audio_info):
+    tag_opts = opts["tags"]
+    tag_df = get_tag_df(audio_info["file_path"], tags_dir, tag_opts)
+    tag_df = check_related(tag_df, opts)
+    tmp_tags = filter_classes(tag_df, opts)
+    return tmp_tags
+
+
+def load_tags_presence(tags_df, opts, audio_info, spec_len):
+    tag_opts = opts["tags"]
+    tag_presence = get_tag_presence(tags_df, audio_info, tag_opts)
+    factor = float(spec_len) / tag_presence.shape[0]
+    zoomed_presence = zoom(tag_presence, factor).astype(int)
+    return zoomed_presence
+
+
 def load_tags(tags_dir, opts, audio_info, spec_len):
     tag_opts = opts["tags"]
     tag_df = get_tag_df(audio_info["file_path"], tags_dir, tag_opts)
+    tag_df = check_related(tag_df, opts)
     tmp_tags = filter_classes(tag_df, opts)
     tag_presence = get_tag_presence(tmp_tags, audio_info, tag_opts)
     factor = float(spec_len) / tag_presence.shape[0]
     zoomed_presence = zoom(tag_presence, factor).astype(int)
     return tmp_tags, zoomed_presence
+
+
+def check_related(df, opts):
+    if not df.empty:
+        ref_df = opts["reference_classes"]
+        for (tag, related) in ref_df.itertuples(index=False):
+            df.loc[df.tag == tag, "related"] = related
+        df.loc[df.related.isnull(), "related"] = ""
+    return df
 
 
 def rename_columns(df, columns):
@@ -204,13 +230,12 @@ def get_tag_df(audio_file_path, labels_dir, tag_opts):
     return tag_df
 
 
-def get_tag_presence(tag_df, audio_info, tag_opts):
-    tag_presence = np.zeros(audio_info["length"])
+def get_tag_presence(tag_df, metadata, tag_opts):
+    tag_presence = np.zeros(metadata["length"])
     for _, annot in tag_df.iterrows():
         # * fill in the label vector
-        start_point = int(float(annot["tag_start"]) * audio_info["sample_rate"])
-        end_point = int(float(annot["tag_end"]) * audio_info["sample_rate"])
-
+        start_point = int(float(annot["tag_start"]) * metadata["sample_rate"])
+        end_point = int(float(annot["tag_end"]) * metadata["sample_rate"])
         tag_presence[start_point:end_point] = 1
     return tag_presence
 
