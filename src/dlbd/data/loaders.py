@@ -34,7 +34,7 @@ class AudioDataLoader(DataLoader):
             self.data["metadata"].append(metadata)
             self.data["spec_opts"].append(spec_opts)
         if load_tags:
-            tags_df = tag_utils.load_tags_df(tags_dir, opts, metadata)
+            tags_df = tag_utils.load_tags_df(tags_dir, opts, file_path)
 
             self.data["tags_df"].append(tags_df)
             if load_audio:

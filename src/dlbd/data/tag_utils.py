@@ -25,9 +25,9 @@ DEFAULT_OPTIONS = {
 }
 
 
-def load_tags_df(tags_dir, opts, audio_info):
+def load_tags_df(tags_dir, opts, audio_file_path):
     tag_opts = opts["tags"]
-    tag_df = get_tag_df(audio_info["file_path"], tags_dir, tag_opts)
+    tag_df = get_tag_df(audio_file_path, tags_dir, tag_opts)
     tag_df = check_related(tag_df, opts)
     tmp_tags = filter_classes(tag_df, opts)
     return tmp_tags
