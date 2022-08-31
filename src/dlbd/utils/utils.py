@@ -32,17 +32,25 @@ def get_models_conf(config, updates=None):
             models_stats = pd.read_csv(models_stats_path).drop_duplicates(
                 "opts", keep="last"
             )
-        if models_stats is not None:
-            list_opts = config.get("models_list_options", {})
-            if updates:
-                list_opts = common_utils.deep_dict_update(list_opts, updates, copy=True)
-            model_ids = config.get("model_ids", [])
-            if model_ids:
-                models_stats = models_stats.loc[models_stats.model_id.isin(model_ids)]
-            models += [
-                load_model_options(row.opts, list_opts)
-                for row in models_stats.itertuples()
-            ]
-            config["models"] = models
+            if models_stats is not None:
+                list_opts = config.get("models_list_options", {})
+                if updates:
+                    list_opts = common_utils.deep_dict_update(
+                        list_opts, updates, copy=True
+                    )
+                model_ids = config.get("model_ids", [])
+                if model_ids:
+                    models_stats = models_stats.loc[
+                        models_stats.model_id.isin(model_ids)
+                    ]
+                models += [
+                    load_model_options(row.opts, list_opts)
+                    for row in models_stats.itertuples()
+                ]
+                config["models"] = models
+            else:
+                common_utils.print_warning("Model list file is empty")
+        else:
+            common_utils.print_warning("Path to model list file not found.")
 
     return config
