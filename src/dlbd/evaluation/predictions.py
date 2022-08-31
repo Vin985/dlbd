@@ -46,14 +46,11 @@ def classify_elements(elements, model, spec_opts=None):
                             + "while classifying elements from a file path."
                         ).format(element)
                     )
-                (
-                    spec,
-                    info,
-                ) = audio_utils.load_audio_data(element, spec_opts)
+                (spec, metadata, _) = audio_utils.load_audio_data(element, spec_opts)
             else:
-                spec, info = element
+                spec, metadata = element
 
-            duration = info["length"] / info["sample_rate"]
+            duration = metadata["duration"]
             total_audio_duration += duration
             if duration < min_duration:
                 if to_classify is None:
@@ -69,15 +66,15 @@ def classify_elements(elements, model, spec_opts=None):
                 dur += duration + 3
                 if dur < min_duration:
                     continue
-                info["duration"] = dur
+                metadata["duration"] = dur
             else:
-                info["duration"] = duration
+                # info["duration"] = duration
                 to_classify = spec
                 # info["duration"] = 30
                 # idx = math.ceil(spec.shape[1] / duration * 30)
                 # to_classify = spec[:, 0:idx]
 
-            res_df = classify_element(model, (to_classify, info), test_sampler)
+            res_df = classify_element(model, (to_classify, metadata), test_sampler)
             # plt = res_df.plot("time", "activity")
             # fig = plt.get_figure()
             # fig.savefig("output.png")
