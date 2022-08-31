@@ -68,7 +68,32 @@ class PhenologyEvaluator(Evaluator):
         )
         return df
 
-    def get_daily_activity(self, df, options, df_type="event"):
+    def get_rolling_trends(self, df, options, df_type, default_period=7):
+        res = {}
+        tmp = df.copy()
+        roll = tmp["total_duration"].rolling(
+            options.get("period", default_period), center=True
+        )
+
+        tmp.loc[:, "trend"] = roll.mean()
+        tmp.loc[:, "trend_std"] = roll.std()
+
+        tmp = tmp.dropna()
+
+        tmp.loc[:, "trend_norm"] = (tmp.trend - tmp.trend.mean()) / tmp.trend.std()
+
+        if df_type == "tag":
+            tmp.loc[:, "type"] = "ground_truth"
+        elif options.get("scenario_info"):
+            tmp.loc[:, "type"] = options["scenario_info"]["model"]
+        else:
+            tmp.loc[:, "type"] = options.get("plot", "unknown_plot")
+
+        res["trends_df"] = tmp.reset_index()
+
+        return res
+
+    def get_daily_trends(self, df, options, df_type="event"):
         res = {}
         # * Get total duration per file
         file_song_duration = (
@@ -104,41 +129,51 @@ class PhenologyEvaluator(Evaluator):
         daily_duration = by_hour.resample("D").agg("mean")
         daily_duration.index.name = "date"
 
-        # # * Get mean duration per day
-        # daily_duration = (
-        #     file_song_duration[["date", "total_duration"]]
-        #     .groupby("date")
-        #     .agg("mean")
-        #     .dropna()
-        # )
-        # idx = pd.date_range(daily_duration.index.min(), daily_duration.index.max())
-        # idx.name = "date"
-        # daily_duration = daily_duration.reindex(idx, fill_value=0)
-        trend = (
-            seasonal_decompose(
-                daily_duration,
-                model="additive",
-            )
-            .trend.reset_index(name="trend")
-            .dropna()
-        )
+        trends = self.get_rolling_trends(daily_duration, options, df_type)
 
-        daily_duration = daily_duration.reset_index().merge(trend)
-
-        daily_duration["trend_norm"] = (
-            daily_duration.trend - daily_duration.trend.mean()
-        ) / daily_duration.trend.std()
-
-        if df_type == "tag":
-            daily_duration["type"] = "ground_truth"
-        elif options.get("scenario_info"):
-            daily_duration["type"] = options["scenario_info"]["model"]
-        else:
-            daily_duration["type"] = options.get("plot", "unknown_plot")
-
-        res["daily_duration"] = daily_duration
+        res.update(trends)
 
         return res
+
+    def get_ENAB_trends(self, data, options, df_type):
+        res = {}
+        df = data.copy()
+        df[["recording", "segment"]] = df.recording_id.path.stem.str.split(
+            "_", expand=True
+        )[[1, 3]]
+        df = df.loc[df.recording == "1"]
+        df.segment = df.segment.astype(int)
+
+        if df_type == "tag" and options.get("remove_crows", False):
+            df = df.loc[df.tag != "AMCR"]
+
+        file_song_duration = (
+            df.groupby(["segment"])
+            .apply(
+                getattr(self, "file_" + df_type + "_duration"), method=options["method"]
+            )
+            .reset_index()
+            .rename(columns={0: "total_duration"})
+        )
+        fsd = file_song_duration.copy().set_index(file_song_duration.segment)
+        fsd = fsd.reindex(list(range(1, 37)), fill_value=0)
+        fsd.loc[:, "date"] = pd.date_range(start=0, periods=36, freq="5min")
+        fsd = fsd.set_index("date")
+
+        res["file_song_duration"] = fsd
+
+        trends = self.get_rolling_trends(fsd, options, df_type, default_period=5)
+
+        res.update(trends)
+
+        return res
+
+    def get_trends(self, data, infos, options, df_type):
+        db = infos["database"]
+        activity_func_name = "get_" + db + "_trends"
+        if not hasattr(self, activity_func_name):
+            activity_func_name = "get_daily_trends"
+        return getattr(self, activity_func_name)(data, options, df_type)
 
     def plot_distances(self, data, options, infos):
         plt_df = data["df"]
@@ -163,6 +198,8 @@ class PhenologyEvaluator(Evaluator):
                 + theme_classic()
                 + theme(axis_text_x=element_text(angle=45))
             )
+            if options.get("add_points", False):
+                tmp_plt = tmp_plt + geom_point(mapping=aes(y="total_duration"))
             res.append(tmp_plt)
         if options.get("plot_norm_distance", True):
             tmp_plt_norm = (
@@ -198,39 +235,79 @@ class PhenologyEvaluator(Evaluator):
             min(plt_df.trend_norm) - 0.1 * y_range,
             max(plt_df.trend_norm) + 0.1 * y_range,
         ]
+        plt_df["type"] = plt_df["type"].astype("category")
+        plt_df["type"] = plt_df["type"].cat.set_categories(
+            ["ground_truth", options["scenario_info"]["model"]], ordered=True
+        )
         plt_gt_norm = (
             ggplot(
                 data=plt_df.loc[plt_df.type == "ground_truth"],
-                mapping=aes("date", "trend_norm", color="type"),
+                mapping=aes("date", "trend_norm", color=["#0571b0"]),
             )
-            + geom_line(color="blue")
-            + ggtitle(
-                "Normalized daily mean activity per recording. \n"
-                + " Euclidean distance to reference: {}".format(data["distance_norm"])
-            )
+            + geom_line(size=1.5)
             + xlab("Date")
-            + ylab("Normalized daily mean activity per recording")
+            + ylab("Normalized vocal activity")
+            + ggtitle(
+                "Normalized trends for model {} on database {} with method {}.\n".format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["method"],
+                )
+                + " Euclidean distance to reference: {} \n".format(
+                    data["distance_norm"]
+                )
+            )
             + ylim(ylims)
-            + scale_color_discrete(labels=["Reference"])
+            + scale_color_manual(values=["#0571b0"], labels=["Reference"])
             + scale_x_datetime(labels=format_date_short)
             + theme_classic()
-            + theme(axis_text_x=element_text(angle=45))
+            + theme(
+                title=element_text(face="bold"),
+                axis_text_x=element_text(angle=45),
+                axis_text=element_text(face="bold"),
+                legend_title=element_blank(),
+                axis_title=element_text(face="bold"),
+            )
         )
 
         plt_norm = (
             ggplot(
-                data=plt_df.loc[plt_df.type == "DLBD"],
-                mapping=aes("date", "trend_norm", color=["red"]),
+                data=plt_df,
+                mapping=aes("date", "trend_norm", color="type"),
             )
-            + geom_line()
+            + geom_line(size=1.5)
+            + ggtitle(
+                "Normalized trends for model {} on database {} with method {}.\n".format(
+                    options["scenario_info"]["model"],
+                    options["scenario_info"]["database"],
+                    options["method"],
+                )
+                + " Euclidean distance to reference: {} \n".format(
+                    data["distance_norm"]
+                )
+            )
+            + xlab("Date")
+            + ylab(
+                "Normalized vocal activity",
+            )
             + ylim(ylims)
-            + scale_color_discrete(labels=["Model"], color=["red"])
+            + scale_color_manual(
+                values=["#0571b0", "#f4a582"], labels=["Reference", "Model"]
+            )
+            + scale_x_datetime(labels=format_date_short)
             + theme_classic()
             + theme(
-                axis_title=element_blank(),
-                axis_ticks_major=element_blank(),
-                axis_text=element_blank(),
+                title=element_text(face="bold"),
+                axis_text_x=element_text(angle=45),
+                axis_text=element_text(face="bold"),
+                legend_title=element_blank(),
+                axis_title=element_text(face="bold"),
             )
+            # + theme(
+            #     axis_title=element_blank(),
+            #     axis_ticks_major=element_blank(),
+            #     axis_text=element_blank(),
+            # )
         )
         res.append(plt_gt_norm)
         res.append(plt_norm)
@@ -253,22 +330,20 @@ class PhenologyEvaluator(Evaluator):
 
         matches = stats["matches"]
 
-        daily_tags_duration = self.get_daily_activity(
-            data[1]["tags_df"], options, "tag"
-        )
-        daily_events_duration = self.get_daily_activity(matches, options, "event")
+        tags_trends = self.get_trends(data[1]["tags_df"], infos, options, "tag")
+        events_trends = self.get_trends(matches, infos, options, "event")
 
         eucl_distance = round(
             euclidean(
-                daily_tags_duration["daily_duration"].trend,
-                daily_events_duration["daily_duration"].trend,
+                tags_trends["trends_df"].trend,
+                events_trends["trends_df"].trend,
             ),
             3,
         )
         eucl_distance_norm = round(
             euclidean(
-                daily_tags_duration["daily_duration"].trend_norm,
-                daily_events_duration["daily_duration"].trend_norm,
+                tags_trends["trends_df"].trend_norm,
+                events_trends["trends_df"].trend_norm,
             ),
             3,
         )
@@ -281,16 +356,16 @@ class PhenologyEvaluator(Evaluator):
 
         stats["stats"].loc[:, "eucl_distance"] = eucl_distance
         stats["stats"].loc[:, "eucl_distance_norm"] = eucl_distance_norm
-        stats["tags_duration"] = daily_tags_duration
-        stats["events_duration"] = daily_events_duration
+        stats["tags_trends"] = tags_trends
+        stats["events_duration"] = events_trends
 
         if options.get("draw_plots", False):
             plts = self.draw_plots(
                 data={
                     "df": pd.concat(
                         [
-                            daily_tags_duration["daily_duration"],
-                            daily_events_duration["daily_duration"],
+                            tags_trends["trends_df"],
+                            events_trends["trends_df"],
                         ]
                     ),
                     "distance": eucl_distance,
