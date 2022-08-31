@@ -46,9 +46,9 @@ infos_res = []
 
 years = [x for x in root_dir.iterdir() if x.is_dir()]
 for year in years:
-    sites = [x for x in year.iterdir() if x.is_dir()][-2:]
+    sites = [x for x in year.iterdir() if x.is_dir()]
     for site in sites:
-        plots = [x for x in site.iterdir() if x.is_dir()][:2]
+        plots = [x for x in site.iterdir() if x.is_dir()]
         for plot in plots:
             try:
                 dest_path = (
@@ -56,7 +56,7 @@ for year in years:
                     / f"{year.name}_{plot.name}_predictions_overlap-{model_opts['spectrogram_overlap']}.feather"
                 )
                 if not dest_path.exists() or overwrite:
-                    wav_list = list(plot.glob("*.WAV"))[1:10]
+                    wav_list = list(plot.glob("*.WAV"))
                     preds, infos = predictions.classify_elements(
                         wav_list, model, spec_opts
                     )
