@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import yaml
 from mouffet import file_utils
 
 from flac_converter import FlacConverter
@@ -11,9 +12,9 @@ arctic_root_path = Path(
     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/Complete"
 )
 
-summer_root_path = Path(
-    "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1"
-)
+# summer_root_path = Path(
+#     "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1"
+# )
 
 dest_root = Path(
     "/mnt/win/UMoncton/OneDrive - Université de Moncton/Data/Reference/Arctic/curated"
@@ -51,8 +52,9 @@ funcs = {"2018": extract_infos_2018, "2019": extract_infos_2019}
 
 compress = True
 overwrite = False
+dest_dir = dest_root
 if compress:
-    dest_root /= "compressed"
+    dest_dir /= "compressed"
     converter = FlacConverter()
 
 
@@ -71,8 +73,8 @@ for year in years:
             deployment_info.loc[deployment_info["plot"] == plot.name].iloc[0].to_dict()
         )
         for wav_file in wav_list:
-            func = funcs[year.stem]
             print(wav_file)
+            func = funcs[year.stem]
             infos = func(wav_file)
             infos["plot"] = plot.name.replace("_", "-")
             infos["year"] = year.name
@@ -87,20 +89,17 @@ for year in years:
                     raise ValueError("BLORP")
             tmp_infos.append(infos)
             if compress:
-                wav_copy_dest = file_utils.ensure_path_exists(
-                    dest_root
-                    / f'{year.name}_{infos["plot"]}_{infos["full_date"].strftime("%Y%m%d-%H%M%S")}_{infos["rec_id"]}.flac',
-                    is_file=True,
-                )
+                ext = "flac"
             else:
-                wav_copy_dest = file_utils.ensure_path_exists(
-                    dest_root
-                    / f'{year.name}_{infos["plot"]}_{infos["full_date"].strftime("%Y%m%d-%H%M%S")}_{infos["rec_id"]}.wav',
-                    is_file=True,
-                )
+                ext = "wav"
+            wav_copy_dest = file_utils.ensure_path_exists(
+                dest_dir
+                / f'{year.name}_{infos["plot"]}_{infos["full_date"].strftime("%Y%m%d-%H%M%S")}_{infos["rec_id"]}.{ext}',
+                is_file=True,
+            )
             tags_path = wav_file.parent / f"{wav_file.stem}-sceneRect.csv"
             tags_copy_dest = (
-                dest_root
+                dest_dir
                 / f'{year.name}_{infos["plot"]}_{infos["full_date"].strftime("%Y%m%d-%H%M%S")}_{infos["rec_id"]}-tags.csv'
             )
             if not wav_copy_dest.exists() or overwrite:
@@ -127,8 +126,6 @@ for col in ["year", "site", "plot", "date"]:
     arctic_summary[f"{col}s"] = arctic_infos_df[col].unique().tolist()
 
 arctic_summary["n_dates_by_year"] = {}
-
-import yaml
 
 with open(dest_root / "arctic_summary.yaml", "w") as summary_file:
     yaml.dump(arctic_summary, summary_file, default_flow_style=False)
