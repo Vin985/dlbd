@@ -46,7 +46,15 @@ def classify_elements(elements, model, spec_opts=None):
                             + "while classifying elements from a file path."
                         ).format(element)
                     )
-                (spec, metadata, _) = audio_utils.load_audio_data(element, spec_opts)
+                try:
+                    (spec, metadata, _) = audio_utils.load_audio_data(
+                        element, spec_opts
+                    )
+                except Exception:
+                    common_utils.print_error(traceback.format_exc())
+                    with open("loading_error.log", "a") as error_log:
+                        error_log.write(str(element))
+
             else:
                 spec, metadata = element
 
