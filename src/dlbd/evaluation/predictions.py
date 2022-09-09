@@ -54,6 +54,7 @@ def classify_elements(elements, model, spec_opts=None):
                     common_utils.print_error(traceback.format_exc())
                     with open("loading_error.log", "a") as error_log:
                         error_log.write(str(element))
+                    continue
 
             else:
                 spec, metadata = element
