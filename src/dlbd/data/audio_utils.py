@@ -2,6 +2,7 @@ import librosa
 from mouffet import common_utils
 import numpy as np
 from PIL import Image
+import soundfile as sf
 
 DEFAULT_PCEN_OPTS = {
     "gain": 0.8,
@@ -35,6 +36,13 @@ STFT_OPTS_NAME = [
     "dtype",
     "pad_mode",
 ]
+
+DEFAULT_AUDIO_SPECS = {
+    "channels": 1,
+    "samplerate": 16000,
+    "subtype": "PCM_16",
+    "format": "RAW",
+}
 
 
 def generate_spectrogram(wav, sample_rate, spec_opts):
@@ -85,12 +93,23 @@ def resize_spectrogram(spec, size, resample_method="bicubic"):
 
 
 def load_audio_data(file_path, spec_opts):
-    print("Loading audio file: " + str(file_path))
+    file_path = str(file_path)
+    print("Loading audio file: " + file_path)
     sr = spec_opts.get("sample_rate", "original")
     if sr and sr == "original":
         sr = None
     # * NOTE: sample_rate can be different from sr if sr is None
-    wav, sample_rate = librosa.load(str(file_path), sr=sr)
+    try:
+        wav, sample_rate = librosa.load(file_path, sr=sr)
+    except Exception as exc:
+        common_utils.print_warning("Cannot read WAV file, trying reading raw")
+        with open("loading_raw.log", "a", encoding="utf8") as raw_log:
+            raw_log.write(str(file_path) + "\n")
+        audio_specs = spec_opts.get("audio_specs", DEFAULT_AUDIO_SPECS)
+        wav, sample_rate = sf.read(file_path, **audio_specs)
+        if len(wav) == 0:
+            raise RuntimeError("Invalid wav file") from exc
+
     # * NOTE: sp_opts can contain options not defined in spec_opts
     spec, sp_opts = generate_spectrogram(wav, sample_rate, spec_opts)
     metadata = {
