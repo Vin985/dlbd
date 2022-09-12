@@ -11,6 +11,8 @@ from ..training import SpectrogramSampler
 
 import mouffet.utils.common as common_utils
 
+import tracemalloc
+
 
 def classify_elements(elements, model, spec_opts=None):
     infos = {}
@@ -32,7 +34,7 @@ def classify_elements(elements, model, spec_opts=None):
     dur = 0
 
     start = time.time()
-
+    snapshot1 = tracemalloc.take_snapshot()
     for i, element in enumerate(elements):
         print("Classifying element {}/{}".format(i, len(elements)))
         try:
@@ -52,7 +54,7 @@ def classify_elements(elements, model, spec_opts=None):
                     )
                 except Exception:
                     common_utils.print_error(traceback.format_exc())
-                    with open("loading_error.log", "a") as error_log:
+                    with open("loading_error.log", "a", "utf8") as error_log:
                         error_log.write(str(element) + "\n")
                     continue
 
@@ -90,7 +92,13 @@ def classify_elements(elements, model, spec_opts=None):
             to_classify = None
             res.append(res_df)
             end_file = time.time()
-            print("File done in {}".format(end_file - start_file))
+            print(f"File done in {end_file - start_file}")
+            snapshot2 = tracemalloc.take_snapshot()
+            top_stats = snapshot2.compare_to(snapshot1, "lineno")
+            print("[ Top 10 differences ]")
+            for stat in top_stats[:10]:
+                print(stat)
+            snapshot1 = snapshot2
         except Exception:
             common_utils.print_error(traceback.format_exc())
 
