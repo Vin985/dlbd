@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 import soundfile as sf
 
+import tracemalloc
+
 DEFAULT_PCEN_OPTS = {
     "gain": 0.8,
     "bias": 10,
@@ -99,16 +101,19 @@ def load_audio_data(file_path, spec_opts):
     if sr and sr == "original":
         sr = None
     # * NOTE: sample_rate can be different from sr if sr is None
-    try:
-        wav, sample_rate = librosa.load(file_path, sr=sr)
-    except Exception as exc:
-        common_utils.print_warning("Cannot read WAV file, trying reading raw")
-        with open("loading_raw.log", "a", encoding="utf8") as raw_log:
-            raw_log.write(str(file_path) + "\n")
-        audio_specs = spec_opts.get("audio_specs", DEFAULT_AUDIO_SPECS)
-        wav, sample_rate = sf.read(file_path, **audio_specs)
-        if len(wav) == 0:
-            raise RuntimeError("Invalid wav file") from exc
+
+    with open(file_path, "rb") as sound_file:
+        try:
+            wav, sample_rate = librosa.load(sound_file, sr=sr)
+        except Exception as exc:
+            common_utils.print_warning("Cannot read WAV file, trying reading raw")
+            audio_specs = spec_opts.get("audio_specs", DEFAULT_AUDIO_SPECS)
+            wav, sample_rate = sf.read(sound_file, **audio_specs)
+            if len(wav) == 0:
+                raise RuntimeError("Invalid wav file") from exc
+            # logging
+            with open("loading_raw.log", "a", encoding="utf8") as raw_log:
+                raw_log.write(str(file_path) + "\n")
 
     # * NOTE: sp_opts can contain options not defined in spec_opts
     spec, sp_opts = generate_spectrogram(wav, sample_rate, spec_opts)
@@ -118,4 +123,8 @@ def load_audio_data(file_path, spec_opts):
         "length": len(wav),
         "duration": round(len(wav) / sample_rate, 1),
     }
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics("lineno")
+    for stat in top_stats[:10]:
+        print(stat)
     return spec, metadata, sp_opts
