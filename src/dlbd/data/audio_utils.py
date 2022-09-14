@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import soundfile as sf
 
-import tracemalloc
+# import tracemalloc
 
 DEFAULT_PCEN_OPTS = {
     "gain": 0.8,
@@ -123,8 +123,8 @@ def load_audio_data(file_path, spec_opts):
         "length": len(wav),
         "duration": round(len(wav) / sample_rate, 1),
     }
-    snapshot = tracemalloc.take_snapshot()
-    top_stats = snapshot.statistics("lineno")
-    for stat in top_stats[:10]:
-        print(stat)
+    # snapshot = tracemalloc.take_snapshot()
+    # top_stats = snapshot.statistics("lineno")
+    # for stat in top_stats[:10]:
+    #     print(stat)
     return spec, metadata, sp_opts
