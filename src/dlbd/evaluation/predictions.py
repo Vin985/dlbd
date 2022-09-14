@@ -109,9 +109,12 @@ def classify_elements(elements, model, spec_opts=None):
     infos["average_time_per_min"] = round(
         infos["global_duration"] / (total_audio_duration / 60), 2
     )
-    infos["average_time_per_file"] = round(
-        infos["global_duration"] / infos["n_files"], 2
-    )
+
+    if infos["n_files"] > 0:
+        infos["average_time_per_file"] = round(
+            infos["global_duration"] / infos["n_files"], 2
+        )
+
     infos["spectrogram_overlap"] = test_sampler.opts["overlap"]
 
     preds = pd.concat(res)
