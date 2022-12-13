@@ -7,7 +7,6 @@ databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete3"]
 
 n_epochs: 50
 learning_rate: 0.01
-wiggle_room: 10
 early_stopping:
   min_delta: 0.002
   patience: 8
@@ -20,7 +19,7 @@ dilation_rate: [[1, 2], 1]
 training_balanced: False
 wriggle_room: 3 #[3, 5, 10]
 batch_size: 256 #[256, 128, 64, 32]
-num_filters: 128
+num_filters: 64
 num_dense_units: 512
 num_dense_units2: 256
 pixels_per_sec: 100
