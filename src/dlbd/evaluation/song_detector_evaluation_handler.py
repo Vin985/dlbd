@@ -13,13 +13,13 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         db = self.data_handler.load_dataset(
             db_type,
             database,
-            load_opts={"file_types": ["spectrograms", "infos"]},
+            load_opts={"file_types": ["spectrograms", "metadata", "spec_opts"]},
             prepare=True,
             prepare_opts=model.opts.opts,
         )
-        data = list(zip(db["spectrograms"], db["infos"]))
+        data = list(zip(db["spectrograms"], db["metadata"]))
 
-        preds, infos = predictions.classify_elements(data, model)
+        preds, infos = predictions.classify_elements(data, model, db["spec_opts"])
         infos["database"] = database.name
 
         return preds, infos
@@ -31,8 +31,19 @@ class SongDetectorEvaluationHandler(EvaluationHandler):
         ).get_spectrogram_subfolder_path()
         return preds_dir
 
-    def on_get_predictions_end(self, preds):
+    def smooth_predictions(self, preds, model_opts):
+        factor = model_opts.get("smooth_factor", 5)
+        if factor:
+            roll = preds["activity"].rolling(factor, center=True)
+            preds.loc[:, "activity"] = roll.mean()
+        return preds
+
+    def on_get_predictions_end(self, preds, model_opts):
         preds = preds.rename(columns={"recording_path": "recording_id"})
+        if model_opts.get("smooth_predictions", False):
+            preds = preds.groupby("recording_id").apply(
+                self.smooth_predictions, model_opts
+            )
         return preds
 
     def get_predictions_file_name(self, model_opts, database):

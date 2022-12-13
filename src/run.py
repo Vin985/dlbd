@@ -14,7 +14,7 @@ from dlbd.evaluation.song_detector_evaluation_handler import (
 logging.basicConfig(level=logging.DEBUG)
 pd.options.mode.chained_assignment = "raise"
 
-EVALUATORS.register_evaluator("phenology", PhenologyEvaluator)
+EVALUATORS.register_evaluator(PhenologyEvaluator)
 
 # import tensorflow as tf
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"cd
@@ -28,6 +28,7 @@ run_handler = RunHandler(
         "data": AudioDataHandler,
         "evaluation": SongDetectorEvaluationHandler,
     },
+    default_args={"run_dir": "config/runs"},
 )
 
 run_handler.launch_runs()

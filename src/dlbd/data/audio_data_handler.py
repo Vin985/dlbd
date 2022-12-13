@@ -53,8 +53,8 @@ class AudioDataHandler(DataHandler):
     def prepare_test_dataset(self, dataset, opts):
         if not opts["learn_log"]:
             for i, spec in enumerate(dataset.data["spectrograms"]):
-                infos = dataset.data["infos"][i]
-                spec_opts = infos["spec_opts"]
+                infos = dataset.data["metadata"][i]
+                spec_opts = dataset.data["spec_opts"][i]
                 resize_width = self.get_resize_width(infos, opts)
 
                 dataset.data["spectrograms"][i] = self.modify_spectrogram(
@@ -65,8 +65,8 @@ class AudioDataHandler(DataHandler):
     def prepare_dataset(self, dataset, opts):
         if not opts["learn_log"]:
             for i, spec in enumerate(dataset.data["spectrograms"]):
-                infos = dataset.data["infos"][i]
-                spec_opts = infos["spec_opts"]
+                infos = dataset.data["metadata"][i]
+                spec_opts = dataset.data["spec_opts"]
                 resize_width = self.get_resize_width(infos, opts)
 
                 if (

@@ -24,7 +24,9 @@ class AudioDataLoader(DataLoader):
         load_audio = common_utils.any_in_list(
             missing, ["spectrograms", "metadata", "spec_opts", "tags_linear_presence"]
         )
-        load_tags = common_utils.any_in_list(missing, ["tags_df"])
+        load_tags = common_utils.any_in_list(
+            missing, ["tags_df", "tags_linear_presence"]
+        )
 
         if load_audio:
             spec, metadata, spec_opts = audio_utils.load_audio_data(
@@ -43,8 +45,9 @@ class AudioDataLoader(DataLoader):
                 )
                 self.data["tags_linear_presence"].append(tags_linear)
 
-    def finalize_dataset(self):
-        self.data["tags_df"] = pd.concat(self.data["tags_df"])
+    def finalize_dataset(self, missing):
+        if "tags_df" in missing:
+            self.data["tags_df"] = pd.concat(self.data["tags_df"])
 
     def load_classes(self, database):
         class_type = database.class_type
