@@ -27,6 +27,14 @@ pixels_per_sec: 100
 scenarios:
   - name: "DLBD_binary"
     class: "dlbd.models.dlbd.DLBDBinary"
+  - name: "DLBD_binary_small"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    num_dense_units: 256
+    num_dense_units2: 128
+  - name: "DLBD_binary_unbal"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    training_balanced: false
+
 
 
 
