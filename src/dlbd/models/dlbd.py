@@ -97,6 +97,12 @@ class DLBD(AudioDetector):
 
 
 class DLBDBinary(DLBD):
+    def get_top_layers(self, x=None):
+        if x is None:
+            x = self.get_base_layers()
+        x = layers.Dense(1, activation=None, name="fc8")(x)
+        return x
+
     @staticmethod
     def tf_loss(y_true, y_pred):
         bce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
