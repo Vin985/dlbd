@@ -100,7 +100,7 @@ class DLBDBinary(DLBD):
     @staticmethod
     def tf_loss(y_true, y_pred):
         bce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-        return tf.reduce_mean(bce(labels=y_true, logits=y_pred))
+        return tf.reduce_mean(bce(y_true, y_pred))
 
     def predict(self, x):
         return tf.keras.activations.sigmoid(self.model(x, training=False)).numpy()
