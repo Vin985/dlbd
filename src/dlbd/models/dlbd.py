@@ -116,3 +116,6 @@ class DLBDBinary(DLBD):
         self.metrics["validation_accuracy"] = tf.keras.metrics.BinaryAccuracy(
             name="validation_accuracy"
         )
+        self.metrics["train_accuracy"] = tf.keras.metrics.BinaryAccuracy(
+            name="train_accuracy"
+        )
