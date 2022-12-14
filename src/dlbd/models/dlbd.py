@@ -110,3 +110,9 @@ class DLBDBinary(DLBD):
 
     def predict(self, x):
         return tf.keras.activations.sigmoid(self.model(x, training=False)).numpy()
+
+    def init_metrics(self):
+        super().init_metrics()
+        self.metrics["validation_accuracy"] = tf.keras.metrics.BinaryAccuracy(
+            name="validation_accuracy"
+        )
