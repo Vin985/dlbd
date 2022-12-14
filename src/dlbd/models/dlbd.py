@@ -94,3 +94,13 @@ class DLBD(AudioDetector):
             x = self.get_base_layers()
         x = layers.Dense(2, activation=None, name="fc8")(x)
         return x
+
+
+class DLBDBinary(DLBD):
+    @staticmethod
+    def tf_loss(y_true, y_pred):
+        bce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+        return tf.reduce_mean(bce(labels=y_true, logits=y_pred))
+
+    def predict(self, x):
+        return tf.keras.activations.sigmoid(self.model(x, training=False)).numpy()
