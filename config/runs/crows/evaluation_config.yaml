@@ -1,0 +1,125 @@
+
+data_config: "config/runs/crows/data_config.yaml"
+save_results: True #True
+
+###########
+## Paths ##
+###########
+models_options:
+  spectrogram_overlap: 0.95
+  smooth_predictions: True
+  win_length: 512
+  # repredict: True
+  # A: 0.05
+
+evaluators_options:
+  draw_plots: True
+  plots: ["distances", "pr_curve", "roc", "separate_distances"] #"separate_distances", "roc"
+  phenology_databases: ["full_summer1", "ENAB"]
+
+
+id: test_crows
+
+evaluators:
+  # - type: "standard"
+  #   activity_threshold: 0.92
+  #   min_duration: 0.4
+  #   end_threshold: 0.15
+  #   dtc_threshold: 0
+  #   gtc_threshold: 0
+  # - type: "phenology"
+  #   method: "citynet"
+  #   activity_threshold: 0.7
+  #   scenarios:
+  #     remove_crows: [True, False]
+  # - type: citynet
+  #   activity_threshold: 0.7
+
+    # plots: ["separate_distances"]
+  - type: phenology
+    method: standard
+    activity_threshold: 0.9
+    min_duration: 0.1
+    end_threshold: 0.5
+    daily_aggregation: "sum"
+  # - type: phenology
+  #   method: standard
+  #   activity_threshold: 0.9
+  #   min_duration: 0.1
+  #   end_threshold: 0.35
+  #   daily_aggregation: "sum"
+  # - type: standard
+  #   method: standard
+  #   activity_threshold: 0.9
+  #   min_duration: 0.1
+  #   end_threshold: 0.35
+  #   daily_aggregation: "sum"
+    # scenarios:
+    #   activity_threshold:
+    #     start: 0.9
+    #     end: 0.99
+    #     step: 0.01
+    #   min_duration: 0.1
+    #     # start: 0.1
+    #     # end: 0.3
+    #     # step: 0.1
+    #   end_threshold:
+    #     start: 0.1
+    #     end: 0.4
+    #     step: 0.05
+    dtc_threshold: 0
+    gtc_threshold: 0
+      
+  # - type: phenology
+  #   method: citynet
+  #   scenarios:
+  #     activity_threshold: 
+  #       start: 0.3
+  #       end: 0.99
+  #       step: 0.1
+
+databases_options:
+  class_type: "biotic"
+  spectrogram:
+    n_mels: 32
+    n_fft: 512
+    sample_rate: "original"
+
+models_list_dir: "resources/models"
+
+models_list_options:
+  model_dir: "resources/models"
+  ignore_parent_path: True
+  batch_size: 64
+  # reclassify: True
+  scenarios:
+    spectrogram_overlap: 0.95
+    # smooth_factor: 20
+
+# model_ids:
+#   # - DLBD
+#   # - DLBD_binary_nmels-32_fft-512_100
+#   # - DLBD_binary_small_nmels-32_fft-512_100
+#   # - DLBD_binary_unbal_nmels-32_fft-512_100
+#   # - DLBD_unbal_nmels-32_fft-512_100
+#   # - citynet
+
+
+# models:
+#   - name: "IndiceModel"
+#     model_dir: "resources/models"
+#     class: "dlbd.models.IndiceModel"
+#     pixels_per_sec: 100
+#     A: 0.001 # biotic 
+#     B: 10.0 #biotic
+#     batch_size: 256
+#     scenarios:
+#       spectrogram_overlap: 0
+
+
+
+databases:
+  # - name: full_summer1
+  - name: ENAB
+  # - name: citynet
+  # - name: nips4b

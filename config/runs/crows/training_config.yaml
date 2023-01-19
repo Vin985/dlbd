@@ -1,0 +1,147 @@
+parent_path: "config/runs/crows/parent.yaml"
+
+data_config: "config/runs/crows/data_config.yaml"
+clean_empty_models: True
+skip_trained: True
+
+logs:
+  log_dir: "logs/gradient_tape/crows"
+  use_version: True
+
+# name : MODEL_NAME
+
+
+# suffix: "{databases_options--spectrogram--n_mels}_{n_epochs}"
+# suffix_prepend:
+#   databases_options--spectrogram--n_mels: "_nmels-"
+
+
+##
+## Model options
+##
+
+n_epochs: 0
+learning_rate: 0.01
+epoch_save_step: 5
+# from_epoch: 100
+
+# learn_log: 0
+# do_augmentation: 1
+# A: 0.001 # biotic 
+# B: 10.0 #biotic
+# ensemble_members: 1
+# training_balanced: True
+pixels_per_sec: 100
+
+# input_height: 32
+
+# batch_size: 64
+# do_batch_norm: 1
+# channels: 4
+# num_filters: 128
+# num_dense_units: 128
+# conv_filter_width: 4
+# wiggle_room: 5
+# dropout: 0.5
+
+# early_stopping:
+#   patience: 5
+#   min_delta: 0.002
+#   restore_best_weights: False
+
+spectrogram_overlap: 0.95
+# random_start: True
+
+# time_mask: True
+# freq_mask: True
+
+##
+## Databases
+##
+
+databases: ["ENAB_crows"]
+
+databases_options:
+  spectrogram:
+    win_length: 512
+    n_mels: 32
+    sample_rate: "original"
+    # to_db: True
+
+scenarios:
+  - name: "DLBD_crows"
+    class: "dlbd.models.dlbd.DLBD"
+    # gt_prop: [0.10, 0]
+    transfer_learning: True
+    include_top: True
+    fine_tuning:
+      start_at: 14
+      n_epochs: 5
+      learning_rate: 0.001
+    weight_opts:
+      model_dir: "resources/models"
+      id: "DLBD"
+
+  # - name: "DLBD"
+  #   suffix: "_dl{dilation_rate}"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD_ma"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   use_ma: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD_swa"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   use_swa: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD2"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   early_stopping: True
+  #   num_dense_units: 128
+  #   dilation_rate: [[[1, 2], 1]]
+
+  # - name: "DLBD2_swa"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   use_swa: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+
+  # - name: "DLBD2_ma"
+  #   class: "dlbd.models.dlbd.DLBD2"
+  #   use_ma: True
+  #   early_stopping: True
+  #   num_dense_units: 128
+  # # - name: "DLBD"
+    # class: "dlbd.models.dlbd_test.DLBD" 
+  # - name: "DLBDL_A"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   learning_rate: [[0.01], [0.001]]
+  #   n_epochs: [[10], [20], [50]]
+  # - name: "DLBDL_A2"
+    # class: "dlbd.models.dlbd.DLBDLite"
+  # - name: "DLBDL_CNN"
+  #   class: "dlbd.models.dlbd.DLBDLite"
+  #   num_dense_units: 128
+  #   databases_options:
+  #     spectrogram:
+  #       n_fft: [512, 1024, 2048]
+    # transfer_learning: True
+    # n_epochs: 100
+    # learning_rate: 0.001
+    # # fine_tuning:
+    # #   n_epochs: 20
+    # #   learning_rate: 0.00001 
+    # weights_opts:
+    #     name: "DLBDL_Ci_nmels-32"
+    #     model_dir: '/mnt/win/UMoncton/Doctorat/dev/dlbd/results/models/gpu/run3'
+
+
