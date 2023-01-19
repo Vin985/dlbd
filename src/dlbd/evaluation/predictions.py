@@ -33,8 +33,12 @@ def classify_elements(elements, model, spec_opts=None):
     min_duration = model.opts.get("classify_min_duration", 0)
     dur = 0
 
+    # * Timing statistics
+    classify_times = []
+    total_times = []
+    classify_props = []
     start = time.time()
-    # snapshot1 = tracemalloc.take_snapshot()
+
     for i, element in enumerate(elements):
         print("Classifying element {}/{}".format(i, len(elements)))
         try:
@@ -84,15 +88,21 @@ def classify_elements(elements, model, spec_opts=None):
                 # info["duration"] = 30
                 # idx = math.ceil(spec.shape[1] / duration * 30)
                 # to_classify = spec[:, 0:idx]
-
+            start_classify = time.time()
             res_df = classify_element(model, (to_classify, metadata), test_sampler)
+            classify_time = time.time() - start_classify
             # plt = res_df.plot("time", "activity")
             # fig = plt.get_figure()
             # fig.savefig("output.png")
             to_classify = None
             res.append(res_df)
-            end_file = time.time()
-            print(f"File done in {end_file - start_file}")
+            total_time = time.time() - start_file
+            classify_prop = classify_time / total_time
+            print(f"File done in {total_time}")
+
+            classify_times.append(classify_time)
+            total_times.append(total_time)
+            classify_props.append(classify_prop)
             # snapshot2 = tracemalloc.take_snapshot()
             # top_stats = snapshot2.compare_to(snapshot1, "lineno")
             # print("[ Top 10 differences ]")
@@ -116,6 +126,13 @@ def classify_elements(elements, model, spec_opts=None):
         )
 
     infos["spectrogram_overlap"] = test_sampler.opts["overlap"]
+
+    infos["average_classification_time"] = round(np.mean(classify_times), 2)
+    infos["average_total_time"] = round(np.mean(total_times), 2)
+    infos["average_loading_time"] = round(
+        infos["average_total_time"] - infos["average_classification_time"], 2
+    )
+    infos["average_classify_prop"] = round(np.mean(classify_props), 2)
 
     preds = pd.concat(res)
     preds = preds.astype({"recording_path": "category"})
