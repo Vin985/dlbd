@@ -55,8 +55,8 @@ def load_tags(tags_dir, opts, audio_info, spec_len):
 def check_related(df, opts):
     if not df.empty:
         ref_df = opts["reference_classes"]
-        for (tag, related) in ref_df.itertuples(index=False):
-            df.loc[df.tag == tag, "related"] = related
+        for ref in ref_df.itertuples(index=False):
+            df.loc[df.tag == ref.tag, "related"] = ref.related
         df.loc[df.related.isnull(), "related"] = ""
     return df
 
