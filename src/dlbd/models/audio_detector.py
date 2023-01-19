@@ -44,6 +44,9 @@ class AudioDetector(TF2Model):
             input_width += 1
             opts.add_option("pixels_per_sec", input_width)
         opts.add_option("input_width", input_width)
+        self.include_top = opts.get("transfer_learning", False) and opts.get(
+            "include_top", False
+        )
         super().__init__(opts)
 
     def get_regularizer(self):
@@ -83,10 +86,9 @@ class AudioDetector(TF2Model):
             ),
             dtype=tf.float32,
         )
-        if not self.opts.get("inference", False) and self.opts.get(
-            "transfer_learning", False
-        ):
-            # * Load weights in training mode: do transfer learning and freeze base layers
+        # * If traning, performing transfer learning and not including the top layers
+        if not self.opts.get("inference", False) and not self.include_top:
+            # * Freeze the base layers
             base_model = keras.Model(
                 self.inputs, self.get_base_layers(), name=self.NAME + "_base"
             )
@@ -110,7 +112,9 @@ class AudioDetector(TF2Model):
     def load_weights(self):
         super().load_weights()
 
-        if self.opts.get("transfer_learning", False):
+        if not self.include_top:
+            # * In transfer learning mode, the model lacks the top layers when loading weights and
+            # * these are set as not trainable. Now add these layers
             print("adding layers for transfer learning")
             model = self.get_top_layers(self.model(self.inputs))
             model = keras.Model(self.inputs, model, name=self.NAME)
@@ -205,5 +209,5 @@ class AudioDetector(TF2Model):
         for x, _ in tqdm(spec_sampler([spectrogram], [labels])):
             pred = self.predict(x)
             preds.append(pred)
-        print("Classified {0} in {1}".format("spectrogram", time() - tic))
+        print(f"Classified spectrogram in {time() - tic}")
         return np.vstack(preds)[:, 1]
