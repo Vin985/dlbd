@@ -119,14 +119,16 @@ class PhenologyEvaluator(Evaluator):
 
         res["file_duration"] = file_song_duration
 
+        agg_method = options.get("daily_aggregation", "mean")
+
         by_hour = (
             file_song_duration[["date_hour", "total_duration"]]
             .groupby("date_hour")
-            .agg("mean")
+            .agg(agg_method)
         )
         by_hour = by_hour.asfreq("H", fill_value=0)
 
-        daily_duration = by_hour.resample("D").agg("mean")
+        daily_duration = by_hour.resample("D").agg(agg_method)
         daily_duration.index.name = "date"
 
         trends = self.get_rolling_trends(daily_duration, options, df_type)
