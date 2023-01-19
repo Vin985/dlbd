@@ -7,6 +7,11 @@ from . import predictions
 class SongDetectorEvaluationHandler(EvaluationHandler):
 
     DATA_HANDLER_CLASS = AudioDataHandler
+    PREDICTIONS_STATS_DUPLICATE_COLUMNS = [
+        "database",
+        "model_id",
+        "spectrogram_overlap",
+    ]
 
     def predict_database(self, model, database, db_type="test"):
 
