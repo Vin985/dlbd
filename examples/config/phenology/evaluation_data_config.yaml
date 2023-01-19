@@ -86,5 +86,5 @@ spectrogram:
   sample_rate: "original" # For no resampling: remove option or set to original
 
 class_type: "biotic"
-classes_file: "resources/classes.csv"
-reference_classes_file: "resources/reference_classes.csv"
+classes_file: "../resources/classes.csv"
+reference_classes_file: "../resources/reference_classes.csv"
