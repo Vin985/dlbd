@@ -17,7 +17,7 @@ EVALUATORS.register_evaluator(PhenologyEvaluator)
 
 #%%
 
-models_dir = "resources/models"
+models_dir = "../resources/models"
 
 evaluation_config_path = "config/phenology/evaluation_config.yaml"
 
