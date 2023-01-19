@@ -76,9 +76,16 @@ class DLBD(AudioDetector):
             bias_initializer=None,
             kernel_regularizer=regularizer,
         )(x)
+
+        return x
+
+    def get_top_layers(self, x=None):
+        if x is None:
+            x = self.get_base_layers()
         x = layers.BatchNormalization()(x)
         dense2 = self.opts.get("num_dense_units2", 0)
         if dense2 > 0:
+            regularizer = self.get_regularizer()
             x = layers.Dense(
                 dense2,
                 activation="relu",
@@ -86,12 +93,6 @@ class DLBD(AudioDetector):
                 kernel_regularizer=regularizer,
             )(x)
             x = layers.BatchNormalization()(x)
-
-        return x
-
-    def get_top_layers(self, x=None):
-        if x is None:
-            x = self.get_base_layers()
         x = layers.Dense(2, activation=None, name="fc8")(x)
         return x
 
