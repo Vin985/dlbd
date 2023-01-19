@@ -51,7 +51,7 @@ class AudioDataHandler(DataHandler):
         return spec
 
     def prepare_test_dataset(self, dataset, opts):
-        if not opts["learn_log"]:
+        if not opts.get("learn_log", False):
             for i, spec in enumerate(dataset.data["spectrograms"]):
                 infos = dataset.data["metadata"][i]
                 spec_opts = dataset.data["spec_opts"][i]
