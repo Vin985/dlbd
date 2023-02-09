@@ -23,13 +23,13 @@ from plotnine import (
 )
 
 
-class CityNetEvaluator(Evaluator):
+class DirectEvaluator(Evaluator):
 
-    NAME = "citynet"
+    NAME = "direct"
 
     REQUIRES = ["tags_df"]
 
-    DEFAULT_ACTIVITY_THRESHOLD = 0.5
+    DEFAULT_ACTIVITY_THRESHOLD = 0.7
 
     DEFAULT_TIME_BUFFER = 0.5
 
@@ -49,34 +49,33 @@ class CityNetEvaluator(Evaluator):
         predictions = predictions[["activity", "recording_id", "time"]].copy()
         predictions["events"] = 0
         predictions["tags"] = 0
-        events = predictions.groupby("recording_id", as_index=True, observed=True)
-        events = events.apply(self.get_recording_events, tags, options)
-        return events
-
-    def get_recording_events(self, predictions, tags, options=None):
-        options = options or {}
-        if tags is not None and not tags.empty:
-            tags = tags[tags.recording_id == predictions.name]
         threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
         predictions.loc[predictions.activity > threshold, "events"] = 2
-        dur = max(predictions.time)
-        if not predictions.empty:
-            step = predictions.time.values[1] - predictions.time.values[0]
-            if tags is not None and not tags.empty:
-                for tag in tags.itertuples():
-                    start = max(
-                        0, math.ceil((tag.tag_start - self.DEFAULT_TIME_BUFFER) / step)
-                    )
-                    end = min(
-                        math.ceil(dur / step),
-                        math.ceil((tag.tag_end + self.DEFAULT_TIME_BUFFER) / step),
-                    )
-                    predictions.tags.iloc[start:end] = 1
+        if tags is not None and not tags.empty:
+            events = predictions.groupby("recording_id", as_index=True, observed=True)
+            return events.apply(self.get_tags_presence, tags, options)
         return predictions
 
-    def get_stats(self, predictions, options):
+    def get_tags_presence(self, predictions, tags, options=None):
+        if not predictions.empty:
+            time_buffer = options.get("time_buffer", self.DEFAULT_TIME_BUFFER)
+            options = options or {}
+            tags = tags[tags.recording_id == predictions.name]
+            # threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
+            # predictions.loc[predictions.activity > threshold, "events"] = 2
+            dur = max(predictions.time)
+            step = predictions.time.values[1] - predictions.time.values[0]
+            for tag in tags.itertuples():
+                start = max(0, math.ceil((tag.tag_start - time_buffer) / step))
+                end = min(
+                    math.ceil(dur / step),
+                    math.ceil((tag.tag_end + time_buffer) / step),
+                )
+                predictions.tags.iloc[start:end] = 1
+        return predictions
 
-        predictions.activity = predictions.activity.fillna(0)
+    def calculate_stats(self, predictions, options):
+        # predictions.loc[predictions.activity > threshold, "events"] = 2
 
         res = predictions.tags + predictions.events
 
@@ -84,6 +83,11 @@ class CityNetEvaluator(Evaluator):
         n_true_negatives = len(res[res == 0])
         n_false_positives = len(res[res == 2])
         n_false_negatives = len(res[res == 1])
+
+        intersection = predictions.tags * predictions.events  # Logical AND
+        union = predictions.tags + predictions.events
+
+        iou = round(intersection.sum() / float(union.sum()), 3)
 
         unbalanced_accuracy = round(
             (float(n_true_positives + n_true_negatives) / predictions.shape[0]), 3
@@ -115,19 +119,50 @@ class CityNetEvaluator(Evaluator):
             "f1_score": f1_score,
             "auc": auc,
             "ap": average_precision,
+            "IoU": iou,
         }
 
-        print("Stats for options {0}:".format(options))
         common_utils.print_warning(
-            "Precision: {}; Recall: {}; F1_score: {}; AUC: {}; Average precision: {}".format(
-                stats["precision"],
-                stats["recall"],
-                stats["f1_score"],
-                stats["auc"],
-                stats["ap"],
-            )
+            # f"Threshold: {threshold},"
+            f'Precision: { stats["precision"]};'
+            + f' Recall: {stats["recall"]};'
+            + f' F1_score: {stats["f1_score"]};'
+            + f' AUC: {stats["auc"]};'
+            + f' Average precision: {stats["ap"]};'
+            + f' IoU: {stats["IoU"]}'
         )
-        return pd.DataFrame([stats])
+        return pd.DataFrame([stats])  # , predictions
+
+    def get_stats(self, predictions, options):
+
+        predictions.activity = predictions.activity.fillna(0)
+
+        # stats = []
+        # matches = []
+        # threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
+        # if threshold == "multiple":
+        #     threshold_by = options.get("threshold_by", 0.1)
+        #     threshold_start = options.get("threshold_start", 0)
+        #     threshold_end = options.get("threshold_end", 0.9)
+        #     thresholds = common_utils.range_list(
+        #         threshold_start, threshold_end, step=threshold_by
+        #     )
+        # else:
+        #     thresholds = [threshold]
+
+        print("Stats for options {0}:".format(options))
+
+        return self.calculate_stats(predictions.copy(), options)
+        # for thresh in thresholds:
+        #     tmp_stats, tmp_matches = self.calculate_stats(
+        #         predictions.copy(), thresh, options
+        #     )
+        #     stats.append(tmp_stats)
+        #     matches.append(tmp_matches)
+
+        # stats = pd.DataFrame(stats)
+
+        # return stats, matches
 
     def plot_pr_curve(self, data, options, infos):
         events = data["events"]
@@ -215,8 +250,8 @@ class CityNetEvaluator(Evaluator):
 
     def evaluate(self, data, options, infos):
         predictions, tags = data
-        tags = tags["tags_df"]
-        events = self.filter_predictions(predictions, options, tags)
+        tags_df = tags["tags_df"]
+        events = self.filter_predictions(predictions, options, tags_df)
         stats = self.get_stats(events, options)
         res = {"stats": stats, "matches": events}
         if options.get("draw_plots", False):
