@@ -1,4 +1,4 @@
-data_config: "config/gpu/runs/binary/data_config.yaml"
+data_config: "config/gpu/runs/gt_thresh_bal/data_config.yaml"
 parent_path: "config/gpu/runs/evaluation_parent.yaml"
 
 models_options:

@@ -1,4 +1,4 @@
-data_config: "config/gpu/runs/y_thresh_train/data_config.yaml"
+data_config: "config/gpu/runs/gt_thresh_bal/data_config.yaml"
 parent_path: "config/gpu/runs/training_parent.yaml"
 
 skip_trained: True
