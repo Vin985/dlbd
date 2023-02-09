@@ -2,14 +2,9 @@ from mouffet.evaluation import EVALUATORS
 from .evaluators import (
     StandardEvaluator,
     SubsamplingEvaluator,
-    CityNetEvaluator,
+    DirectEvaluator,
 )
 
 EVALUATORS.register_evaluators(
-    # {
-    #     "standard": StandardEvaluator,
-    #     "subsampling": SubsamplingEvaluator,
-    #     "citynet": CityNetEvaluator,
-    # }
-    [StandardEvaluator, SubsamplingEvaluator, CityNetEvaluator]
+    [StandardEvaluator, SubsamplingEvaluator, DirectEvaluator]
 )

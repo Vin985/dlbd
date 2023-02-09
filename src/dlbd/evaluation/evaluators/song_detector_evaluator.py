@@ -13,7 +13,7 @@ class SongDetectorEvaluator(Evaluator):
     }
     TAGS_COLUMNS_RENAME = {"id": "tag_id"}
 
-    DEFAULT_ACTIVITY_THRESHOLD = 0.85
+    DEFAULT_ACTIVITY_THRESHOLD = 0.9
 
     DEFAULT_PR_CURVE_OPTIONS = {
         "variable": "activity_threshold",
