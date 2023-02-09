@@ -35,6 +35,7 @@ class SpectrogramSampler:
         # Half-width window for ground truth. Should ideally be the same as spectrograms
         self.opts["hww_gt"] = opts.get("hww_gt", self.opts["hww_spec"])
         self.opts["batch_size"] = opts["batch_size"]
+        self.opts["class_size"] = opts.get("class_size", "smallest")
         self.opts["overlap"] = opts.get("spectrogram_overlap", 0.75)
         self.opts["random_start"] = opts.get("random_start", False)
         self.opts["gt_prop"] = opts.get("gt_prop", 0)
@@ -102,7 +103,7 @@ class SpectrogramSampler:
             self.opts["batch_size"],
             randomise=self.opts["randomise"],
             balanced=self.opts["balanced"],
-            class_size="smallest",
+            class_size=self.opts["class_size"],
         ):
 
             # extract the specs
