@@ -6,7 +6,6 @@ from mouffet.evaluation import Evaluator
 from pandas_path import path  # pylint: disable=unused-import
 from plotnine import *
 from scipy.spatial.distance import euclidean
-from statsmodels.tsa.seasonal import seasonal_decompose
 
 from ...evaluation import EVALUATORS
 from ...utils.plot_utils import format_date_short
@@ -17,7 +16,8 @@ class PhenologyEvaluator(Evaluator):
 
     NAME = "phenology"
 
-    REQUIRES = ["tags_df"]
+    def requires(self, options):
+        return EVALUATORS[options["method"]].requires(options)
 
     def file_event_duration(self, df, method):
         return EVALUATORS[method].file_event_duration(df)
@@ -195,7 +195,7 @@ class PhenologyEvaluator(Evaluator):
                 )
                 + xlab("Date")
                 + ylab("Daily mean activity per recording (s)")
-                + scale_color_discrete(labels=["Model", "Reference"])
+                + scale_color_discrete(labels=["Reference", "Model"])
                 + scale_x_datetime(labels=format_date_short)
                 + theme_classic()
                 + theme(axis_text_x=element_text(angle=45))
@@ -237,10 +237,6 @@ class PhenologyEvaluator(Evaluator):
             min(plt_df.trend_norm) - 0.1 * y_range,
             max(plt_df.trend_norm) + 0.1 * y_range,
         ]
-        plt_df["type"] = plt_df["type"].astype("category")
-        plt_df["type"] = plt_df["type"].cat.set_categories(
-            ["ground_truth", options["scenario_info"]["model"]], ordered=True
-        )
         plt_gt_norm = (
             ggplot(
                 data=plt_df.loc[plt_df.type == "ground_truth"],
@@ -319,14 +315,6 @@ class PhenologyEvaluator(Evaluator):
     def evaluate(self, data, options, infos):
         if not self.check_database(data, options, infos):
             return {}
-        # if infos["database"] not in options.get("phenology_databases", []):
-        #     common_utils.print_info(
-        #         (
-        #             "Database {} is not part of the accepted databases for the 'Phenology' "
-        #             + "evaluator described in the 'phenology_databases' option. Skipping."
-        #         ).format(options["scenario_info"]["database"])
-        #     )
-        #     return {}
         method = options["method"]
         stats = EVALUATORS[method].evaluate(data, options, infos)
 
@@ -334,6 +322,17 @@ class PhenologyEvaluator(Evaluator):
 
         tags_trends = self.get_trends(data[1]["tags_df"], infos, options, "tag")
         events_trends = self.get_trends(matches, infos, options, "event")
+
+        trends = pd.concat(
+            [
+                tags_trends["trends_df"],
+                events_trends["trends_df"],
+            ]
+        )
+        trends["type"] = trends["type"].astype("category")
+        trends["type"] = trends["type"].cat.set_categories(
+            ["ground_truth", options["scenario_info"]["model"]], ordered=True
+        )
 
         eucl_distance = round(
             euclidean(
@@ -358,18 +357,14 @@ class PhenologyEvaluator(Evaluator):
 
         stats["stats"].loc[:, "eucl_distance"] = eucl_distance
         stats["stats"].loc[:, "eucl_distance_norm"] = eucl_distance_norm
-        stats["tags_trends"] = tags_trends
-        stats["events_duration"] = events_trends
+        stats["trends_df"] = {"trends_df": trends}
+        # stats["tags_trends"] = tags_trends
+        # stats["events_duration"] = events_trends
 
         if options.get("draw_plots", False):
             plts = self.draw_plots(
                 data={
-                    "df": pd.concat(
-                        [
-                            tags_trends["trends_df"],
-                            events_trends["trends_df"],
-                        ]
-                    ),
+                    "df": trends,
                     "distance": eucl_distance,
                     "distance_norm": eucl_distance_norm,
                     "method": method,
