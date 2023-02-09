@@ -124,11 +124,11 @@ class SpectrogramSampler:
                     X[count] = X[count] - self.medians[which][:, None]
 
                 # TODO: Change the way labels are decided?
+                y_labs = self.labels[
+                    (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
+                ]
                 y[count] = int(
-                    self.labels[
-                        (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
-                    ].mean()
-                    > self.opts["gt_prop"]
+                    (y_labs.sum() / y_labs.shape[0] * 100) > self.opts["gt_prop"]
                 )
 
                 if self.opts["learn_log"]:
