@@ -44,8 +44,9 @@ class AudioDetector(TF2Model):
             input_width += 1
             opts.add_option("pixels_per_sec", input_width)
         opts.add_option("input_width", input_width)
-        self.include_top = opts.get("transfer_learning", False) and opts.get(
-            "include_top", False
+        transfer_learning = opts.get("transfer_learning", False)
+        self.include_top = not transfer_learning or (
+            transfer_learning and opts.get("include_top", False)
         )
         super().__init__(opts)
 
@@ -86,7 +87,7 @@ class AudioDetector(TF2Model):
             ),
             dtype=tf.float32,
         )
-        # * If traning, performing transfer learning and not including the top layers
+        # * If training, performing transfer learning and not including the top layers
         if not self.include_top:
             # * Freeze the base layers
             base_model = keras.Model(

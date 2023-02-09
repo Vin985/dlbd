@@ -154,8 +154,8 @@ class TF2Model(DLModel):
         self.logs = {}
 
         # If transfer learning, model has already been initialized during loading
-        if self.opts.get("transfer_learning", False):
-            self.init_model
+        if not self.opts.get("transfer_learning", False):
+            self.init_model()
 
         self.init_optimizer()
 
