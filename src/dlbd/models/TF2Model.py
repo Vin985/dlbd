@@ -153,7 +153,9 @@ class TF2Model(DLModel):
 
         self.logs = {}
 
-        self.init_model()
+        # If transfer learning, model has already been initialized during loading
+        if self.opts.get("transfer_learning", False):
+            self.init_model
 
         self.init_optimizer()
 
@@ -322,10 +324,9 @@ class TF2Model(DLModel):
         self.model.save_weights(path)  # pylint: disable=no-member
 
     def load_weights(self):
-        print("Loading pre-trained weights")
-        self.model.load_weights(  # pylint: disable=no-member
-            self.opts.get_weights_path()
-        )
+        weights_path = self.opts.get_weights_path()
+        common_utils.print_info(f"Loading pre-trained weights from {weights_path}")
+        self.model.load_weights(weights_path)  # pylint: disable=no-member
 
     @abstractmethod
     def predict(self, x):

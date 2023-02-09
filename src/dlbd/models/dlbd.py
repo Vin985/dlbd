@@ -91,6 +91,7 @@ class DLBD(AudioDetector):
                 activation="relu",
                 bias_initializer=None,
                 kernel_regularizer=regularizer,
+                name="dense2",
             )(x)
             x = layers.BatchNormalization()(x)
         x = layers.Dense(2, activation=None, name="fc8")(x)

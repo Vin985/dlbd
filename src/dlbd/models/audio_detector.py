@@ -87,7 +87,7 @@ class AudioDetector(TF2Model):
             dtype=tf.float32,
         )
         # * If traning, performing transfer learning and not including the top layers
-        if not self.opts.get("inference", False) and not self.include_top:
+        if not self.include_top:
             # * Freeze the base layers
             base_model = keras.Model(
                 self.inputs, self.get_base_layers(), name=self.NAME + "_base"
@@ -109,17 +109,24 @@ class AudioDetector(TF2Model):
     def get_top_layers(self, x=None):
         return x
 
+    def add_top_layers(self):
+        model = self.get_top_layers(self.model(self.inputs))
+        model = keras.Model(self.inputs, model, name=self.NAME)
+        model.summary()
+        self.model = model
+
     def load_weights(self):
+        if self.opts.get("inference", False) and not self.include_top:
+            # * We are in inference mode of a transfer learning model. Add top layers before loading
+            # * Weights
+            self.add_top_layers()
+
         super().load_weights()
 
-        if not self.include_top:
-            # * In transfer learning mode, the model lacks the top layers when loading weights and
-            # * these are set as not trainable. Now add these layers
+        if not self.opts.get("inference", False) and not self.include_top:
+            # * We are in training mode of transfer learning. Add top layers after loading weights
             print("adding layers for transfer learning")
-            model = self.get_top_layers(self.model(self.inputs))
-            model = keras.Model(self.inputs, model, name=self.NAME)
-            model.summary()
-            self.model = model
+            self.add_top_layers()
 
     def get_preprocessing_layers(self, x=None):
         if not x:
@@ -167,7 +174,9 @@ class AudioDetector(TF2Model):
             balanced=self.opts.get("training_balanced", True),
         )(training_data.get_raw_data(), training_data.get_ground_truth())
         validation_sampler = SpectrogramSampler(
-            self.opts, randomise=False, balanced=True
+            self.opts,
+            randomise=False,
+            balanced=self.opts.get("training_balanced", True),
         )(validation_data.get_raw_data(), validation_data.get_ground_truth())
         return train_sampler, validation_sampler
 
