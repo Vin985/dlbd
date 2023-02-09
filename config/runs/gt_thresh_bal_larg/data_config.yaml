@@ -1,0 +1,124 @@
+#* All path can be relative to the root_dir or complete
+# root_dir: other dirs will be relative to this one
+data_dir: 'wavs'
+tags_dir: 'tags'
+training_dir: 'training'
+validation_dir:  'validation'
+test_dir: 'test'
+dest_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/datasets'
+save_intermediate: False
+
+print_missing_classes: True
+overwrite: False
+
+subfolders:
+  - type: "spectrogram"
+    options: ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
+
+data_extensions:
+  - ".wav"
+  - ".WAV"
+recursive: True
+
+#* Tags files options
+tags:
+  print_missing_classes: True
+  suffix: "-sceneRect.csv"
+  columns:
+    Label: "tag"
+    Related: "related"
+    LabelStartTime_Seconds: "tag_start"
+    LabelEndTime_Seconds: "tag_end"
+    overlap: "overlap"
+    background: "background"
+    noise: "noise"
+  columns_type:
+    overlap: "str"
+  with_data: False
+
+
+databases:
+  #* All options found in data can be overriden in each iteration. If not found, default values
+  #* from data will be used
+    - name: 'citynet'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/CityNet'
+      # spectrogram:
+      #   sample_rate: 22050
+      split:
+        validation: 0.2
+    - name: 'full_summer1'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      data_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/full_summer_subset1/'
+      db_types: ["test"]
+      overwrite: False
+      tags:
+        with_data: True
+    - name: 'nips4b'
+      root_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b'
+      data_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/wavs"
+      tags_dir: "/mnt/win/UMoncton/Doctorat/data/dl_training/raw/nips4b/tags"
+      split:
+        validation: 0.2
+        test: 0.2
+      tags:
+        type: "nips4b"
+    - name: 'ENAB'
+      root_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      data_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB'
+      db_types: ["test"]
+      overwrite: False
+      tags:
+        print_missing_classes: True
+        filter_classes: False
+        with_data: True
+        suffix: ".Table.1.selections.txt"
+        columns:
+          Species: "tag"
+          "Begin Time (s)": "tag_start"
+          "End Time (s)": "tag_end"
+    - name: 'ENAB_crows'
+      root_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB_crows'
+      data_dir: ''
+      tags_dir: ''
+      data_by_type: True
+      split:
+        validation: 0.2
+      overwrite: False
+      tags:
+        print_missing_classes: True
+        filter_classes: False
+        with_data: True
+        suffix: ".Table.1.selections.txt"
+        columns:
+          Species: "tag"
+          "Begin Time (s)": "tag_start"
+          "End Time (s)": "tag_end"
+    - name: 'ENAB_crows2'
+      root_dir: '/home/vin/Doctorat/data/dl_training/raw/ENAB_crows2'
+      data_by_type: True
+      data_dir: ''
+      tags_dir: ''
+      split:
+        validation: 0.2
+      overwrite: False
+      tags:
+        print_missing_classes: True
+        filter_classes: False
+        with_data: True
+        suffix: ".csv"
+        columns:
+          Species: "tag"
+          tag_start: "tag_start"
+          tag_end: "tag_end"
+
+        
+      
+spectrogram:
+  type: "mel"
+  n_mels: 32
+  n_fft: 512
+  sample_rate: "original" # For no resampling: remove option or set to original
+
+class_type: "biotic"
+classes_file: "resources/classes.csv"
+reference_classes_file: "resources/reference_classes.csv"

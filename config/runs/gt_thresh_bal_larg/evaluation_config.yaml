@@ -1,0 +1,25 @@
+data_config: "config/gpu/runs/y_thresh_train/data_config.yaml"
+parent_path: "config/gpu/runs/evaluation_parent.yaml"
+
+models_options:
+  spectrogram_overlap: 0.95
+  reclassify: False
+
+evaluators_options:
+  draw_plots: False
+  phenology_databases: ["full_summer"]
+
+evaluators:
+  - type: "phenology"
+    method: "standard"
+    activity_threshold: 0.9
+    min_duration: 0.1
+    end_threshold: 0.15
+    dtc_threshold: 0
+    gtc_threshold: 0
+
+
+databases:
+  - name: citynet
+  - name: full_summer
+  - name: nips4b
