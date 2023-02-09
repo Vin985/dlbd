@@ -149,7 +149,7 @@ class SpectrogramSampler:
 
     def __len__(self):
         if len(self.tmp_idxs):
-            class_size = "smallest" if self.opts["balanced"] else "largest"
+            class_size = self.opts["class_size"]
             return int(
                 np.ceil(
                     float(
