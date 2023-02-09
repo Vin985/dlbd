@@ -1,0 +1,41 @@
+data_config: "config/gpu/runs/binary/data_config.yaml"
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+skip_trained: True
+
+databases: ['citynet3', "nips4b3", "NABS3", "arctic_complete4"]
+
+n_epochs: 50
+learning_rate: 0.01
+early_stopping:
+  min_delta: 0.002
+  patience: 8
+  restore_best_weights: False
+spectrogram_overlap: 0.75
+random_start: True
+time_mask: True
+freq_mask: True
+dilation_rate: [[1, 2], 1]
+training_balanced: True
+wiggle_room: 10 #[3, 5, 10]
+batch_size: 256 #[256, 128, 64, 32]
+num_filters: 64
+num_dense_units: 512
+num_dense_units2: 256
+pixels_per_sec: 100
+
+scenarios:
+  - name: "DLBD"
+    class: "dlbd.models.dlbd.DLBD"
+    suffix: "_gtprop{gt_prop}"
+    gt_prop: [5, 10, 20, 30]
+    
+  - name: "DLBD_binary"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    suffix: "_gtprop{gt_prop}"
+    gt_prop: [5, 10, 20, 30]
+
+
+
+
+
