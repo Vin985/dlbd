@@ -1,6 +1,7 @@
 data_config: "config/gpu/runs/gt_thresh_bal/data_config.yaml"
 parent_path: "config/gpu/runs/training_parent.yaml"
 
+clean_empty_models: True
 skip_trained: True
 
 databases: ['citynet3', "nips4b3", "NABS3", "arctic_complete4"]
