@@ -107,3 +107,4 @@ spectrogram:
 
 class_type: "biotic"
 classes_file: "src/classes.csv"
+reference_classes_file: "resources/reference_classes.csv"

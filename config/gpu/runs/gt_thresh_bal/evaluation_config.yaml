@@ -8,6 +8,7 @@ models_options:
 evaluators_options:
   draw_plots: False
   phenology_databases: ["full_summer2"]
+  plots: ["distances", "pr_curve", "roc", "separate_distances"] #"separate_distances", "roc"
 
 evaluators:
   - type: "phenology"
