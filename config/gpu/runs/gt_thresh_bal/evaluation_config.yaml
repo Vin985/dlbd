@@ -25,6 +25,8 @@ evaluators:
     end_threshold: 0.15
     dtc_threshold: 0
     gtc_threshold: 0
+  - type: direct
+    activity_threshold: 0.7
 
 
 databases:
