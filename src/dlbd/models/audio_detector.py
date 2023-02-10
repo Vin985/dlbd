@@ -210,6 +210,9 @@ class AudioDetector(TF2Model):
 
         return count
 
+    def post_process_predictions(self, preds):
+        return np.vstack(preds)[:, 1]
+
     def predict_spectrogram(self, data):
         spectrogram, spec_sampler = data
         """Apply the classifier"""
@@ -220,4 +223,4 @@ class AudioDetector(TF2Model):
             pred = self.predict(x)
             preds.append(pred)
         print(f"Classified spectrogram in {time() - tic}")
-        return np.vstack(preds)[:, 1]
+        return self.post_process_predictions(preds)

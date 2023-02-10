@@ -1,6 +1,7 @@
 import tensorflow as tf
 from mouffet import common_utils
 from tensorflow.keras import layers
+import numpy as np
 
 from . import AudioDetector
 
@@ -121,3 +122,6 @@ class DLBDBinary(DLBD):
         self.metrics["train_accuracy"] = tf.keras.metrics.BinaryAccuracy(
             name="train_accuracy"
         )
+
+    def post_process_predictions(self, preds):
+        return np.vstack(preds)[:, 0]
