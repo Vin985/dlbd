@@ -36,6 +36,28 @@ scenarios:
     class: "dlbd.models.dlbd.DLBDBinary"
     suffix: "_gtprop{gt_prop}"
     gt_prop: [5, 10, 20, 30]
+    num_dense_units2: 0
+
+  - name: "DLBD_binary_dense2"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    suffix: "_gtprop{gt_prop}"
+    gt_prop: [5, 10]
+    num_dense_units2: 256
+
+  - name: "DLBD_binary_dense2_small"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    suffix: "_gtprop{gt_prop}"
+    gt_prop: [5, 10]
+    num_dense_units2: 256
+    class_size: "smallest"
+
+
+  - name: "DLBD_small"
+    class: "dlbd.models.dlbd.DLBDBinary"
+    suffix: "_gtprop{gt_prop}"
+    gt_prop: [5, 10]
+    class_size: "smallest"
+
 
 
 
