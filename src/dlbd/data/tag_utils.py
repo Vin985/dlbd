@@ -11,6 +11,8 @@ DEFAULT_OPTIONS = {
         "columns_name": {
             "Label": "tag",
             "Related": "related",
+            "start": "tag_start",
+            "end": "tag_end",
             "LabelStartTime_Seconds": "tag_start",
             "LabelEndTime_Seconds": "tag_end",
             "overlap": "overlap",
@@ -54,10 +56,13 @@ def load_tags(tags_dir, opts, audio_info, spec_len):
 
 def check_related(df, opts):
     if not df.empty:
-        ref_df = opts["reference_classes"]
-        for ref in ref_df.itertuples(index=False):
-            df.loc[df.tag == ref.tag, "related"] = ref.related
-        df.loc[df.related.isnull(), "related"] = ""
+        try:
+            ref_df = opts["reference_classes"]
+            for ref in ref_df.itertuples(index=False):
+                df.loc[df.tag == ref.tag, "related"] = ref.related
+            df.loc[df.related.isnull(), "related"] = ""
+        except Exception:
+            print("Error")
     return df
 
 
@@ -66,9 +71,9 @@ def rename_columns(df, columns):
         if isinstance(columns, dict):
             # df["tags"] = df["Label"] + \
             #     "," + df["Related"]
-            keys = [column for column in df.columns if column in columns.keys()]
-            df = df[keys]
             df = df.rename(columns=columns)
+            values = [column for column in df.columns if column in columns.values()]
+            df = df[values]
         else:
             raise ValueError(
                 "columns must be a dict with old labels as keys and new labels as values"
