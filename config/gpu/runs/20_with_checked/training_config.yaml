@@ -33,9 +33,8 @@ scenarios:
     weights_opts:
       model_dir: "/home/sylvain/resources/models"
       name: "DLBD"
-    scenarios:
-      n_epochs: [[5, 5], [10,10]]
-      learning_rate: [[0.01, 0.001], [0.0001, 0.00001]]
+    n_epochs: [[5, 5], [10,10]]
+    learning_rate: [[0.01, 0.001], [0.0001, 0.00001]]
     
 
 
