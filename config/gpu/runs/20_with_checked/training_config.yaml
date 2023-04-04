@@ -4,7 +4,7 @@ parent_path: "config/gpu/runs/training_parent.yaml"
 clean_empty_models: True
 skip_trained: True
 
-databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete3", "arctic_checked"]
+databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final", "arctic_checked"]
 
 n_epochs: 50
 learning_rate: 0.01
