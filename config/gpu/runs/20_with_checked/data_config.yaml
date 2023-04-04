@@ -40,12 +40,12 @@ tags:
 databases:
   #* All options found in data can be overriden in each iteration. If not found, default values
   #* from data will be used
-    - name: 'citynet3'
+    - name: 'citynet2'
       root_dir: '/home/sylvain/data/raw/CityNet'
       split:
         validation: 0.3
       data_by_type: True
-    - name: 'arctic_complete2'
+    - name: 'arctic_complete3'
       root_dir: '/home/sylvain/data/raw/Arctic_complete'
       data_dir: '/home/sylvain/data/raw/Arctic_complete'
       tags:
@@ -53,31 +53,13 @@ databases:
       split:
         validation: 0.3
         test: 0.2
-    - name: 'arctic_complete4'
-      root_dir: '/home/sylvain/data/raw/Arctic_complete'
-      data_dir: '/home/sylvain/data/raw/Arctic_complete'
-      db_types: ["training", "validation"]
-      tags:
-        with_data: True
-      split:
-        validation: 0.3
-        type: arctic
-    - name: 'arctic_complete5'
-      root_dir: '/home/sylvain/data/raw/Arctic_complete'
-      data_dir: '/home/sylvain/data/raw/Arctic_complete'
-      db_types: ["training", "validation"]
-      tags:
-        with_data: True
-      split:
-        validation: 0.3
-        type: arctic
-    - name: 'full_summer2'
+    - name: 'full_summer1'
       root_dir: '/home/sylvain/data/raw/full_summer_subset1/'
       data_dir: '/home/sylvain/data/raw/full_summer_subset1/'
       db_types: ["test"]
       tags:
         with_data: True
-    - name: "nips4b3"
+    - name: "nips4b2"
       root_dir: "/home/sylvain/data/raw/nips4b/"
       data_dir: "/home/sylvain/data/raw/nips4b/wavs"
       tags_dir: "/home/sylvain/data/raw/nips4b/tags"
@@ -87,7 +69,7 @@ databases:
       tags:
         type: "nips4b"
 
-    - name: "NABS3"
+    - name: "NABS2"
       root_dir: "/home/sylvain/data/raw/NABS2"
       data_dir: "/home/sylvain/data/raw/NABS2"
       db_types: ["validation", "training"]
