@@ -33,6 +33,8 @@ class DirectEvaluator(Evaluator):
 
     DEFAULT_TIME_BUFFER = 0.5
 
+    DEFAULT_REFINE_OPTIONS = {"min_duration": 300, "activity_threshold_min": 0.1}
+
     def file_event_duration(self, df):
         if df.shape[0] > 0:
             step = df.time.iloc[1] - df.time.iloc[0]
@@ -45,6 +47,42 @@ class DirectEvaluator(Evaluator):
             return df.tags.sum() * step
         return 0
 
+    def refine_predictions(self, predictions, options):
+        step = predictions.time.values[1] - predictions.time.values[0]
+        refine_options = self.DEFAULT_REFINE_OPTIONS
+        refine_options.update(options.get("refine_options", {}))
+        event_start = 0
+        for i in range(0, predictions.shape[0]):
+            # * no event started, start one
+            if predictions.events.iloc[i] > 0 and event_start == 0:
+                event_start = i
+            # * event is ending
+            elif predictions.events.iloc[i] == 0 and event_start > 0:
+                event_end = i - 1
+                event_duration = (event_end - event_start) * step * 1000
+                if event_duration <= refine_options["min_duration"] or (
+                    max(
+                        predictions.activity.iloc[event_start:event_end]
+                        < refine_options["activity_threshold_min"]
+                    )
+                ):
+                    # if predictions.tags.iloc[event_start:event_end].sum() > 0:
+                    #     print(predictions.iloc[event_start:event_end])
+                    if event_start == event_end:
+                        predictions.events.iloc[event_start] = 0
+                        # predictions.activity.iloc[event_start] = (
+                        #     predictions.activity.iloc[event_start] - 0.3
+                        # )
+                    else:
+                        predictions.events.iloc[event_start:event_end] = 0
+                        # predictions.activity.iloc[event_start:event_end] = (
+                        #     predictions.activity.iloc[event_start] - 0.3
+                        # )
+                # TODO: remove buffer?
+                event_start = 0
+
+        return predictions
+
     def filter_predictions(self, predictions, options, tags=None):
         predictions = predictions[["activity", "recording_id", "time"]].copy()
         predictions["events"] = 0
@@ -53,7 +91,10 @@ class DirectEvaluator(Evaluator):
         predictions.loc[predictions.activity > threshold, "events"] = 2
         if tags is not None and not tags.empty:
             events = predictions.groupby("recording_id", as_index=True, observed=True)
-            return events.apply(self.get_tags_presence, tags, options)
+            predictions = events.apply(self.get_tags_presence, tags, options)
+        if options.get("refine_predictions", False):
+            events = predictions.groupby("recording_id", as_index=True, observed=True)
+            predictions = events.apply(self.refine_predictions, options)
         return predictions
 
     def get_tags_presence(self, predictions, tags, options=None):
@@ -107,6 +148,9 @@ class DirectEvaluator(Evaluator):
         auc = round(metrics.roc_auc_score(predictions.tags, predictions.activity), 3)
 
         stats = {
+            "activity_threshold": options.get(
+                "activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD
+            ),
             "n_true_positives": n_true_positives,
             "n_false_positives": n_false_positives,
             "n_true_negatives": n_true_negatives,

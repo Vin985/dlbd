@@ -216,8 +216,8 @@ class StandardEvaluator(SongDetectorEvaluator):
         tags.loc[:, "matched"] = 0
 
         if not match_df.empty:
-            dtc_threshold = options.get("dtc_threshold", 0.3)
-            gtc_threshold = options.get("gtc_threshold", 0.1)
+            dtc_threshold = options.get("dtc_threshold", 0)
+            gtc_threshold = options.get("gtc_threshold", 0)
             res = match_df.loc[
                 (match_df.event_overlap >= dtc_threshold)
                 & (match_df.tag_overlap >= gtc_threshold)
@@ -293,11 +293,11 @@ class StandardEvaluator(SongDetectorEvaluator):
         )
         return label
 
-    def plot_tag_repartition(self, data, options):
+    def plot_tag_repartition(self, data, options, infos):
         tag_df = data["tags"]
         if not "background" in tag_df.columns:
             tag_df["background"] = False
-        test = tag_df[["tag", "matched", "background", "id"]].copy()
+        test = tag_df[["tag", "matched", "background", "tag_id"]].copy()
         test.loc[:, "prop_matched"] = -1
         test.loc[:, "prop_background"] = -1
         test.loc[:, "lbl_matched"] = ""
@@ -370,7 +370,7 @@ class StandardEvaluator(SongDetectorEvaluator):
 
         return plt
 
-    def plot_detected_tags(self, data, options):
+    def plot_detected_tags(self, data, options, infos):
         tmp = data["tags"][["tag", "matched", "tag_id"]].copy()
         tmp.loc[:, "prop_matched"] = -1
         tmp.loc[:, "n_tags"] = -1
@@ -447,7 +447,7 @@ class StandardEvaluator(SongDetectorEvaluator):
 
         return plt
 
-    def plot_overlap_duration(self, data, options):
+    def plot_overlap_duration(self, data, options, infos):
         matches = data["matches"]
         matches = matches.loc[matches.tag_overlap > 0]
         # matches.loc[:, "log_dur"] = log()
@@ -489,7 +489,7 @@ class StandardEvaluator(SongDetectorEvaluator):
 
         return plt
 
-    def plot_overlap_duration_bar(self, data, options):
+    def plot_overlap_duration_bar(self, data, options, infos):
         matches = data["matches"]
         matches = matches.loc[matches.tag_overlap > 0]
         matches.loc[:, "tag_overlap_bin"] = pd.cut(
@@ -499,7 +499,7 @@ class StandardEvaluator(SongDetectorEvaluator):
             matches.tag_duration, [0, 0.25, 0.5, 0.75, 1, 1.5, 2, float("inf")]
         )
 
-        matches.loc[matches.tag_overlap < 0.3].to_csv("small_overlap.csv")
+        # matches.loc[matches.tag_overlap < 0.3].to_csv("small_overlap.csv")
 
         # matches.loc[:, "log_dur"] = log()
 
@@ -567,6 +567,9 @@ class StandardEvaluator(SongDetectorEvaluator):
         )
 
         stats = {
+            "activity_threshold": options.get(
+                "activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD
+            ),
             "n_events": events.shape[0],
             "n_tags": tags.shape[0],
             "n_true_positives": n_true_positives,
@@ -584,6 +587,10 @@ class StandardEvaluator(SongDetectorEvaluator):
             "mean_event_overlap": round(matches.event_overlap.mean(), 2),
             "mean_tag_overlap": round(matches.tag_overlap.mean(), 2),
             "IoU": round(matches.iou.mean(), 2),
+            "end_threshold": options.get(
+                "end_threshold", self.DEFAULT_ACTIVITY_THRESHOLD
+            ),
+            "min_duration": options.get("min_duration", self.DEFAULT_MIN_DURATION),
         }
 
         print("Stats for options {0}:".format(options))
