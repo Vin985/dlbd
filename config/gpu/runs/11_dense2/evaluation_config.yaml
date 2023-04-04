@@ -19,5 +19,5 @@ evaluators:
     sample_step: 1
     event_method: "activity_max"
     activity_threshold: 0.5
-  - type: citynet
+  - type: direct
     activity_threshold: 0.5

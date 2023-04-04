@@ -23,7 +23,7 @@ evaluators:
     event_method: "activity_max"
     activity_threshold: 0.5
   - type: phenology 
-    method: citynet
+    method: direct
     activity_threshold: 0.5
   - type: "standard"
     activity_threshold: 0.9
@@ -35,7 +35,7 @@ evaluators:
     sample_step: 1
     event_method: "activity_max"
     activity_threshold: 0.5
-  - type: citynet
+  - type: direct
     activity_threshold: 0.5
 
 databases:

@@ -1,0 +1,45 @@
+data_config: "config/gpu/runs/gt_thresh_bal/data_config.yaml"
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+clean_empty_models: True
+skip_trained: True
+
+databases: ['citynet2', "nips4b2", "NABS2", "arctic_complete3", "arctic_checked"]
+
+n_epochs: 50
+learning_rate: 0.01
+early_stopping:
+  min_delta: 0.002
+  patience: 8
+  restore_best_weights: False
+spectrogram_overlap: 0.75
+random_start: True
+time_mask: True
+freq_mask: True
+dilation_rate: [[1, 2], 1]
+training_balanced: True
+wiggle_room: 10 #[3, 5, 10]
+batch_size: 256 #[256, 128, 64, 32]
+num_filters: 64
+num_dense_units: 512
+num_dense_units2: 256
+pixels_per_sec: 100
+# class_size: "largest"
+
+scenarios:
+  - name: "DLBD_with_checked"
+    class: "dlbd.models.dlbd.DLBD"
+    suffix: "_epoch{n_epochs}_lr{learning_rate}"
+    weights_opts:
+      model_dir: "/home/sylvain/resources/models"
+      name: "DLBD"
+    scenarios:
+      n_epochs: [[5, 5], [10,10]]
+      learning_rate: [[0.01, 0.001], [0.0001, 0.00001]]
+    
+
+
+
+
+
+

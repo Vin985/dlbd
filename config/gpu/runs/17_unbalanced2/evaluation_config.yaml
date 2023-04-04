@@ -1,4 +1,4 @@
-data_config: "config/gpu/runs/summary/data_config.yaml"
+data_config: "config/gpu/runs/unbalanced2/data_config.yaml"
 parent_path: "config/gpu/runs/evaluation_parent.yaml"
 
 models_options:
@@ -7,7 +7,7 @@ models_options:
 
 evaluators_options:
   draw_plots: False
-  phenology_databases: ["full_summer1"]
+  phenology_databases: ["full_summer2"]
 
 evaluators:
   - type: "phenology"
@@ -23,7 +23,7 @@ evaluators:
     event_method: "activity_max"
     activity_threshold: 0.5
   - type: phenology 
-    method: citynet
+    method: direct
     activity_threshold: 0.5
   - type: "standard"
     activity_threshold: 0.9
@@ -35,10 +35,10 @@ evaluators:
     sample_step: 1
     event_method: "activity_max"
     activity_threshold: 0.5
-  - type: citynet
+  - type: direct
     activity_threshold: 0.5
 
 databases:
-  - name: citynet2
-  - name: full_summer1
-  - name: nips4b2
+  - name: citynet3
+  - name: full_summer2
+  - name: nips4b3

@@ -17,7 +17,7 @@ time_mask: True
 freq_mask: True
 dilation_rate: [[1, 2], 1]
 training_balanced: False
-wriggle_room: 3 #[3, 5, 10]
+wiggle_room: 10 #[3, 5, 10]
 batch_size: 256 #[256, 128, 64, 32]
 num_filters: 64
 num_dense_units: 512
