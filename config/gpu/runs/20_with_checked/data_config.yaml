@@ -84,7 +84,7 @@ databases:
     - name: 'arctic_checked'
       root_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
       data_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
-      # db_types: ["training", "validation"]
+      db_types: ["training", "validation"]
       tags:
         essential: "absence"
         with_data: True
