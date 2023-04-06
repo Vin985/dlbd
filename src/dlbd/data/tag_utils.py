@@ -236,12 +236,19 @@ def get_tag_df(audio_file_path, labels_dir, tag_opts):
 
 
 def get_tag_presence(tag_df, metadata, tag_opts):
-    tag_presence = np.zeros(metadata["length"])
+    essential = tag_opts.get("essential", "")
+    absence_offset, presence_offset = 0, 0
+    if essential:
+        if essential == "absence":
+            absence_offset = 2
+        elif essential == "presence":
+            presence_offset = 2
+    tag_presence = np.zeros(metadata["length"]) + absence_offset
     for _, annot in tag_df.iterrows():
         # * fill in the label vector
         start_point = int(float(annot["tag_start"]) * metadata["sample_rate"])
         end_point = int(float(annot["tag_end"]) * metadata["sample_rate"])
-        tag_presence[start_point:end_point] = 1
+        tag_presence[start_point:end_point] = 1 + presence_offset
     return tag_presence
 
 

@@ -61,7 +61,7 @@ class SpectrogramSampler:
 
         blank_label = np.zeros(2 * pad_hww) - 1
         if y is not None:
-            labels = [yy > 0 for yy in y]
+            labels = y  # [yy > 0 for yy in y]
         else:
             labels = [np.zeros(self.specs.shape[2] - 4 * pad_hww)]
 
@@ -128,6 +128,7 @@ class SpectrogramSampler:
                 y_labs = self.labels[
                     (loc - self.opts["hww_gt"]) : (loc + self.opts["hww_gt"])
                 ]
+                y_labs[y_labs > 1] = y_labs[y_labs > 1] - 2
                 y[count] = int(
                     (y_labs.sum() / y_labs.shape[0] * 100) > self.opts["gt_prop"]
                 )

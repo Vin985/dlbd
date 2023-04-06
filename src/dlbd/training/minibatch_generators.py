@@ -21,10 +21,17 @@ def get_class_size(y, using):
     """
     if isinstance(using, numbers.Number):
         return using
-    elif using == "largest":
-        return max([np.sum(y == yy) for yy in np.unique(y)])
-    elif using == "smallest":
-        return min([np.sum(y == yy) for yy in np.unique(y)])
+    if isinstance(using, str):
+        unique, counts = np.unique(y, return_counts=True)
+        classes = dict(zip([str(int(x)) for x in unique], counts))
+        if using in classes.keys():
+            return classes[using]
+        elif using == "largest":
+            return max([np.sum(y == yy) for yy in np.unique(y)])
+        elif using == "smallest":
+            return min([np.sum(y == yy) for yy in np.unique(y)])
+        else:
+            return min([np.sum(y == yy) for yy in np.unique(y)])
 
     raise Exception("Unknown balance_using, %s" % using)
 
