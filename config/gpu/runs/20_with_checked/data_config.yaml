@@ -90,7 +90,6 @@ databases:
         with_data: True
         suffix: "-tags.csv"
       split:
-        test: 0.2
         validation: 0.2
         type: "arctic"
 
