@@ -86,6 +86,7 @@ databases:
       data_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
       # db_types: ["training", "validation"]
       tags:
+        essential: "absence"
         with_data: True
         suffix: "-tags.csv"
       split:
