@@ -35,15 +35,15 @@ scenarios:
       name: "DLBD"
     n_epochs: [[5, 5]]
     learning_rate: [[0.01, 0.001], [0.0001, 0.00001]]
-  - name: "DLBD_forced_checked"
-    class_size: "1"
-    class: "dlbd.models.dlbd.DLBD"
-    suffix: "_epoch{n_epochs}_lr{learning_rate}"
-    weights_opts:
-      model_dir: "/home/sylvain/resources/models"
-      name: "DLBD"
-    n_epochs: [[5, 5]]
-    learning_rate: [[0.01, 0.001], [0.001, 0.0001]]
+  # - name: "DLBD_forced_checked"
+  #   class_size: "1"
+  #   class: "dlbd.models.dlbd.DLBD"
+  #   suffix: "_epoch{n_epochs}_lr{learning_rate}"
+  #   weights_opts:
+  #     model_dir: "/home/sylvain/resources/models"
+  #     name: "DLBD"
+  #   n_epochs: [[5, 5]]
+  #   learning_rate: [[0.01, 0.001], [0.001, 0.0001]]
     
 
 
