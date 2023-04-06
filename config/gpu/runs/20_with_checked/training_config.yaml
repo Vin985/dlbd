@@ -9,8 +9,8 @@ databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_fina
 n_epochs: 50
 learning_rate: 0.01
 early_stopping:
-  min_delta: 0.002
-  patience: 8
+  min_delta: 0.001
+  patience: 4
   restore_best_weights: False
 spectrogram_overlap: 0.75
 random_start: True
@@ -43,7 +43,7 @@ scenarios:
       model_dir: "/home/sylvain/resources/models"
       name: "DLBD"
     n_epochs: [[5, 5], [10,10]]
-    learning_rate: [[0.01, 0.001], [0.0001, 0.00001]]
+    learning_rate: [[0.01, 0.001], [0.001, 0.0001], [0.0001, 0.00001]]
     
 
 
