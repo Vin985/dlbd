@@ -30,6 +30,7 @@ evaluators:
 
 
 databases:
+  - name: arctic_complete_final
   - name: citynet_final
   - name: full_summer_final
   - name: nips4b_final
