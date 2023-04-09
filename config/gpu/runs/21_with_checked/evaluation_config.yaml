@@ -4,11 +4,14 @@ parent_path: "config/gpu/runs/evaluation_parent.yaml"
 models_options:
   spectrogram_overlap: 0.95
   reclassify: False
+  smooth_predictions: True
 
 evaluators_options:
   draw_plots: False
   phenology_databases: ["full_summer_final"]
   plots: ["distances", "pr_curve", "roc", "separate_distances"] #"separate_distances", "roc"
+
+id: smoothed
 
 evaluators:
   - type: "phenology"
