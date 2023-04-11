@@ -34,7 +34,7 @@ scenarios:
     weights_opts:
       model_dir: "/home/sylvain/resources/models"
       name: "DLBD"
-    n_epochs: [10, 10]
+    n_epochs: [10, 30]
     learning_rate: [0.001, 0.0001]
     epoch_save_step: 2
     early_stopping:
@@ -49,7 +49,7 @@ scenarios:
     weights_opts:
       model_dir: "/home/sylvain/resources/models"
       name: "DLBD"
-    n_epochs: [10, 10]
+    n_epochs: [10, 30]
     learning_rate: [0.001, 0.0001]
     epoch_save_step: 2
     early_stopping:
@@ -75,7 +75,7 @@ scenarios:
       name: "DLBD2"
     class_size: "1"
     databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final", "arctic_checked_all"]
-    n_epochs: [10, 10]
+    n_epochs: [10, 30]
     learning_rate: [0.001, 0.0001]
     epoch_save_step: 2
     early_stopping:
