@@ -1,0 +1,133 @@
+#* All path can be relative to the root_dir or complete
+# root_dir: other dirs will be relative to this one
+data_dir: 'wavs'
+tags_dir: 'annotations'
+training_dir: 'training'
+validation_dir:  'validation'
+test_dir: 'test'
+dest_dir: '/home/sylvain/data/datasets'
+save_intermediate: False
+overwrite: False
+
+subfolders:
+  - type: "spectrogram"
+    options: ["sample_rate", "type", "n_fft", "win_length", "hop_length"]
+
+data_extensions:
+  - ".wav"
+  - ".WAV"
+recursive: True
+
+#* Tags files options
+tags:
+  suffix: "-sceneRect.csv"
+  columns:
+    Label: "tag"
+    Related: "related"
+    start: "tag_start"
+    end: "tag_end"
+    LabelStartTime_Seconds: "tag_start"
+    LabelEndTime_Seconds: "tag_end"
+    overlap: "overlap"
+    background: "background"
+    noise: "noise"
+    Filename: "file_name"
+  columns_type:
+    overlap: "str"
+  with_data: False
+
+
+databases:
+  #* All options found in data can be overriden in each iteration. If not found, default values
+  #* from data will be used
+    - name: 'citynet_final'
+      root_dir: '/home/sylvain/data/raw/CityNet'
+      split:
+        validation: 0.3
+      data_by_type: True
+    - name: 'arctic_complete_final'
+      root_dir: '/home/sylvain/data/raw/Arctic_complete'
+      data_dir: '/home/sylvain/data/raw/Arctic_complete'
+      tags:
+        with_data: True
+      split:
+        validation: 0.3
+        test: 0.2
+    - name: 'arctic_complete_unsplit'
+      root_dir: '/home/sylvain/data/raw/Arctic_complete'
+      data_dir: '/home/sylvain/data/raw/Arctic_complete'
+      db_types: ["training", "validation"]
+      tags:
+        with_data: True
+      split:
+        validation: 0.3
+    - name: 'full_summer_final'
+      root_dir: '/home/sylvain/data/raw/full_summer_subset1/'
+      data_dir: '/home/sylvain/data/raw/full_summer_subset1/'
+      db_types: ["test"]
+      tags:
+        with_data: True
+    - name: "nips4b_final"
+      root_dir: "/home/sylvain/data/raw/nips4b/"
+      data_dir: "/home/sylvain/data/raw/nips4b/wavs"
+      tags_dir: "/home/sylvain/data/raw/nips4b/tags"
+      split:
+        validation: 0.3
+        test: 0.2
+      tags:
+        type: "nips4b"
+    - name: "NABS_final"
+      root_dir: "/home/sylvain/data/raw/NABS2"
+      data_dir: "/home/sylvain/data/raw/NABS2"
+      db_types: ["validation", "training"]
+      tags:
+        with_data: True
+        suffix: "_tags.csv"
+        columns:
+          tag: "tag"
+          start: "tag_start"
+          end: "tag_end"
+      split:
+        validation: 0.3
+    - name: 'arctic_checked'
+      root_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
+      data_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
+      db_types: ["training", "validation"]
+      tags:
+        essential: "absence"
+        with_data: True
+        suffix: "-tags.csv"
+      split:
+        validation: 0.3
+        type: "arctic"
+    - name: 'arctic_checked_all'
+      root_dir: "/home/sylvain/data/raw/ArcticChecked_all"
+      data_dir: "/home/sylvain/data/raw/ArcticChecked_all"
+      tags:
+        essential: "absence"
+        with_data: True
+        suffix: "-tags.csv"
+      split:
+        test: 0.2
+        validation: 0.3
+        type: "arctic"
+
+  #   #* split: Defines proportion of data to set aside for test and validation datasets.
+  #   #* If provided, first the test dataset is set aside, then the remaining data is split into
+  #   #* training and validation datasets.
+  #   #* Overrides training_dir/validation_dir. Set to false or 0 to avoid using it in a database
+  #   # train_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic'
+  #   audio_dir: "/mnt/win/UMoncton/McGill University/Tommy O'Neill Sanger - Labeled Recordings"
+
+    # tags_dir: '/mnt/win/UMoncton/Doctorat/data/dl_training/Arctic2/tags'
+    
+spectrogram:
+  type: "mel"
+  n_mels: 32
+  n_fft: 512
+  sample_rate: "original"
+  # sample_rate: 22050 # For no resampling: remove option or set to original
+
+class_type: "biotic"
+classes_file: "src/classes.csv"
+reference_classes_file: "resources/reference_classes.csv"

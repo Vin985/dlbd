@@ -1,0 +1,78 @@
+data_config: "config/gpu/runs/21_with_checked/data_config.yaml"
+parent_path: "config/gpu/runs/training_parent.yaml"
+
+clean_empty_models: True
+skip_trained: True
+
+databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final", "arctic_checked_all"]
+
+n_epochs: 50
+learning_rate: 0.01
+early_stopping:
+  min_delta: 0.001
+  patience: 8
+  restore_best_weights: False
+spectrogram_overlap: 0.75
+random_start: True
+time_mask: True
+freq_mask: True
+dilation_rate: [[1, 2], 1]
+training_balanced: True
+wiggle_room: 10 #[3, 5, 10]
+batch_size: 256 #[256, 128, 64, 32]
+num_filters: 64
+num_dense_units: 512
+num_dense_units2: 256
+pixels_per_sec: 100
+
+
+scenarios:
+  - name: "DLBD_checked2_split"
+    class_size: "1"
+    class: "dlbd.models.dlbd.DLBD"
+    suffix: "_epoch{n_epochs}_lr{learning_rate}_class{class_size}"
+    weights_opts:
+      model_dir: "/home/sylvain/resources/models"
+      name: "DLBD"
+    n_epochs: [10, 10]
+    learning_rate: [0.001, 0.0001]
+    epoch_save_step: 2
+  - name: "DLBD_checked2_unsplit"
+    class_size: "1"
+    databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_unsplit", "arctic_checked_all"]
+    class: "dlbd.models.dlbd.DLBD"
+    suffix: "_epoch{n_epochs}_lr{learning_rate}_class{class_size}"
+    weights_opts:
+      model_dir: "/home/sylvain/resources/models"
+      name: "DLBD"
+    n_epochs: [10, 10]
+    learning_rate: [0.001, 0.0001]
+    epoch_save_step: 2
+  - name: "DLBD2"
+    class_size: "1"
+    databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final"]
+    class: "dlbd.models.dlbd.DLBD"
+  - name: "DLBD2_full"
+    class_size: "1"
+    class: "dlbd.models.dlbd.DLBD"
+  - name: "DLBD2_full_smallest"
+    class_size: "smallest"
+    class: "dlbd.models.dlbd.DLBD"
+  - name: "DLBD2_checked"
+    class_size: "1"
+    class: "dlbd.models.dlbd.DLBD"
+    suffix: "_epoch{n_epochs}_lr{learning_rate}_class{class_size}"
+    weights_opts:
+      model_dir: "/home/sylvain/resources/models"
+      name: "DLBD2"
+    class_size: "1"
+    databases: ['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final", "arctic_checked_all"]
+    n_epochs: [10, 10]
+    learning_rate: [0.001, 0.0001]
+    epoch_save_step: 2
+
+
+
+
+
+
