@@ -1,4 +1,4 @@
-data_config: "config/gpu/runs/21_with_checked/data_config.yaml"
+data_config: "config/gpu/runs/22_checked_all/data_config.yaml"
 parent_path: "config/gpu/runs/training_parent.yaml"
 
 clean_empty_models: True
