@@ -3,3 +3,4 @@ from .song_detector_evaluator import SongDetectorEvaluator
 from .direct_evaluator import DirectEvaluator
 from .standard_evaluator import StandardEvaluator
 from .subsampling_evaluator import SubsamplingEvaluator
+from .presence_evaluator import PresenceEvaluator
