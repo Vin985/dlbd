@@ -88,6 +88,13 @@ def classify_elements(elements, model, spec_opts=None):
                 # info["duration"] = 30
                 # idx = math.ceil(spec.shape[1] / duration * 30)
                 # to_classify = spec[:, 0:idx]
+            to_classify = audio_utils.modify_spectrogram(
+                to_classify,
+                model.opts,
+                resize_width=audio_utils.get_resize_width(
+                    model.opts.get("pixels_per_second", 100), duration
+                ),
+            )
             start_classify = time.time()
             res_df = classify_element(model, (to_classify, metadata), test_sampler)
             classify_time = time.time() - start_classify

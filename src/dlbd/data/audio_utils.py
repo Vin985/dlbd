@@ -128,3 +128,16 @@ def load_audio_data(file_path, spec_opts):
     # for stat in top_stats[:10]:
     #     print(stat)
     return spec, metadata, sp_opts
+
+
+def modify_spectrogram(spec, opts, resize_width, to_db=False):
+    if not to_db:
+        spec = np.log(opts["A"] + opts["B"] * spec)
+    spec = spec - np.median(spec, axis=1, keepdims=True)
+    if resize_width > 0:
+        spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
+    return spec
+
+
+def get_resize_width(pixels_per_sec, duration):
+    return int(pixels_per_sec * duration)

@@ -4,7 +4,7 @@ from mouffet import common_utils
 from mouffet.data import DataHandler
 from scipy.ndimage.interpolation import zoom
 
-from ..data.audio_utils import resize_spectrogram
+from ..data import audio_utils
 from ..options import AudioDatabaseOptions
 from .audio_database import AudioDatabase
 from .audio_dataset import AudioDataset
@@ -21,16 +21,8 @@ class AudioDataHandler(DataHandler):
     def __init__(self, opts):
         super().__init__(opts)
 
-    def modify_spectrogram(self, spec, resize_width, opts, to_db=False):
-        if not to_db:
-            spec = np.log(opts["A"] + opts["B"] * spec)
-        spec = spec - np.median(spec, axis=1, keepdims=True)
-        if resize_width > 0:
-            spec = resize_spectrogram(spec, (resize_width, spec.shape[0]))
-        return spec
-
-    def prepare_spectrogram(self, spec, infos, opts):
-        spec = self.modify_spectrogram(spec, self.get_resize_width(infos, opts), opts)
+    def prepare_spectrogram(self, spec, opts, *args, **kwargs):
+        spec = audio_utils.modify_spectrogram(spec, opts, *args, **kwargs)
         return spec
 
     def prepare_test_dataset(self, dataset, opts):
@@ -38,10 +30,12 @@ class AudioDataHandler(DataHandler):
             for i, spec in enumerate(dataset.data["spectrograms"]):
                 infos = dataset.data["metadata"][i]
                 spec_opts = dataset.data["spec_opts"][i]
-                resize_width = self.get_resize_width(infos, opts)
 
-                dataset.data["spectrograms"][i] = self.modify_spectrogram(
-                    spec, resize_width, opts, to_db=spec_opts["to_db"]
+                dataset.data["spectrograms"][i] = self.prepare_spectrogram(
+                    spec,
+                    opts,
+                    resize_width=self.get_resize_width(infos, opts),
+                    to_db=spec_opts["to_db"],
                 )
         return dataset
 
@@ -71,8 +65,8 @@ class AudioDataHandler(DataHandler):
                             + " option or the hop_length of the spectrogram so the two values can be closer"
                         ).format(new_pps, original_pps)
                     )
-                dataset.data["spectrograms"][i] = self.modify_spectrogram(
-                    spec, resize_width, opts, to_db=spec_opts["to_db"]
+                dataset.data["spectrograms"][i] = self.prepare_spectrogram(
+                    spec, opts, resize_width=resize_width, to_db=spec_opts["to_db"]
                 )
                 if resize_width > 0:
                     dataset.data["tags_linear_presence"][i] = zoom(
@@ -83,11 +77,9 @@ class AudioDataHandler(DataHandler):
         return dataset
 
     def get_resize_width(self, infos, opts):
-        resize_width = -1
-        pix_in_sec = opts.get("pixels_per_sec", 20)
+        pix_in_sec = opts.get("pixels_per_sec", 100)
         infos["duration"] = infos["length"] / infos["sample_rate"]
-        resize_width = int(pix_in_sec * infos["duration"])
-        return resize_width
+        return audio_utils.get_resize_width(pix_in_sec, infos["duration"])
 
     def merge_datasets(self, datasets):
         merged = super().merge_datasets(datasets)
