@@ -71,7 +71,7 @@ scenarios:
     class: "dlbd.models.dlbd.DLBD"
     suffix: "_epoch{n_epochs}_lr{learning_rate}_class{class_size}"
     weights_opts:
-      model_dir: "/home/sylvain/resources/models"
+      # model_dir: "/home/sylvain/resources/models"
       name: "DLBD2"
     class_size: "1"
     databases: [['citynet_final', "nips4b_final", "NABS_final", "arctic_complete_final", "arctic_checked_all"]]
