@@ -48,3 +48,4 @@ databases:
   - name: full_summer_final
   - name: nips4b_final
   - name: arctic_complete_final
+  - name: arctic_checked_all
