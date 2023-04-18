@@ -1,0 +1,69 @@
+A: 0.001
+B: 10.0
+batch_size: 256
+channels: 4
+class: dlbd.models.dlbd.DLBD
+class_size: '1'
+clean_empty_models: true
+conv_filter_width: 4
+data_config: config/gpu/runs/22_checked_all/data_config.yaml
+databases:
+- citynet_final
+- nips4b_final
+- NABS_final
+- arctic_complete_unsplit
+- arctic_checked_all
+databases_options:
+  spectrogram:
+    n_fft: 512
+    n_mels: 32
+    sample_rate: original
+    to_db: false
+dilation_rate:
+- - 1
+  - 2
+- 1
+do_augmentation: 1
+do_batch_norm: 1
+dropout: 0.5
+early_stopping:
+  min_delta: 0.0005
+  patience: 3
+  restore_best_weights: false
+ensemble_members: 1
+epoch_save_step: 2
+freq_mask: true
+input_height: 32
+input_width: 100
+learn_log: 0
+learning_rate:
+- 0.001
+- 0.0001
+logs:
+  log_dir: /home/sylvain/logs/gradient_tape/runs/22_checked_all
+  use_version: true
+model_dir: /home/sylvain/data/results/runs/22_checked_all/models
+n_epochs:
+- 10
+- 30
+name: DLBD_checked2_unsplit
+num_dense_units: 512
+num_dense_units2: 256
+num_filters: 64
+parent_path: config/gpu/runs/training_parent.yaml
+pixels_per_sec: 100
+random_start: true
+resize_spectrogram: true
+skip_trained: true
+spectrogram_overlap: 0.75
+suffix: _epoch{n_epochs}_lr{learning_rate}_class{class_size}
+suffix_prepend:
+  databases_options--spectrogram--n_fft: fft-
+  databases_options--spectrogram--n_mels: _nmels-
+time_mask: true
+training: true
+training_balanced: true
+weights_opts:
+  model_dir: /home/sylvain/resources/models
+  name: DLBD
+wiggle_room: 10
