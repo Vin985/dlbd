@@ -32,6 +32,7 @@ model_opts = ModelOptions(
         "random_start": False,
         "ignore_parent_path": True,
         "input_height": 32,
+        "class_size": "smallest",
     }
 )
 
