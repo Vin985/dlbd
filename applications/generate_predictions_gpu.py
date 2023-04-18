@@ -24,6 +24,7 @@ model_opts = ModelOptions(
     {
         "model_dir": "../resources/models/",
         "name": "DLBD_v2",
+        "model_id": "DLBD_v2",
         "class": DLBD,
         "batch_size": 64,
         "spectrogram_overlap": 0.75,
