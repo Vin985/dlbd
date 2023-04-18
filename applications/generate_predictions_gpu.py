@@ -12,8 +12,8 @@ from mouffet.options.model_options import ModelOptions
 from mouffet.utils.file import ensure_path_exists
 from mouffet.utils.model_handler import ModelHandler
 
-gpus = tf.config.experimental.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(gpus[0], True)
+# gpus = tf.config.experimental.list_physical_devices("GPU")
+# tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
 root_dir = Path("/mnt/PhD/Acoustics")
