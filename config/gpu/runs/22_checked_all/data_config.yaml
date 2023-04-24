@@ -89,17 +89,17 @@ databases:
           end: "tag_end"
       split:
         validation: 0.3
-    - name: 'arctic_checked'
-      root_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
-      data_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
-      db_types: ["training", "validation"]
-      tags:
-        essential: "absence"
-        with_data: True
-        suffix: "-tags.csv"
-      split:
-        validation: 0.3
-        type: "arctic"
+    # - name: 'arctic_checked'
+    #   root_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
+    #   data_dir: "/home/sylvain/data/raw/ArcticChecked/2018"
+    #   db_types: ["training", "validation"]
+    #   tags:
+    #     essential: "absence"
+    #     with_data: True
+    #     suffix: "-tags.csv"
+    #   split:
+    #     validation: 0.3
+    #     type: "arctic"
     - name: 'arctic_checked_all'
       root_dir: "/home/sylvain/data/raw/ArcticChecked_all"
       data_dir: "/home/sylvain/data/raw/ArcticChecked_all"
