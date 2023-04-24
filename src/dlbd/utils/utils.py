@@ -6,9 +6,11 @@ from mouffet.training.training_handler import TrainingHandler
 from mouffet.utils import common_utils
 
 
-def load_model_options(opts, updates={}):
+def load_model_options(opts, updates={}, model_id=None):
     model_opt = ast.literal_eval(opts)
     model_opt.update(updates)
+    if model_id is not None:
+        model_opt["model_id"] = model_id
     return model_opt
 
 
@@ -44,7 +46,7 @@ def get_models_conf(config, updates=None):
                         models_stats.model_id.isin(model_ids)
                     ]
                 models += [
-                    load_model_options(row.opts, list_opts)
+                    load_model_options(row.opts, list_opts, row.model_id)
                     for row in models_stats.itertuples()
                 ]
                 config["models"] = models
