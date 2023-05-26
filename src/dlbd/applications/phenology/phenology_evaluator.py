@@ -8,19 +8,24 @@ from plotnine import *
 from scipy.spatial.distance import euclidean
 
 from ...evaluation import EVALUATORS
-from ...utils.plot_utils import format_date_short
 from ...data.tag_utils import flatten_tags
+from ...plots.distance import plot_distances
 
 
 class PhenologyEvaluator(Evaluator):
 
     NAME = "phenology"
 
+    PLOTS = {"distances": plot_distances}
+
     def requires(self, options):
         return EVALUATORS[options["method"]].requires(options)
 
     def file_event_duration(self, df, method):
         return EVALUATORS[method].file_event_duration(df)
+
+    def file_positive_event_duration(self, df, method):
+        return EVALUATORS[method].file_positive_event_duration(df)
 
     def file_tag_duration(self, df, method=None):
         flattened = flatten_tags(df)
@@ -96,6 +101,9 @@ class PhenologyEvaluator(Evaluator):
     def get_daily_trends(self, df, options, df_type="event"):
         res = {}
         # * Get total duration per file
+        if df_type == "event" and options.get("only_positives", False):
+            df_type = "positive_" + df_type
+
         file_song_duration = (
             df.groupby("recording_id")
             .apply(
@@ -119,7 +127,7 @@ class PhenologyEvaluator(Evaluator):
 
         res["file_duration"] = file_song_duration
 
-        agg_method = options.get("daily_aggregation", "mean")
+        agg_method = options.get("daily_aggregation", "sum")
 
         by_hour = (
             file_song_duration[["date_hour", "total_duration"]]
@@ -137,7 +145,7 @@ class PhenologyEvaluator(Evaluator):
 
         return res
 
-    def get_ENAB_trends(self, data, options, df_type):
+    def get_ENAB_final_trends(self, data, options, df_type):
         res = {}
         df = data.copy()
         df[["recording", "segment"]] = df.recording_id.path.stem.str.split(
@@ -177,140 +185,57 @@ class PhenologyEvaluator(Evaluator):
             activity_func_name = "get_daily_trends"
         return getattr(self, activity_func_name)(data, options, df_type)
 
-    def plot_distances(self, data, options, infos):
-        plt_df = data["df"]
-        res = []
-        if options.get("plot_real_distance", True):
-            tmp_plt = (
-                ggplot(
-                    data=plt_df,
-                    mapping=aes("date", "trend", color="type"),
-                )
-                + geom_line()
-                + ggtitle(
-                    "Daily mean activity per recording with method {}.\n".format(
-                        options["method"]
-                    )
-                    + " Euclidean distance to reference: {}".format(data["distance"])
-                )
-                + xlab("Date")
-                + ylab("Daily mean activity per recording (s)")
-                + scale_color_discrete(labels=["Reference", "Model"])
-                + scale_x_datetime(labels=format_date_short)
-                + theme_classic()
-                + theme(axis_text_x=element_text(angle=45))
-            )
-            if options.get("add_points", False):
-                tmp_plt = tmp_plt + geom_point(mapping=aes(y="total_duration"))
-            res.append(tmp_plt)
-        if options.get("plot_norm_distance", True):
-            tmp_plt_norm = (
-                ggplot(
-                    data=plt_df,
-                    mapping=aes("date", "trend_norm", color="type"),
-                )
-                + geom_line()
-                + ggtitle(
-                    "Normalized daily mean activity per recording with method {}.\n".format(
-                        options["method"]
-                    )
-                    + " Euclidean distance to reference: {}".format(
-                        data["distance_norm"]
-                    )
-                )
-                + xlab("Date")
-                + ylab("Normalized daily mean activity per recording")
-                + scale_color_discrete(labels=["Model", "Reference"])
-                + scale_x_datetime(labels=format_date_short)
-                + theme_classic()
-                + theme(axis_text_x=element_text(angle=45))
-            )
-            res.append(tmp_plt_norm)
+    # def plot_distances(self, data, options, infos):
+    #     plt_df = data["df"]
+    #     res = []
+    #     if options.get("plot_real_distance", True):
+    #         tmp_plt = (
+    #             ggplot(
+    #                 data=plt_df,
+    #                 mapping=aes("date", "trend", color="type"),
+    #             )
+    #             + geom_line()
+    #             + ggtitle(
+    #                 "Daily mean activity per recording with method {}.\n".format(
+    #                     options["method"]
+    #                 )
+    #                 + " Euclidean distance to reference: {}".format(data["distance"])
+    #             )
+    #             + xlab("Date")
+    #             + ylab("Daily mean activity per recording (s)")
+    #             + scale_color_discrete(labels=["Reference", "Model"])
+    #             + scale_x_datetime(labels=format_date_short)
+    #             + theme_classic()
+    #             + theme(axis_text_x=element_text(angle=45))
+    #         )
+    #         if options.get("add_points", False):
+    #             tmp_plt = tmp_plt + geom_point(mapping=aes(y="total_duration"))
+    #         res.append(tmp_plt)
+    #     if options.get("plot_norm_distance", True):
+    #         tmp_plt_norm = (
+    #             ggplot(
+    #                 data=plt_df,
+    #                 mapping=aes("date", "trend_norm", color="type"),
+    #             )
+    #             + geom_line()
+    #             + ggtitle(
+    #                 "Normalized daily mean activity per recording with method {}.\n".format(
+    #                     options["method"]
+    #                 )
+    #                 + " Euclidean distance to reference: {}".format(
+    #                     data["distance_norm"]
+    #                 )
+    #             )
+    #             + xlab("Date")
+    #             + ylab("Normalized daily mean activity per recording")
+    #             + scale_color_discrete(labels=["Model", "Reference"])
+    #             + scale_x_datetime(labels=format_date_short)
+    #             + theme_classic()
+    #             + theme(axis_text_x=element_text(angle=45))
+    #         )
+    #         res.append(tmp_plt_norm)
 
-        return res
-
-    def plot_separate_distances(self, data, options, infos):
-        plt_df = data["df"]
-        res = []
-        y_range = max(plt_df.trend_norm) - min(plt_df.trend_norm)
-        ylims = [
-            min(plt_df.trend_norm) - 0.1 * y_range,
-            max(plt_df.trend_norm) + 0.1 * y_range,
-        ]
-        plt_gt_norm = (
-            ggplot(
-                data=plt_df.loc[plt_df.type == "ground_truth"],
-                mapping=aes("date", "trend_norm", color=["#0571b0"]),
-            )
-            + geom_line(size=1.5)
-            + xlab("Date")
-            + ylab("Normalized vocal activity")
-            + ggtitle(
-                "Normalized trends for model {} on database {} with method {}.\n".format(
-                    options["scenario_info"]["model"],
-                    options["scenario_info"]["database"],
-                    options["method"],
-                )
-                + " Euclidean distance to reference: {} \n".format(
-                    data["distance_norm"]
-                )
-            )
-            + ylim(ylims)
-            + scale_color_manual(values=["#0571b0"], labels=["Reference"])
-            + scale_x_datetime(labels=format_date_short)
-            + theme_classic()
-            + theme(
-                title=element_text(face="bold"),
-                axis_text_x=element_text(angle=45),
-                axis_text=element_text(face="bold"),
-                legend_title=element_blank(),
-                axis_title=element_text(face="bold"),
-            )
-        )
-
-        plt_norm = (
-            ggplot(
-                data=plt_df,
-                mapping=aes("date", "trend_norm", color="type"),
-            )
-            + geom_line(size=1.5)
-            + ggtitle(
-                "Normalized trends for model {} on database {} with method {}.\n".format(
-                    options["scenario_info"]["model"],
-                    options["scenario_info"]["database"],
-                    options["method"],
-                )
-                + " Euclidean distance to reference: {} \n".format(
-                    data["distance_norm"]
-                )
-            )
-            + xlab("Date")
-            + ylab(
-                "Normalized vocal activity",
-            )
-            + ylim(ylims)
-            + scale_color_manual(
-                values=["#0571b0", "#f4a582"], labels=["Reference", "Model"]
-            )
-            + scale_x_datetime(labels=format_date_short)
-            + theme_classic()
-            + theme(
-                title=element_text(face="bold"),
-                axis_text_x=element_text(angle=45),
-                axis_text=element_text(face="bold"),
-                legend_title=element_blank(),
-                axis_title=element_text(face="bold"),
-            )
-            # + theme(
-            #     axis_title=element_blank(),
-            #     axis_ticks_major=element_blank(),
-            #     axis_text=element_blank(),
-            # )
-        )
-        res.append(plt_gt_norm)
-        res.append(plt_norm)
-
-        return res
+    #     return res
 
     def evaluate(self, data, options, infos):
         if not self.check_database(data, options, infos):
@@ -330,8 +255,8 @@ class PhenologyEvaluator(Evaluator):
             ]
         )
         trends["type"] = trends["type"].astype("category")
-        trends["type"] = trends["type"].cat.set_categories(
-            ["ground_truth", options["scenario_info"]["model"]], ordered=True
+        trends["type"] = trends["type"].cat.reorder_categories(
+            ["ground_truth", options["scenario_info"]["model"]]
         )
 
         eucl_distance = round(
