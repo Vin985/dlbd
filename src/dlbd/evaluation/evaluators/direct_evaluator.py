@@ -41,6 +41,15 @@ class DirectEvaluator(Evaluator):
             return df.events.sum() / 2 * step
         return 0
 
+    def file_positive_event_duration(self, df):
+        if "tags" not in df.columns:
+            raise ValueError("Cannot get positive events without reference")
+        if df.shape[0] > 0:
+            step = df.time.iloc[1] - df.time.iloc[0]
+            res = df.events + df.tags
+            return res[res == 3].sum() / 3 * step
+        return 0
+
     def file_tag_duration(self, df):
         if df.shape[0] > 1:
             step = df.time.iloc[1] - df.time.iloc[0]
@@ -84,7 +93,11 @@ class DirectEvaluator(Evaluator):
         return predictions
 
     def filter_predictions(self, predictions, options, tags=None):
-        predictions = predictions[["activity", "recording_id", "time"]].copy()
+        predictions = (
+            predictions[["activity", "recording_id", "time"]]
+            .copy()
+            .reset_index(drop=True)
+        )
         predictions["events"] = 0
         predictions["tags"] = 0
         threshold = options.get("activity_threshold", self.DEFAULT_ACTIVITY_THRESHOLD)
@@ -95,7 +108,7 @@ class DirectEvaluator(Evaluator):
         if options.get("refine_predictions", False):
             events = predictions.groupby("recording_id", as_index=True, observed=True)
             predictions = events.apply(self.refine_predictions, options)
-        return predictions
+        return predictions.reset_index(drop=True)
 
     def get_tags_presence(self, predictions, tags, options=None):
         if not predictions.empty:

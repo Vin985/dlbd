@@ -512,7 +512,7 @@ class StandardEvaluator(SongDetectorEvaluator):
         )
         plt = (
             plt
-            + geom_bar()
+            + geom_bar(stat="prop")
             + xlab("Tag duration")
             + ylab("Proportion tag overlapping with matching event")
             + theme_classic()
