@@ -1,9 +1,8 @@
 from copy import deepcopy
 from pathlib import Path
 import pandas as pd
-import mouffet.utils.file as file_utils
+from mouffet import file_utils, config_utils
 from dlbd.applications.phenology.utils import score_models
-from dlbd.utils import get_models_conf
 from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
@@ -60,7 +59,7 @@ if not global_res_path.exists() or overwrite:
                 print(model_dir)
                 conf["models_list_dir"] = model_dir
                 conf["add_models_from_list"] = True
-                conf = get_models_conf(conf)
+                conf = config_utils.get_models_conf(conf)
                 evaluator = SongDetectorEvaluationHandler(
                     opts=conf, dh_class=AudioDataHandler
                 )
