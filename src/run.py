@@ -11,7 +11,7 @@ from dlbd.evaluation.song_detector_evaluation_handler import (
     SongDetectorEvaluationHandler,
 )
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 pd.options.mode.chained_assignment = "raise"
 
 EVALUATORS.register_evaluator(PhenologyEvaluator)

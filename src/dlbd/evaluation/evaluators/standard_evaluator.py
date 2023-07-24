@@ -110,7 +110,9 @@ class StandardEvaluator(SongDetectorEvaluator):
         return events
 
     def filter_predictions(self, predictions, options, *args, **kwargs):
-        predictions = predictions[["activity", "recording_id", "time"]]
+        predictions = predictions[["activity", "recording_id", "time"]].reset_index(
+            drop=True
+        )
         events = predictions.groupby("recording_id", as_index=False, observed=True)
         events = (
             events.apply(self.get_recording_events, options)

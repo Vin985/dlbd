@@ -37,7 +37,7 @@ class IndiceModel(AudioDetector):
         for i, data in enumerate(x):
             res[i] = self.compute_ACI(data)
         # res = (res - res.mean()) / res.std()
-        res = (res - np.min(res)) / (np.max(res) - np.min(res))
+        # res = (res - np.min(res)) / (np.max(res) - np.min(res))
         # res = np.log(res / (1 - res))
         return res
 
@@ -56,5 +56,7 @@ class IndiceModel(AudioDetector):
         for x, _ in tqdm(spec_sampler([spectrogram], [labels])):
             pred = self.predict(x)
             preds.append(pred)
+        preds = np.concatenate(preds)
+        preds = (preds - np.min(preds)) / (np.max(preds) - np.min(preds))
         print("Classified {0} in {1}".format("spectrogram", time() - tic))
-        return np.concatenate(preds)
+        return preds

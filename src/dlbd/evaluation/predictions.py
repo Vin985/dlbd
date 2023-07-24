@@ -35,6 +35,7 @@ def classify_elements(elements, model, spec_opts=None):
 
     # * Timing statistics
     classify_times = []
+    classify_times_pm = []
     total_times = []
     classify_props = []
     start = time.time()
@@ -101,6 +102,7 @@ def classify_elements(elements, model, spec_opts=None):
             start_classify = time.time()
             res_df = classify_element(model, (to_classify, metadata), test_sampler)
             classify_time = time.time() - start_classify
+            classify_time_pm = classify_time * 60 / duration
             # plt = res_df.plot("time", "activity")
             # fig = plt.get_figure()
             # fig.savefig("output.png")
@@ -111,6 +113,7 @@ def classify_elements(elements, model, spec_opts=None):
             print(f"File done in {total_time}")
 
             classify_times.append(classify_time)
+            classify_times_pm.append(classify_time_pm)
             total_times.append(total_time)
             classify_props.append(classify_prop)
             # snapshot2 = tracemalloc.take_snapshot()
@@ -138,6 +141,9 @@ def classify_elements(elements, model, spec_opts=None):
     infos["spectrogram_overlap"] = test_sampler.opts["overlap"]
 
     infos["average_classification_time"] = round(np.mean(classify_times), 2)
+    infos["average_classification_time_per_minute"] = round(
+        np.mean(classify_times_pm), 2
+    )
     infos["average_total_time"] = round(np.mean(total_times), 2)
     infos["average_loading_time"] = round(
         infos["average_total_time"] - infos["average_classification_time"], 2
